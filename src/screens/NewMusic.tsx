@@ -15,7 +15,7 @@ export const NewMusic: React.FC<any> = ({ navigation }) =>
         MusicService.create({ name, artist })
         .then(res =>
         {
-            navigation.navigate('Home');
+            navigation.navigate('Home', { update: true });
         })
         .catch(err =>
         {

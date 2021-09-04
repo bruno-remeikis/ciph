@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, TextInput } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 
 import MusicService from '../services/MusicService';
 import { music } from '../models/music';
@@ -61,18 +60,20 @@ export const Home: React.FC<any> = ({ navigation, route }) =>
 
 	// EFFECTS
 
-	/**
-	 * Busca as músicas ao carregar ou voltar nesta tela
-	 */
 	useEffect(() =>
 	{
-		// return to unsubscribe
-		return navigation.addListener('focus', () =>
-		{
+		//This will run whenever params change
+		const { params = {} } = route;
+		
+	   	//your logic here
+		if(params.update)
 			searchMusics(search);
-		});
-	},
-	[navigation]);
+   	},
+	[route]);
+
+
+
+	// RETURN 
 
 	return (
 		<View style={styles.container}>

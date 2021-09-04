@@ -14,7 +14,7 @@ import { Music } from './src/screens/Music';
 import { NewMusic } from './src/screens/NewMusic';
 
 type RootStackParamList = {
-	Home: undefined;
+	Home: { update?: boolean } | undefined;
 	Music: { music: music };
 	NewMusic: undefined;
 };
@@ -43,6 +43,7 @@ export default function App()
 					name="Home"
 					component={Home}
 					options={{ title: 'Ciphersonal' }}
+					initialParams={{ update: true }}
 				/>
 
 				{/* MUSIC */}
