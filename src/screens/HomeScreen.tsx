@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, TextInput } from 'react-native';
 
 import MusicService from '../services/MusicService';
-import { music } from '../models/music';
+import { Music } from '../models/Music';
 
 import { colors } from '../utils/colors';
 
-export const Home: React.FC<any> = ({ navigation, route }) =>
+export const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 {
 	// STATES
 
 	const [search, setSearch] = useState('');
 	const [searching, setSearching] = useState(false);
-	const [musics, setMusics] = useState<music[]>([]);
+	const [musics, setMusics] = useState<Music[]>([]);
 
 
 
@@ -79,12 +79,24 @@ export const Home: React.FC<any> = ({ navigation, route }) =>
 		<View style={styles.container}>
 			<ScrollView style={styles.scrollView}>
 				<View style={styles.mainContent}>
-					<TextInput
-						style={styles.search}
-						placeholder="Pesquisar"
-						value={search}
-						onChangeText={text => searchMusics(text)}
-					/>
+					<View style={styles.search}>
+						<TextInput
+							style={styles.searchInput}
+							placeholder="Pesquisar"
+							value={search}
+							onChangeText={text => searchMusics(text)}
+						/>
+						<Pressable
+							style={styles.searchClearBtn}
+							onPress={() =>
+							{
+								setSearch('');
+								searchMusics('');
+							}}
+						>
+							<Text style={styles.searchClearBtnText}>X</Text>
+						</Pressable>
+					</View>
 
 					<View>
 						<View style={styles.searchStatus}>
@@ -155,11 +167,31 @@ const styles = StyleSheet.create({
 
 	// SEARCH
 	search: {
-		paddingHorizontal: 18,
-		paddingVertical: 4,
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		
 		borderWidth: 1,
 		borderColor: 'rgba(0, 0, 0, 0.2)',
 		borderRadius: 999,
+	},
+	searchInput: {
+		flex: 1,
+
+		paddingHorizontal: 18,
+		paddingVertical: 4,
+	},
+	searchClearBtn: {
+		alignItems: 'center',
+		width: 30,
+		height: '100%',
+		marginRight: 6,
+		fontSize: 6,
+	},
+	searchClearBtnText: {
+		flex: 1,
+		textAlignVertical: 'center',
+		fontSize: 12,
 	},
 	searchStatus: {
 		width: '100%',

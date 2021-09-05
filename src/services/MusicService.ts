@@ -1,17 +1,18 @@
 import { db } from '../database/connection';
-import { music } from '../models/music';
+import SheetService from '../services/SheetService';
+import { Music } from '../models/Music';
 
 const table = 'music';
 
 export default class MusicService
 {
     /**
-     * Insere uma nova música no banco
+     * Insere uma nova entidade no banco
      * 
-     * @param obj Música a ser inserida
-     * @returns ID do ítem recém incerido
+     * @param obj Entidade a ser inserida
+     * @returns ID da entidade recém incerido
      */
-    static create(obj: music)
+    static create(obj: Music)
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
@@ -97,6 +98,32 @@ export default class MusicService
     }
 
     /**
+     * Deleta música por ID
+     * @param id ID da música
+     */
+    static delete(id: number)
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            // Deleta folhas da música
+            SheetService.deleteByMusicId(id);
+
+            const sql = `delete from ${table} where id = ?`;
+
+            tx.executeSql(sql, [id], (_, { rowsAffected }) =>
+            {
+                resolve(rowsAffected);
+            }),
+            (_: any, err: any) =>
+            {
+                console.error(err);
+                reject(err);
+                return false;
+            };
+        }));
+    }
+
+    /**
      * Deleta todas as músicas.
      * (Recomendado apenas para testes)
      * 
@@ -122,38 +149,13 @@ export default class MusicService
     }
 
     /*
-    static deleteById(id: number)
-    {
-        db.transaction(tx =>
-        {
-            tx.executeSql(`delete from ${table} where id = ?;`, [id], (_, { rows }) => {
-            }), (sqlError) => {
-                console.log(sqlError);
-            }}, (txError) => {
-            console.log(txError);
-        });
-    }
-    
-     static updateById(param: Animal) {
+    static updateById(param: Animal) {
         return new Promise((resolve, reject) =>db.transaction(tx => {
-                tx.executeSql(`update ${table} set nome = ? where id = ?;`, [param.nome,param.id], () => {
-                }), (sqlError) => {
-                    console.log(sqlError);
-                }}, (txError) => {
-                console.log(txError);
-    
-            }));
-    }
-
-     static findById(id: number) {
-        return new Promise((resolve, reject) => db.transaction(tx => {
-            tx.executeSql(`select * from ${table} where id=?`, [id], (_, { rows }) => {
-                resolve(rows)
+            tx.executeSql(`update ${table} set nome = ? where id = ?;`, [param.nome,param.id], () => {
             }), (sqlError) => {
                 console.log(sqlError);
             }}, (txError) => {
             console.log(txError);
-
         }));
     }
     */

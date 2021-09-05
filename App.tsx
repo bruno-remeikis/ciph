@@ -5,17 +5,17 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import DatabaseInit from './src/database/DatabaseInit';
 
-import { music } from './src/models/music';
+import { Music } from './src/models/Music';
 
 import { colors } from './src/utils/colors';
 
-import { Home } from './src/screens/Home';
-import { Music } from './src/screens/Music';
-import { NewMusic } from './src/screens/NewMusic';
+import { HomeScreen } from './src/screens/HomeScreen';
+import { MusicScreen } from './src/screens/MusicScreen';
+import { NewMusicScreen } from './src/screens/NewMusicScreen';
 
 type RootStackParamList = {
 	Home: { update?: boolean } | undefined;
-	Music: { music: music };
+	Music: { music: Music };
 	NewMusic: undefined;
 };
 
@@ -41,7 +41,7 @@ export default function App()
 				{/* HOME */}
 				<Stack.Screen
 					name="Home"
-					component={Home}
+					component={HomeScreen}
 					options={{ title: 'Ciphersonal' }}
 					initialParams={{ update: true }}
 				/>
@@ -49,7 +49,7 @@ export default function App()
 				{/* MUSIC */}
 				<Stack.Screen
 					name="Music"
-					component={Music}
+					component={MusicScreen}
 					//options={{ title: 'Music' }}
 					options={({ route }) => ({ title: route.params.music.name })}
 				/>
@@ -57,7 +57,7 @@ export default function App()
 				{/* NEW MUSIC */}
 				<Stack.Screen
 					name="NewMusic"
-					component={NewMusic}
+					component={NewMusicScreen}
 					//options={{ title: 'Music' }}
 					options={{ title: 'Nova música' }}
 				/>

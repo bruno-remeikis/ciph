@@ -5,7 +5,7 @@ import MusicService from '../services/MusicService';
 
 import { colors } from '../utils/colors';
 
-export const NewMusic: React.FC<any> = ({ navigation }) =>
+export const NewMusicScreen: React.FC<any> = ({ navigation }) =>
 {
     const [name, setName] = useState('');
     const [artist, setArtist] = useState('');

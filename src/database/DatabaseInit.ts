@@ -18,9 +18,19 @@ export default class DatabaseInit
 
             `create table if not exists music (
                 id integer primary key autoincrement,
-                name text,
-                artist text
+                name text not null,
+                artist text not null
             );`,
+            
+            `create table if not exists sheet (
+                id integer primary key autoincrement,
+                music_id integer not null,
+                title text not null,
+                content text not null,
+
+                foreign key (music_id)
+                    references music (id)
+            );`
             
             //`insert into music(name, artist) values('Faroeste Cabolco', 'Legião Urbana');`,
         ];
