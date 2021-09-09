@@ -27,7 +27,7 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
     return (
         <View style={styles.container}>
             <View style={styles.inputGroup}>
-                <Text>Nome</Text>
+                <Text style={styles.label}>Nome</Text>
                 <TextInput
                     style={styles.input}
                     value={name}
@@ -36,7 +36,7 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
             </View>
 
             <View style={styles.inputGroup}>
-                <Text>Artista/banda</Text>
+                <Text style={styles.label}>Artista/banda</Text>
                 <TextInput
                     style={styles.input}
                     value={artist}
@@ -48,7 +48,7 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
                 style={[styles.submit, styles.inputGroup]}
                 onPress={handleSubmit}
             >
-                <Text>Salvar música</Text>
+                <Text style={styles.submitContent}>Adicionar</Text>
             </Pressable>
         </View>
     );
@@ -62,18 +62,29 @@ const styles = StyleSheet.create({
     },
 
     inputGroup: {
-        marginBottom: 10,
+        marginBottom: 14,
     },
-
+    label: {
+        marginLeft: 6,
+        marginBottom: 6,
+        fontSize: 16,
+    },
     input: {
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderWidth: 1,
+        borderColor: 'rgba(0, 0, 0, 0.2)',
+        borderRadius: 8,
     },
 
     submit: {
         alignSelf: 'flex-end',
         backgroundColor: colors.primary,
-        padding: 10
-    }
+        paddingHorizontal: 14,
+        paddingVertical: 12,
+        borderRadius: 999,
+    },
+    submitContent: {
+        fontSize: 16,
+    },
 });
