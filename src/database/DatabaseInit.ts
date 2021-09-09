@@ -8,14 +8,15 @@ export default class DatabaseInit
             console.log('Foreign keys turned on')
         );
 
-        this.init();
+        DatabaseInit.init();
     }
 
-    private init()
+    /**
+     * Constroi as tabelas do banco
+     */
+    public static init()
     {
         var sqls = [
-            //`DROP TABLE IF EXISTS music;`,
-
             `create table if not exists music (
                 id integer primary key autoincrement,
                 name text not null,
@@ -31,13 +32,11 @@ export default class DatabaseInit
                 foreign key (music_id)
                     references music (id)
             );`
-            
-            //`insert into music(name, artist) values('Faroeste Cabolco', 'Legião Urbana');`,
         ];
 
         db.transaction(tx =>
         {
-            sqls.forEach((sql) =>
+            sqls.forEach(sql =>
                 tx.executeSql(sql)
             );
         },
@@ -46,6 +45,32 @@ export default class DatabaseInit
             console.error(err);
             alert(err);
         });
-        //() => console.log("transaction complete call back"));
+    }
+
+    /**
+     * Destroi as tabelas e as recria novamente.
+     * (Recomendado apenas para testes)
+     * @deprecated
+     */
+    public static recreate()
+    {
+        const sqls = [
+            `DROP TABLE IF EXISTS sheet;`,
+            `DROP TABLE IF EXISTS music;`,
+        ];
+
+        db.transaction(tx =>
+        {
+            sqls.forEach(sql =>
+                tx.executeSql(sql)
+            );
+
+            DatabaseInit.init();
+        },
+        (err) =>
+        {
+            console.error(err);
+            alert(err);
+        });
     }
 }

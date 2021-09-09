@@ -122,41 +122,4 @@ export default class MusicService
             };
         }));
     }
-
-    /**
-     * Deleta todas as músicas.
-     * (Recomendado apenas para testes)
-     * 
-     * @returns número de elementos deletados 
-     */
-    static deleteAll()
-    {
-        return new Promise((resolve, reject) => db.transaction(tx =>
-        {
-            const sql = `delete from ${table}`;
-
-            tx.executeSql(sql, [], (_, { rowsAffected }) =>
-            {
-                resolve(rowsAffected);
-            }),
-            (_: any, err: any) =>
-            {
-                console.error(err);
-                reject(err);
-                return false;
-            };
-        }));
-    }
-
-    /*
-    static updateById(param: Animal) {
-        return new Promise((resolve, reject) =>db.transaction(tx => {
-            tx.executeSql(`update ${table} set nome = ? where id = ?;`, [param.nome,param.id], () => {
-            }), (sqlError) => {
-                console.log(sqlError);
-            }}, (txError) => {
-            console.log(txError);
-        }));
-    }
-    */
 }

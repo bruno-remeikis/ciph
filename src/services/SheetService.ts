@@ -104,4 +104,64 @@ export default class SheetService
             };
         }));
     }
+
+    /*static updateContents(sheets: Sheet[])
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            console.log('sheets:');
+            console.log(sheets);
+            
+            if(sheets.length === 0)
+            {
+                resolve(0);
+                return;
+            }
+
+            const sql = `update ${table} set content = ? where id = ?; `;
+            
+            let fullSql = '';
+            let params: any[] = [];
+            sheets.forEach(sheet =>
+            {
+                fullSql += sql;
+                params.push(sheet.content, sheet.id);
+            });
+
+            console.log(fullSql);
+
+            tx.executeSql(fullSql, params, (_, { rowsAffected }) =>
+            {
+                console.log(rowsAffected);
+                resolve(rowsAffected);
+            }),
+            (_: any, err: any) =>
+            {
+                console.error(err);
+                reject(err);
+                return false;
+            };
+        }));
+    }*/
+
+    static updateContent(sheet: Sheet)
+    {
+        console.log(sheet);
+
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            const sql = `update ${table} set content = ? where id = ?`;
+
+            tx.executeSql(sql, [sheet.content, sheet.id], (_, { rowsAffected }) =>
+            {
+                resolve(rowsAffected);
+            }),
+            (_: any, err: any) =>
+            {
+                console.error(err);
+                reject(err);
+                return false;
+            };
+        }));
+    }
 }

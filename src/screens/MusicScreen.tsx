@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Pressable, TextInput, ScrollView, Modal } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { StyleSheet, Text, View, Pressable, TextInput, ScrollView, Modal, Switch, AppState } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
-import { Music } from '../models/Music';
 import { Sheet } from '../models/Sheet';
 
 import SheetService from '../services/SheetService';
@@ -9,49 +9,63 @@ import { colors } from '../utils/colors';
 
 
 
-// SHEET
+// ---------- CONSTS ----------
+
+const tabVerticalPadding = 2;
+
+
+
+// ---------- INTERFACES ----------
 
 interface SheetCompProps
 {
     sheet: Sheet;
-    currentId: number;
+    sheets: Sheet[];
+    setSheets: Function;
+    setChanged: Function;
+    currentSheet: Sheet | undefined;
+    enableEdition: boolean;
 }
 
-const SheetComp: React.FC<SheetCompProps> = ({ sheet, currentId }) =>
+
+
+// ---------- COMPONENTS ----------
+
+const SheetComp: React.FC<SheetCompProps> = ({ sheet, sheets, setSheets, setChanged, currentSheet, enableEdition }) =>
 {
-    //const [lines, setLines] = useState(sheet.content.split('\n').length - 1);
-    const [content, setContent] = useState(sheet.content);
+    function setContent(text: string)
+    {
+        sheet.content = text;
+        setSheets(sheets.map((s: Sheet) =>
+            s.id === sheet.id ? sheet : s
+        ));
+        setChanged(true);
+    }
 
     return (
         <TextInput
             style={[
                 styles.sheet,
-                { display: currentId === sheet.id ? 'flex' : 'none' }
+                { display: currentSheet?.id === sheet.id ? 'flex' : 'none' }
             ]}
             multiline={true}
-            //numberOfLines={/*lines*/ 8}
-            value={content}
-            onChangeText={text => setContent(text)}
-            /*onContentSizeChange={(event) =>
-                setLines(event.nativeEvent.contentSize.height)}*/
+            value={sheet.content}
+            onChangeText={setContent}
+            editable={enableEdition}
+            
         />
     );
 }
 
-
-
-// SCREEN
-
-const sheetLinkVerticalPadding = 2;
 export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
 {
-    // CONSTS
+    // ---------- CONSTS ---------- //
 
     const { id, name, artist } = route.params.music;
 
 
 
-    // STATES
+    // ---------- STATES ----------
 
     const [modalVisible, setModalVisible] = useState(false);
     // Guarda se a View interna (conteúdo) do Modal foi tocada
@@ -62,15 +76,37 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
     const [newSheetTitle, setNewSheetTitle] = useState('');
 
     const [sheets, setSheets] = useState<Sheet[]>([]);
-    // ID da folha (sheet) aberta no momento
-    const [currentSheetId, setCurrentSheetId] = useState(0);
+    // Folha (sheet) aberta no momento
+    const [currentSheet, _setCurrentSheet] = useState<Sheet>();
+    const [enableEdition, setEnableEdition] = useState(false);
+    const [changed, _setChanged] = useState(false);
 
 
 
-    // FUNCTIONS
+    // ---------- REFS ----------
+
+    const currentSheetRef = useRef(currentSheet);
+    const setCurrentSheet = (newValue: Sheet) =>
+    {
+        currentSheetRef.current = newValue;
+        _setCurrentSheet(newValue);
+    }
+
+    const changedRef = useRef(changed);
+    const setChanged = (newValue: boolean) =>
+    {
+        changedRef.current = newValue;
+        _setChanged(newValue);
+    }
+
+
+
+    // ---------- FUNCTIONS ----------
 
     function createSheet()
     {
+        saveSheetContent();
+
         const newSheet: Sheet = {
             musicId: id,
             title: 'Nova página',
@@ -81,7 +117,7 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
         {
             newSheet.id = res;
             setSheets([...sheets, newSheet]);
-            setCurrentSheetId(res);
+            setCurrentSheet(newSheet);
 
             // Atualizar nome da folha:
             openModal(newSheet);
@@ -100,7 +136,6 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
     function closeModal()
     {
         setModalVisible(false);
-
         //setRenamedSheet(null);
         //setNewSheetTitle('');
     }
@@ -135,28 +170,63 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
             alert('ERRO\nNão foi possível atualizar o título da página');
     }
 
+    function saveSheetContent()
+    {
+        if(!currentSheetRef.current
+        || !changedRef.current)
+            return;
+
+        setChanged(false);
+
+        SheetService.updateContent(currentSheetRef.current).then(() =>
+        {
+            
+        })
+        .catch(err => alert(err));
+    }
 
 
-    // EFFECTS
+
+    // ---------- EFFECTS ----------
 
     useEffect(() =>
     {
+        // Busca páginas ao carregar tela
         SheetService.findByMusicId(id).then((res: any) =>
         {
             setSheets(res._array);
 
-            setCurrentSheetId(res._array.length > 0
-                ? res._array[0].id
-                : 0
+            setCurrentSheet(res._array.length > 0
+                ? res._array[0]
+                : undefined
             );
         })
         .catch(err => alert(err));
+
+        // Setar estado 'enableEdition' de acordo com o storage
+        SecureStore.getItemAsync('enable-edition').then(res =>
+        {
+            setEnableEdition(res === 'true' ? true : false);
+        })
+        .catch(err => alert(err));
+
+        // Salvar pagina atual ao minimizar app
+        AppState.addEventListener('change', saveSheetContent);
     },
     []);
 
+    /**
+     * Salva pagina atual ao clicar em voltar
+     */
+    useEffect(() =>
+    {
+        navigation.addListener('beforeRemove', saveSheetContent);
+    },
+    [navigation]);
 
 
-    // RETURN
+
+    // ---------- RETURN ----------
 
     return (
         <>
@@ -191,7 +261,7 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
                             value={newSheetTitle}
                             placeholder="Nome da página"
                             onChangeText={text => setNewSheetTitle(text)}
-                            autoFocus
+                            //autoFocus
                             selectTextOnFocus
                         />
                         <View style={{ flexDirection: 'row-reverse', marginTop: 2, alignItems: 'center' }}>
@@ -214,43 +284,70 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
 
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={{ flex: 1, padding: 12 }}>
-                    <Text style={{ fontSize: 24 }}>{ name }</Text>
-                    <Text style={{ fontSize: 16 }}>{ artist }</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <View>
+                            <Text style={{ fontSize: 24 }}>{ name }</Text>
+                            <Text style={{ fontSize: 16 }}>{ artist }</Text>
+                        </View>
+
+                        <View>
+                            <Text>Edição {enableEdition ? 'habilitada' : 'desabilitada'}</Text>
+                            <Switch
+                                trackColor={{
+                                    true: 'rgb(18, 163, 33)',
+                                    false: 'rgba(0, 0, 0, 0.14)'
+                                }}
+                                thumbColor={colors.primary}
+                                onValueChange={v =>
+                                {
+                                    setEnableEdition(v);
+                                    SecureStore.setItemAsync('enable-edition', v ? 'true' : 'false');
+                                }}
+                                value={enableEdition}
+                            />
+                        </View>
+                    </View>
 
                     <View>
                         <ScrollView
-                            style={styles.sheetLinks}
+                            style={styles.tabs}
                             horizontal
                         >
+                            {/* Abas */}
                             {sheets.map(sheet =>
                                 <View
                                     key={sheet.id}
                                     style={{ flexDirection: 'column-reverse' }}
                                 >
                                     <Pressable
-                                        style={[styles.sheetLink, { paddingBottom: currentSheetId === sheet.id
-                                            ? sheetLinkVerticalPadding + 6
-                                            : sheetLinkVerticalPadding
+                                        style={[styles.tab,
+                                        {
+                                            paddingBottom: currentSheet?.id === sheet.id
+                                                ? tabVerticalPadding + 6
+                                                : tabVerticalPadding
                                         }]}
                                         onPress={() =>
                                         {
-                                            if(currentSheetId !== sheet.id)
-                                                setCurrentSheetId(sheet.id ? sheet.id : 0)
+                                            if(currentSheet?.id !== sheet.id)
+                                            {
+                                                saveSheetContent();
+                                                setCurrentSheet(sheet);
+                                            }
                                             else
                                                 openModal(sheet);
                                         }}
                                     >
-                                        <Text>{sheet.title}</Text>
+                                        <Text style={styles.tabContent}>{sheet.title}</Text>
                                     </Pressable>
                                 </View>
                             )}
 
                             <View style={{ flexDirection: 'column-reverse' }}>
                                 <Pressable
-                                    style={styles.sheetLink}
+                                    style={styles.tab}
                                     onPress={createSheet}
                                 >
-                                    <Text>+</Text>
+                                    <Text style={styles.tabContent}>+</Text>
                                 </Pressable>
                             </View>
                         </ScrollView>
@@ -262,7 +359,11 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
                             <SheetComp
                                 key={sheet.id}
                                 sheet={sheet}
-                                currentId={currentSheetId}
+                                sheets={sheets}
+                                setSheets={setSheets}
+                                setChanged={setChanged}
+                                currentSheet={currentSheet}
+                                enableEdition={enableEdition}
                             />
                         )}
 
@@ -280,6 +381,15 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
                             </View>
                         </View>}
                     </View>
+
+                    {/*<View style={{ flexDirection: 'row-reverse' }}>
+                        <Pressable
+                            style={{ backgroundColor: colors.primary, paddingHorizontal: 26, paddingVertical: 10, marginTop: 8, borderRadius: 999 }}
+                            onPress={saveSheetContent}
+                        >
+                            <Text style={{ fontSize: 18 }}>Save</Text>
+                        </Pressable>
+                    </View>*/}
                 </View>
             </ScrollView>
         </>
@@ -288,18 +398,20 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
 
 const styles = StyleSheet.create({
     // SHEET
-    sheetLinks: {
-        //flexDirection: 'row',
+    tabs: {
         marginTop: 8,
     },
-    sheetLink: {
+    tab: {
         backgroundColor: colors.primary,
         
         marginRight: 2,
         paddingHorizontal: 10,
-        paddingVertical: sheetLinkVerticalPadding,
+        paddingVertical: tabVerticalPadding,
         borderTopLeftRadius: 8,
         borderTopRightRadius: 8,
+    },
+    tabContent: {
+        fontSize: 18,
     },
     sheets: {
         flex: 1,
@@ -307,6 +419,7 @@ const styles = StyleSheet.create({
     sheet: {
         flex: 1,
         backgroundColor: 'white',
+        color: 'black',
 
         width: '100%',
         paddingHorizontal: 12,

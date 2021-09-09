@@ -5,6 +5,7 @@ import MusicService from '../services/MusicService';
 import { Music } from '../models/Music';
 
 import { colors } from '../utils/colors';
+import DatabaseInit from '../database/DatabaseInit';
 
 export const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 {
@@ -17,13 +18,6 @@ export const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 
 
 	// FUNCTIONS
-
-	function deleteAll()
-	{
-		MusicService.deleteAll()
-		.then(() => setMusics([]))
-		.catch(err => alert(err));
-	}
 
 	function searchMusics(text: string)
 	{
@@ -134,7 +128,7 @@ export const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 
 			<Pressable
 				style={styles.deleteAllBtn}
-				onPress={deleteAll}
+				onPress={() => DatabaseInit.recreate}
 			>
 				<Text style={styles.deleteBtnContent}>X</Text>
 			</Pressable>
