@@ -1,3 +1,4 @@
+import { SQLResultSetRowList } from 'expo-sqlite';
 import { db } from '../database/connection';
 import { Sheet } from '../models/Sheet';
 
@@ -9,15 +10,15 @@ export default class SheetService
      * Insere uma nova entidade no banco
      * 
      * @param obj Entidade a ser inserida
-     * @returns ID da entidade recém incerido
+     * @returns ID da entidade recém incerida
      */
-    static create(obj: Sheet)
+    static create(obj: Sheet): Promise<number>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            const sql = `insert into ${table} (music_id, title, content) values (?, ?, ?)`;
+            const sql = `insert into ${table} (song_id, title, content) values (?, ?, ?)`;
 
-            tx.executeSql(sql, [obj.musicId, obj.title, obj.content], (_, { rowsAffected, insertId }) =>
+            tx.executeSql(sql, [obj.songId, obj.title, obj.content], (_, { rowsAffected, insertId }) =>
             {
                 if(rowsAffected > 0)
                     resolve(insertId);
@@ -34,18 +35,18 @@ export default class SheetService
     }
 
     /**
-     * Busca folhas pelo ID de sua música
+     * Busca paginas pelo ID de sua música
      * 
-     * @param musicId ID da música
-     * @returns Lista de folhas
+     * @param songId ID da música
+     * @returns Lista de paginas
      */
-    static findByMusicId(musicId: number)
+    static findBySongId(songId: number): Promise<SQLResultSetRowList>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            const sql = `select * from ${table} where music_id = ?`;
+            const sql = `select * from ${table} where song_id = ?`;
 
-            tx.executeSql(sql, [musicId], (_, { rows }) =>
+            tx.executeSql(sql, [songId], (_, { rows }) =>
             {
                 resolve(rows);
             }),
@@ -59,16 +60,17 @@ export default class SheetService
     }
 
     /**
-     * Deleta folhas por ID da música
-     * @param musicId ID da música
+     * Deleta paginas por ID da música
+     * @param songId ID da música
+     * @returns Número de linhas afetadas
      */
-    static deleteByMusicId(musicId: number)
+    static deleteBySongId(songId: number): Promise<number>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            const sql = `delete from ${table} where music_id = ?`;
+            const sql = `delete from ${table} where song_id = ?`;
 
-            tx.executeSql(sql, [musicId], (_, { rowsAffected }) =>
+            tx.executeSql(sql, [songId], (_, { rowsAffected }) =>
             {
                 resolve(rowsAffected);
             }),
@@ -82,11 +84,11 @@ export default class SheetService
     }
 
     /**
-     * Atualiza o título da folha
-     * @param id ID da folha
-     * @param title novo título da folha
+     * Atualiza o título da pagina
+     * @param id ID da pagina
+     * @param title novo título da pagina
      */
-    static updateTitle(id: number, title: string)
+    static updateTitle(id: number, title: string): Promise<number>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
@@ -105,54 +107,22 @@ export default class SheetService
         }));
     }
 
-    /*static updateContents(sheets: Sheet[])
+    /**
+     * Atualiza o conteúdo da pagina
+     * 
+     * @param id ID da pagina
+     * @param content novo conteúdo da pagina
+     * @returns Número de linhas afetadas
+     */
+    static updateContent(id: number, content: string): Promise<number>
     {
-        return new Promise((resolve, reject) => db.transaction(tx =>
-        {
-            console.log('sheets:');
-            console.log(sheets);
-            
-            if(sheets.length === 0)
-            {
-                resolve(0);
-                return;
-            }
-
-            const sql = `update ${table} set content = ? where id = ?; `;
-            
-            let fullSql = '';
-            let params: any[] = [];
-            sheets.forEach(sheet =>
-            {
-                fullSql += sql;
-                params.push(sheet.content, sheet.id);
-            });
-
-            console.log(fullSql);
-
-            tx.executeSql(fullSql, params, (_, { rowsAffected }) =>
-            {
-                console.log(rowsAffected);
-                resolve(rowsAffected);
-            }),
-            (_: any, err: any) =>
-            {
-                console.error(err);
-                reject(err);
-                return false;
-            };
-        }));
-    }*/
-
-    static updateContent(sheet: Sheet)
-    {
-        console.log(sheet);
+        console.log(`New content: ${content}`);
 
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
             const sql = `update ${table} set content = ? where id = ?`;
 
-            tx.executeSql(sql, [sheet.content, sheet.id], (_, { rowsAffected }) =>
+            tx.executeSql(sql, [content, id], (_, { rowsAffected }) =>
             {
                 resolve(rowsAffected);
             }),

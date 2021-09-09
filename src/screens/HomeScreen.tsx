@@ -1,44 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, TextInput } from 'react-native';
 
-import MusicService from '../services/MusicService';
-import { Music } from '../models/Music';
+import SongService from '../services/SongService';
+import { Song } from '../models/Song';
 
 import { colors } from '../utils/colors';
 import DatabaseInit from '../database/DatabaseInit';
 
-export const HomeScreen: React.FC<any> = ({ navigation, route }) =>
+const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 {
-	// STATES
+	// ---------- STATES ----------
 
-	const [search, setSearch] = useState('');
-	const [searching, setSearching] = useState(false);
-	const [musics, setMusics] = useState<Music[]>([]);
+	const [search, setSearch] = useState<string>('');
+	const [searching, setSearching] = useState<boolean>(false);
+	const [songs, setSongs] = useState<Song[]>([]);
+	const [statusText, setStatusText] = useState<string>('');
 
 
 
-	// FUNCTIONS
+	// ---------- FUNCTIONS ----------
 
-	function searchMusics(text: string)
+	function searchSongs(text: string)
 	{
 		setSearching(true);
 		setSearch(text);
 
-		MusicService.find(text)
+		SongService.find(text)
 		.then((res: any) =>
 		{
-			setMusics(res._array);
-			setSearching(false);
+			setSongs(res._array);
 		})
-		.catch(err => alert(err));
+		.catch(err => alert(err))
+		.finally(() => setSearching(false));
 	}
 
-	function getStatusText(): string
+
+
+	// ---------- EFFECTS ----------
+
+	/**
+	 * Carrega as músicas quando esta tela ganha foco e caso seja necessário
+	 */
+	useEffect(() =>
+	{
+		//This will run whenever params change
+		const { params = {} } = route;
+		
+	   	//your logic here
+		if(params.update)
+			searchSongs(search);
+   	},
+	[route]);
+
+	/**
+	 * Atualiza mensagem de status
+	 */
+	useEffect(() => setStatusText((): string =>
 	{
 		if(searching)
 			return 'Pesquisando ...';
 
-		if(musics.length === 0)
+		if(songs.length === 0)
 		{
 			if(search.length !== 0)
 				return 'Nenhum resultado.';
@@ -48,26 +70,12 @@ export const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 		if(search.length !== 0)
 			return 'Resultados';
 		return 'Todas';
-	}
+	}),
+	[searching, songs]);
 
 
 
-	// EFFECTS
-
-	useEffect(() =>
-	{
-		//This will run whenever params change
-		const { params = {} } = route;
-		
-	   	//your logic here
-		if(params.update)
-			searchMusics(search);
-   	},
-	[route]);
-
-
-
-	// RETURN 
+	// ---------- RETURN ----------
 
 	return (
 		<View style={styles.container}>
@@ -78,14 +86,14 @@ export const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 							style={styles.searchInput}
 							placeholder="Pesquisar"
 							value={search}
-							onChangeText={text => searchMusics(text)}
+							onChangeText={text => searchSongs(text)}
 						/>
 						<Pressable
 							style={styles.searchClearBtn}
 							onPress={() =>
 							{
 								setSearch('');
-								searchMusics('');
+								searchSongs('');
 							}}
 						>
 							<Text style={styles.searchClearBtnText}>X</Text>
@@ -94,20 +102,20 @@ export const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 
 					<View>
 						<View style={styles.searchStatus}>
-							<Text>{getStatusText()}</Text>
+							<Text>{statusText}</Text>
 						</View>
 
-						{musics.map(music =>
+						{songs.map(song =>
 							<Pressable
-								key={music.id}
-								style={styles.music}
-								onPress={() => navigation.navigate('Music', { music })}
+								key={song.id}
+								style={styles.song}
+								onPress={() => navigation.navigate('Song', { song })}
 							>
-								<Text style={{ fontSize: 20 }}>{music.name}</Text>
+								<Text style={{ fontSize: 20 }}>{song.name}</Text>
 								<Text>
-									{/*music.artists.map((artist, i) =>
+									{/*song.artists.map((artist, i) =>
 									{
-										const diff = music.artists.length - i;
+										const diff = song.artists.length - i;
 										var after = '';
 
 										if(diff > 1)
@@ -118,7 +126,7 @@ export const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 										return artist.name + after;
 									})*/
 									
-									music.artist}
+									song.artist}
 								</Text>
 							</Pressable>
 						)}
@@ -128,20 +136,31 @@ export const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 
 			<Pressable
 				style={styles.deleteAllBtn}
-				onPress={() => DatabaseInit.recreate}
+				onPress={() =>
+				{
+					DatabaseInit.recreate()
+						.then(() => searchSongs(''))
+						.catch(err => alert(err));
+				}}
 			>
 				<Text style={styles.deleteBtnContent}>X</Text>
 			</Pressable>
 
 			<Pressable
 				style={styles.newBtn}
-				onPress={() => navigation.navigate('NewMusic')}
+				onPress={() => navigation.navigate('NewSong')}
 			>
 				<Text style={styles.newBtnContent}>+</Text>
 			</Pressable>
 		</View>
   	);
 }
+
+export default HomeScreen;
+
+
+
+// ---------- STYLES ----------
 
 const styles = StyleSheet.create({
 	// CONTAINER
@@ -194,8 +213,8 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-around'
 	},
 
-	// MUSIC
-	music: {
+	// Song
+	song: {
 		backgroundColor: colors.background2,
 
 		width: '100%',

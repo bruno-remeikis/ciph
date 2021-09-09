@@ -1,6 +1,6 @@
 export type Sheet = {
     id?: number;
-    musicId: number;
+    songId: number;
     title: string;
     content: string;
 } 

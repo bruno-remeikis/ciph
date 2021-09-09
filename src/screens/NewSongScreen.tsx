@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, Pressable, TextInput } from 'react-native';
 
-import MusicService from '../services/MusicService';
+import SongService from '../services/SongService';
 
 import { colors } from '../utils/colors';
 
-export const NewMusicScreen: React.FC<any> = ({ navigation }) =>
+const NewSongScreen: React.FC<any> = ({ navigation }) =>
 {
     const [name, setName] = useState('');
     const [artist, setArtist] = useState('');
 
     function handleSubmit()
     {
-        MusicService.create({ name, artist })
-        .then(res =>
+        SongService.create({ name, artist })
+        .then(() =>
         {
             navigation.navigate('Home', { update: true });
         })
@@ -53,6 +53,8 @@ export const NewMusicScreen: React.FC<any> = ({ navigation }) =>
         </View>
     );
 }
+
+export default NewSongScreen;
 
 const styles = StyleSheet.create({
     container: {

@@ -3,7 +3,7 @@ export type artist = {
     name: string;
 }
 
-export type music = {
+export type song = {
     id?: number;
     name: string;
     artists: artist[];

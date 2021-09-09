@@ -1,10 +1,11 @@
+import { SQLResultSetRowList } from 'expo-sqlite';
 import { db } from '../database/connection';
-import SheetService from '../services/SheetService';
-import { Music } from '../models/Music';
+import SheetService from './SheetService';
+import { Song } from '../models/Song';
 
-const table = 'music';
+const table = 'song';
 
-export default class MusicService
+export default class SongService
 {
     /**
      * Insere uma nova entidade no banco
@@ -12,7 +13,7 @@ export default class MusicService
      * @param obj Entidade a ser inserida
      * @returns ID da entidade recém incerido
      */
-    static create(obj: Music)
+    static create(obj: Song): Promise<number>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
@@ -39,7 +40,7 @@ export default class MusicService
      * 
      * @returns Lista de músicas
      */
-    static findAll()
+    static findAll(): Promise<SQLResultSetRowList>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
@@ -66,7 +67,7 @@ export default class MusicService
      * @param search Texto de busca
      * @returns Lista de músicas
      */
-    static find(search: string)
+    static find(search: string): Promise<SQLResultSetRowList>
     {
         // Quebra a pesquisa por palavras
         const words = search.split(" ");
@@ -99,14 +100,16 @@ export default class MusicService
 
     /**
      * Deleta música por ID
+     * 
      * @param id ID da música
+     * @returns Número de linhas afetadas
      */
-    static delete(id: number)
+    static delete(id: number): Promise<number>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
             // Deleta folhas da música
-            SheetService.deleteByMusicId(id);
+            SheetService.deleteBySongId(id);
 
             const sql = `delete from ${table} where id = ?`;
 

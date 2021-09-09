@@ -17,7 +17,7 @@ export default class DatabaseInit
     public static init()
     {
         var sqls = [
-            `create table if not exists music (
+            `create table if not exists song (
                 id integer primary key autoincrement,
                 name text not null,
                 artist text not null
@@ -25,26 +25,28 @@ export default class DatabaseInit
             
             `create table if not exists sheet (
                 id integer primary key autoincrement,
-                music_id integer not null,
+                song_id integer not null,
                 title text not null,
                 content text not null,
 
-                foreign key (music_id)
-                    references music (id)
+                foreign key (song_id)
+                    references song (id)
             );`
         ];
 
-        db.transaction(tx =>
+        return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            sqls.forEach(sql =>
-                tx.executeSql(sql)
-            );
-        },
-        (err) =>
-        {
-            console.error(err);
-            alert(err);
-        });
+            db.transaction(tx =>
+            {
+                sqls.forEach(sql =>
+                    tx.executeSql(sql)
+                );
+            },
+            // Error
+            (err) => reject(err),
+            // Success
+            () => resolve(true));
+        }));
     }
 
     /**
@@ -56,21 +58,30 @@ export default class DatabaseInit
     {
         const sqls = [
             `DROP TABLE IF EXISTS sheet;`,
-            `DROP TABLE IF EXISTS music;`,
+            `DROP TABLE IF EXISTS song;`,
         ];
 
-        db.transaction(tx =>
+        return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            sqls.forEach(sql =>
-                tx.executeSql(sql)
-            );
-
-            DatabaseInit.init();
-        },
-        (err) =>
-        {
-            console.error(err);
-            alert(err);
-        });
+            db.transaction(tx =>
+            {
+                sqls.forEach(sql =>
+                    tx.executeSql(sql)
+                );
+            },
+            // Error
+            (err) =>
+            {
+                console.error(err);
+                reject(err);
+            },
+            // Success
+            () =>
+            {
+                DatabaseInit.init()
+                    .then(() => resolve(true))
+                    .catch(err => reject(err));
+            });
+        }));
     }
 }

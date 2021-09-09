@@ -15,53 +15,13 @@ const tabVerticalPadding = 2;
 
 
 
-// ---------- INTERFACES ----------
+// ---------- SCREEN ----------
 
-interface SheetCompProps
-{
-    sheet: Sheet;
-    sheets: Sheet[];
-    setSheets: Function;
-    setChanged: Function;
-    currentSheet: Sheet | undefined;
-    enableEdition: boolean;
-}
-
-
-
-// ---------- COMPONENTS ----------
-
-const SheetComp: React.FC<SheetCompProps> = ({ sheet, sheets, setSheets, setChanged, currentSheet, enableEdition }) =>
-{
-    function setContent(text: string)
-    {
-        sheet.content = text;
-        setSheets(sheets.map((s: Sheet) =>
-            s.id === sheet.id ? sheet : s
-        ));
-        setChanged(true);
-    }
-
-    return (
-        <TextInput
-            style={[
-                styles.sheet,
-                { display: currentSheet?.id === sheet.id ? 'flex' : 'none' }
-            ]}
-            multiline={true}
-            value={sheet.content}
-            onChangeText={setContent}
-            editable={enableEdition}
-            
-        />
-    );
-}
-
-export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
+const SongScreen: React.FC<any> = ({ navigation, route }) =>
 {
     // ---------- CONSTS ---------- //
 
-    const { id, name, artist } = route.params.music;
+    const { id, name, artist } = route.params.song;
 
 
 
@@ -80,6 +40,7 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
     const [currentSheet, _setCurrentSheet] = useState<Sheet>();
     const [enableEdition, setEnableEdition] = useState(false);
     const [changed, _setChanged] = useState(false);
+    //const [content, setContent] = useState('');
 
 
 
@@ -108,7 +69,7 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
         saveSheetContent();
 
         const newSheet: Sheet = {
-            musicId: id,
+            songId: id,
             title: 'Nova página',
             content: ''
         };
@@ -178,11 +139,11 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
 
         setChanged(false);
 
-        SheetService.updateContent(currentSheetRef.current).then(() =>
-        {
-            
-        })
-        .catch(err => alert(err));
+        const { id, content } = currentSheetRef.current;
+
+        if(id)
+            SheetService.updateContent(id, content)
+            .catch(err => alert(err));
     }
 
 
@@ -192,7 +153,7 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
     useEffect(() =>
     {
         // Busca páginas ao carregar tela
-        SheetService.findByMusicId(id).then((res: any) =>
+        SheetService.findBySongId(id).then((res: any) =>
         {
             setSheets(res._array);
 
@@ -355,7 +316,7 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
 
                     <View style={styles.sheets}>
                         {/* Folhas (sheets) do banco */}
-                        {sheets.map(sheet =>
+                        {/*sheets.map(sheet =>
                             <SheetComp
                                 key={sheet.id}
                                 sheet={sheet}
@@ -365,21 +326,38 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
                                 currentSheet={currentSheet}
                                 enableEdition={enableEdition}
                             />
-                        )}
+                        )*/}
 
-                        {/* Caso não haja nenhuma folha (sheet) */}
-                        {sheets.length === 0 &&
-                        <View style={[styles.sheet, styles.emptySheet]}>
-                            <View style={{ alignItems: 'center' }}>
-                                <Text style={{ fontSize: 16 }}>Nova página</Text>
-                                <Pressable
-                                    style={styles.newSheetBtn}
-                                    onPress={createSheet}
-                                >
-                                    <Text style={{ fontSize: 22 }}>+</Text>
-                                </Pressable>
+                        {sheets.length > 0
+                            // Pagina com conteúdo atual:
+                            ? <TextInput
+                                style={styles.sheet}
+                                multiline={true}
+                                value={/*content*/ currentSheet?.content}
+                                onChangeText={content =>
+                                {
+                                    /*setContent(text)*/
+                                    if(currentSheet)
+                                    {
+                                        setCurrentSheet({ ...currentSheet, content });
+                                        setChanged(true);
+                                    }
+                                }}
+                                editable={enableEdition}
+                            />
+                            // Caso não hajam paginas ainda:
+                            : <View style={[styles.sheet, styles.emptySheet]}>
+                                <View style={{ alignItems: 'center' }}>
+                                    <Text style={{ fontSize: 16 }}>Nova página</Text>
+                                    <Pressable
+                                        style={styles.newSheetBtn}
+                                        onPress={createSheet}
+                                    >
+                                        <Text style={{ fontSize: 22 }}>+</Text>
+                                    </Pressable>
+                                </View>
                             </View>
-                        </View>}
+                        }
                     </View>
 
                     {/*<View style={{ flexDirection: 'row-reverse' }}>
@@ -395,6 +373,8 @@ export const MusicScreen: React.FC<any> = ({ navigation, route }) =>
         </>
     )
 }
+
+export default SongScreen;
 
 const styles = StyleSheet.create({
     // SHEET

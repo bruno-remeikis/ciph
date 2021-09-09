@@ -1,4 +1,4 @@
-export type Music = {
+export type Song = {
     id?: number;
     name: string;
     artist: string; //artist[];
