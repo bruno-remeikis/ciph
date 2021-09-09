@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-between',
 		
 		borderWidth: 1,
-		borderColor: 'rgba(0, 0, 0, 0.2)',
+		borderColor: colors.inputBorder,
 		borderRadius: 999,
 	},
 	searchInput: {

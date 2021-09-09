@@ -5,4 +5,6 @@ export const colors = {
 
 	primary: '#D98859',
     //primary: '#734429',
+
+    inputBorder: 'rgba(0, 0, 0, 0.2)',
 }

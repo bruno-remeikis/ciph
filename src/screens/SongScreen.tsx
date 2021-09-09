@@ -198,14 +198,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                 onRequestClose={closeModal}
             >
                 <View
-                    style={{
-                        flex: 1,
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-
-                        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                    }}
+                    style={styles.modalBackground}
                     onTouchEnd={() =>
                     {
                         if(!touchIn)
@@ -214,26 +207,26 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                     }}
                 >
                     <View
-                        style={{ backgroundColor: colors.background, padding: 10, borderRadius: 8 }}
+                        style={styles.modalBox}
                         onTouchStart={() => setTouchIn(true)}
                     >
                         <TextInput
-                            style={{ width: 220, borderWidth: 1, borderColor: 'rgba(0, 0, 0, 0.2)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 4 }}
+                            style={styles.modalInput}
                             value={newSheetTitle}
                             placeholder="Nome da página"
                             onChangeText={text => setNewSheetTitle(text)}
                             //autoFocus
                             selectTextOnFocus
                         />
-                        <View style={{ flexDirection: 'row-reverse', marginTop: 2, alignItems: 'center' }}>
+                        <View style={styles.modalBtns}>
                             <Pressable
-                                style={{ padding: 6 }}
+                                style={styles.modalBtn}
                                 onPress={saveRenamedSheet}
                             >
-                                <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 16 }}>Salvar</Text>
+                                <Text style={styles.modalBtnContent}>Salvar</Text>
                             </Pressable>
                             <Pressable
-                                style={{ padding: 6, }}
+                                style={styles.modalBtn}
                                 onPress={closeModal}
                             >
                                 <Text>Cancelar</Text>
@@ -245,7 +238,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={{ flex: 1, padding: 12 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={styles.header}>
                         <View>
                             <Text style={{ fontSize: 24 }}>{ name }</Text>
                             <Text style={{ fontSize: 16 }}>{ artist }</Text>
@@ -315,19 +308,6 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                     </View>
 
                     <View style={styles.sheets}>
-                        {/* Folhas (sheets) do banco */}
-                        {/*sheets.map(sheet =>
-                            <SheetComp
-                                key={sheet.id}
-                                sheet={sheet}
-                                sheets={sheets}
-                                setSheets={setSheets}
-                                setChanged={setChanged}
-                                currentSheet={currentSheet}
-                                enableEdition={enableEdition}
-                            />
-                        )*/}
-
                         {sheets.length > 0
                             // Pagina com conteúdo atual:
                             ? <TextInput
@@ -359,15 +339,6 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                             </View>
                         }
                     </View>
-
-                    {/*<View style={{ flexDirection: 'row-reverse' }}>
-                        <Pressable
-                            style={{ backgroundColor: colors.primary, paddingHorizontal: 26, paddingVertical: 10, marginTop: 8, borderRadius: 999 }}
-                            onPress={saveSheetContent}
-                        >
-                            <Text style={{ fontSize: 18 }}>Save</Text>
-                        </Pressable>
-                    </View>*/}
                 </View>
             </ScrollView>
         </>
@@ -377,6 +348,48 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 export default SongScreen;
 
 const styles = StyleSheet.create({
+    // MODAL
+    modalBackground: {
+        flex: 1,
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    },
+    modalBox: {
+        backgroundColor: colors.background,
+        padding: 10,
+        borderRadius: 8,
+    },
+    modalInput: {
+        width: 220,
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        borderWidth: 1,
+        borderColor: colors.inputBorder,
+        borderRadius: 4,
+    },
+    modalBtns: {
+        flexDirection: 'row-reverse',
+        marginTop: 2,
+        alignItems: 'center',
+    },
+    modalBtn: {
+        padding: 6,
+    },
+    modalBtnContent: {
+        color: colors.primary,
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+
+    // HEADER
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+
     // SHEET
     tabs: {
         marginTop: 8,
