@@ -21,7 +21,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 {
     // ---------- CONSTS ---------- //
 
-    const { id, name, artist } = route.params.song;
+    const { id, name, artists } = route.params.song;
 
 
 
@@ -241,7 +241,11 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                     <View style={styles.header}>
                         <View>
                             <Text style={{ fontSize: 24 }}>{ name }</Text>
-                            <Text style={{ fontSize: 16 }}>{ artist }</Text>
+                            <Text style={{ fontSize: 16 }}>{
+                                artists && typeof artists === 'string'
+                                    ? artists
+                                    : ''
+                            }</Text>
                         </View>
 
                         <View>

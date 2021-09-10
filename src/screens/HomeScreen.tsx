@@ -112,22 +112,10 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 								onPress={() => navigation.navigate('Song', { song })}
 							>
 								<Text style={{ fontSize: 20 }}>{song.name}</Text>
-								<Text>
-									{/*song.artists.map((artist, i) =>
-									{
-										const diff = song.artists.length - i;
-										var after = '';
-
-										if(diff > 1)
-											after = ' & ';
-										else if(diff === 1)
-											after = ', ';
-
-										return artist.name + after;
-									})*/
-									
-									song.artist}
-								</Text>
+								<Text>{ song.artists && typeof song.artists === 'string'
+									? song.artists
+									: ''
+								}</Text>
 							</Pressable>
 						)}
 					</View>

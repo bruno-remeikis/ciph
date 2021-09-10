@@ -5,7 +5,7 @@ export default class DatabaseInit
     constructor()
     {
         db.exec([{ sql: 'PRAGMA foreign_keys = ON;', args: [] }], false, () =>
-            console.log('Foreign keys turned on')
+            console.log('Foreign keys turned on.')
         );
 
         DatabaseInit.init();
@@ -19,8 +19,16 @@ export default class DatabaseInit
         var sqls = [
             `create table if not exists song (
                 id integer primary key autoincrement,
+                name text not null
+            );`,
+
+            `create table if not exists artist (
+                id integer primary key autoincrement,
+                song_id integer not null,
                 name text not null,
-                artist text not null
+
+                foreign key (song_id)
+                    references song (id)
             );`,
             
             `create table if not exists sheet (
@@ -45,7 +53,11 @@ export default class DatabaseInit
             // Error
             (err) => reject(err),
             // Success
-            () => resolve(true));
+            () =>
+            {
+                console.log('Database has been created.');
+                resolve(true)
+            });
         }));
     }
 
@@ -58,6 +70,7 @@ export default class DatabaseInit
     {
         const sqls = [
             `DROP TABLE IF EXISTS sheet;`,
+            `DROP TABLE IF EXISTS artist;`,
             `DROP TABLE IF EXISTS song;`,
         ];
 
@@ -78,6 +91,7 @@ export default class DatabaseInit
             // Success
             () =>
             {
+                console.log('Tables have been deleted.');
                 DatabaseInit.init()
                     .then(() => resolve(true))
                     .catch(err => reject(err));

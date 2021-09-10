@@ -116,8 +116,6 @@ export default class SheetService
      */
     static updateContent(id: number, content: string): Promise<number>
     {
-        console.log(`New content: ${content}`);
-
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
             const sql = `update ${table} set content = ? where id = ?`;

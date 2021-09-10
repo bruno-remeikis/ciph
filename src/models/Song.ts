@@ -1,5 +1,7 @@
+import { Artist } from "./Artist";
+
 export type Song = {
     id?: number;
     name: string;
-    artist: string; //artist[];
+    artists?: Artist[] | string;
 }

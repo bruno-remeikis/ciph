@@ -2,6 +2,7 @@ import { SQLResultSetRowList } from 'expo-sqlite';
 import { db } from '../database/connection';
 import SheetService from './SheetService';
 import { Song } from '../models/Song';
+import ArtistService from './ArtistService';
 
 const table = 'song';
 
@@ -17,9 +18,9 @@ export default class SongService
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            const sql = `insert into ${table} (name, artist) values (?, ?)`;
+            const sql = `insert into ${table} (name) values (?)`;
 
-            tx.executeSql(sql, [obj.name, obj.artist], (_, { rowsAffected, insertId }) =>
+            tx.executeSql(sql, [obj.name], (_, { rowsAffected, insertId }) =>
             {
                 if(rowsAffected > 0)
                     resolve(insertId);
@@ -40,7 +41,7 @@ export default class SongService
      * 
      * @returns Lista de músicas
      */
-    static findAll(): Promise<SQLResultSetRowList>
+    /*static findAll(): Promise<SQLResultSetRowList>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
@@ -57,7 +58,7 @@ export default class SongService
 				return false;
 			};
         }));
-    }
+    }*/
 
     /**
      * Busca músicas pelo nome e pelo(s) artista(s).
@@ -69,23 +70,31 @@ export default class SongService
      */
     static find(search: string): Promise<SQLResultSetRowList>
     {
-        // Quebra a pesquisa por palavras
-        const words = search.split(" ");
-
-        var where = '';
-        if(words.length)
+        let where = '';
+        if(search.trim().length > 0)
         {
+            // Quebra a pesquisa por palavras
+            const words = search.split(" ");
             // Pesquisa separadamente por cada palavra
-            words.forEach(word => { where += `or name like '%${word}%' or artist like '%${word}%'` });
-            
+            // or artist like '%${word}%'
+            words.forEach(word => { where += `or name like '%${word}%'` });
             where = where.replace('or', 'where');
         }
 
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            const sql = `select * from ${table} ${where}`;
+            const sql = //`select * from ${table} ${where}`;
+                `select
+                    s.*,
+                    group_concat(a.name, ', ') as artists
+                from ${table} s
+                join artist a
+                    on a.song_id = s.id
+                ${where}
+                group by
+                    s.id, a.song_id`;
 
-            tx.executeSql(sql, [], (_, { rows }) =>
+            tx.executeSql(sql, [], (_, { rows, rowsAffected }) =>
             {
                 resolve(rows);
             }),
