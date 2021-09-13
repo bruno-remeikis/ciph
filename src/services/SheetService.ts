@@ -2,10 +2,18 @@ import { SQLResultSetRowList } from 'expo-sqlite';
 import { db } from '../database/connection';
 import { Sheet } from '../models/Sheet';
 
-const table = 'sheet';
+export const sheet = {
+    table: 'tb_sheet',
+    id: 'sht_id_pk',
+    songId: 'sht_sng_id_pk_fk',
+    title: 'sht_title',
+    content: 'sht_content',
+}
 
 export default class SheetService
 {
+    
+
     /**
      * Insere uma nova entidade no banco
      * 
@@ -16,7 +24,11 @@ export default class SheetService
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            const sql = `insert into ${table} (song_id, title, content) values (?, ?, ?)`;
+            const sql = `insert into ${sheet.table} (
+                ${sheet.songId},
+                ${sheet.title},
+                ${sheet.content}
+            ) values (?, ?, ?)`;
 
             tx.executeSql(sql, [obj.songId, obj.title, obj.content], (_, { rowsAffected, insertId }) =>
             {
@@ -24,13 +36,12 @@ export default class SheetService
                     resolve(insertId);
                 else
                     reject("Error inserting obj: " + JSON.stringify(obj));
-            },
-            (_, err) =>
-            {
-                console.error(err);
-                reject(err);
-                return false;
             });
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
         }));
     }
 
@@ -44,18 +55,26 @@ export default class SheetService
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            const sql = `select * from ${table} where song_id = ?`;
+            const sql =
+                `select
+                    ${sheet.id} as id,
+                    ${sheet.songId} as songId,
+                    ${sheet.title} as title,
+                    ${sheet.content} as content
+                from
+                    ${sheet.table}
+                where
+                    ${sheet.songId} = ?`;
 
             tx.executeSql(sql, [songId], (_, { rows }) =>
             {
                 resolve(rows);
-            }),
-            (_: any, err: any) =>
-            {
-                console.error(err);
-                reject(err);
-                return false;
-            };
+            });
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
         }));
     }
 
@@ -68,18 +87,17 @@ export default class SheetService
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            const sql = `delete from ${table} where song_id = ?`;
+            const sql = `delete from ${sheet.table} where ${sheet.songId} = ?`;
 
             tx.executeSql(sql, [songId], (_, { rowsAffected }) =>
             {
                 resolve(rowsAffected);
-            }),
-            (_: any, err: any) =>
-            {
-                console.error(err);
-                reject(err);
-                return false;
-            };
+            });
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
         }));
     }
 
@@ -92,18 +110,20 @@ export default class SheetService
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            const sql = `update ${table} set title = ? where id = ?`;
+            const sql =
+                `update ${sheet.table}
+                set ${sheet.title} = ?
+                where ${sheet.id} = ?`;
 
             tx.executeSql(sql, [title, id], (_, { rowsAffected }) =>
             {
                 resolve(rowsAffected);
-            }),
-            (_: any, err: any) =>
-            {
-                console.error(err);
-                reject(err);
-                return false;
-            };
+            });
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
         }));
     }
 
@@ -118,18 +138,20 @@ export default class SheetService
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            const sql = `update ${table} set content = ? where id = ?`;
+            const sql =
+                `update ${sheet.table}
+                set ${sheet.content} = ?
+                where ${sheet.id} = ?`;
 
             tx.executeSql(sql, [content, id], (_, { rowsAffected }) =>
             {
                 resolve(rowsAffected);
-            }),
-            (_: any, err: any) =>
-            {
-                console.error(err);
-                reject(err);
-                return false;
-            };
+            });
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
         }));
     }
 }

@@ -26,10 +26,7 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 		setSearch(text);
 
 		SongService.find(text)
-		.then((res: any) =>
-		{
-			setSongs(res._array);
-		})
+		.then((res: any) => setSongs(res._array))
 		.catch(err => alert(err))
 		.finally(() => setSearching(false));
 	}

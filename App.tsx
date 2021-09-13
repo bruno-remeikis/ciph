@@ -16,7 +16,7 @@ import NewSongScreen from './src/screens/NewSongScreen';
 type RootStackParamList = {
 	Home: { update?: boolean } | undefined;
 	Song: { song: Song };
-	NewSong: undefined;
+	NewSong: { song: Song } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();

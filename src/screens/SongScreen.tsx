@@ -239,14 +239,16 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={{ flex: 1, padding: 12 }}>
                     <View style={styles.header}>
-                        <View>
+                        <Pressable
+                            onPress={() => navigation.navigate('NewSong', {  })}
+                        >
                             <Text style={{ fontSize: 24 }}>{ name }</Text>
                             <Text style={{ fontSize: 16 }}>{
                                 artists && typeof artists === 'string'
                                     ? artists
                                     : ''
                             }</Text>
-                        </View>
+                        </Pressable>
 
                         <View>
                             <Text>Edição {enableEdition ? 'habilitada' : 'desabilitada'}</Text>

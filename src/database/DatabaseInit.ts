@@ -1,5 +1,10 @@
 import { db } from './connection';
 
+import { song } from '../services/SongService';
+import { artist } from '../services/ArtistService';
+import { song_artist } from '../services/SongArtistService';
+import { sheet } from '../services/SheetService';
+
 export default class DatabaseInit
 {
     constructor()
@@ -17,28 +22,35 @@ export default class DatabaseInit
     public static init()
     {
         var sqls = [
-            `create table if not exists song (
-                id integer primary key autoincrement,
-                name text not null
+            `create table if not exists ${song.table} (
+                ${song.id} integer primary key autoincrement,
+                ${song.name} text not null
             );`,
 
-            `create table if not exists artist (
-                id integer primary key autoincrement,
-                song_id integer not null,
-                name text not null,
+            `create table if not exists ${artist.table} (
+                ${artist.id} integer primary key autoincrement,
+                ${artist.name} text not null
+            );`,
 
-                foreign key (song_id)
-                    references song (id)
+            `create table if not exists ${song_artist.table} (
+                ${song_artist.songId} integer not null,
+                ${song_artist.artistId} integer not null,
+
+                foreign key (${song_artist.songId})
+                    references ${song.table} (${song.id}),
+
+                foreign key (${song_artist.artistId})
+                    references ${artist.table} (${artist.id})
             );`,
             
-            `create table if not exists sheet (
-                id integer primary key autoincrement,
-                song_id integer not null,
-                title text not null,
-                content text not null,
+            `create table if not exists ${sheet.table} (
+                ${sheet.id} integer primary key autoincrement,
+                ${sheet.songId} integer not null,
+                ${sheet.title} text not null,
+                ${sheet.content} text not null,
 
-                foreign key (song_id)
-                    references song (id)
+                foreign key (${sheet.songId})
+                    references ${song.table} (${song.id})
             );`
         ];
 
@@ -69,9 +81,10 @@ export default class DatabaseInit
     public static recreate()
     {
         const sqls = [
-            `DROP TABLE IF EXISTS sheet;`,
-            `DROP TABLE IF EXISTS artist;`,
-            `DROP TABLE IF EXISTS song;`,
+            `DROP TABLE IF EXISTS ${sheet.table};`,
+            `DROP TABLE IF EXISTS ${song_artist.table};`,
+            `DROP TABLE IF EXISTS ${artist.table};`,
+            `DROP TABLE IF EXISTS ${song.table};`,
         ];
 
         return new Promise((resolve, reject) => db.transaction(tx =>

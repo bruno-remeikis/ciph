@@ -1,64 +1,55 @@
 import { SQLResultSetRowList } from 'expo-sqlite';
 import { db } from '../database/connection';
-import SheetService from './SheetService';
-import { Song } from '../models/Song';
-import ArtistService from './ArtistService';
 
-const table = 'song';
+import SheetService from './SheetService';
+import ArtistService, { artist } from './ArtistService';
+import { song_artist } from './SongArtistService';
+
+import { Song } from '../models/Song';
+import { Artist } from '../models/Artist';
+
+export const song = {
+    table: 'tb_song',
+    id: 'sng_id_pk',
+    name: 'sng_name'
+}
 
 export default class SongService
 {
+
     /**
      * Insere uma nova entidade no banco
      * 
      * @param obj Entidade a ser inserida
      * @returns ID da entidade recém incerido
      */
-    static create(obj: Song): Promise<number>
+    static create(obj: Song, artists: Artist[]): Promise<number>
     {
+        let id: number;
+
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            const sql = `insert into ${table} (name) values (?)`;
+            const sql =
+                `insert into ${song.table} (
+                    ${song.name}
+                ) values (?)`;
 
-            tx.executeSql(sql, [obj.name], (_, { rowsAffected, insertId }) =>
+            tx.executeSql(sql, [obj.name.trim()], (_, { rowsAffected, insertId }) =>
             {
                 if(rowsAffected > 0)
-                    resolve(insertId);
-                else
-                    reject("Error inserting obj: " + JSON.stringify(obj));
-            },
-            (_, err) =>
-            {
-                console.error(err);
-                reject(err);
-                return false;
+                {
+                    id = insertId;
+                    ArtistService.createTx(tx, insertId, artists);
+                }
             });
-        }));
-    }
-
-    /**
-     * Busca todas as músicas
-     * 
-     * @returns Lista de músicas
-     */
-    /*static findAll(): Promise<SQLResultSetRowList>
-    {
-        return new Promise((resolve, reject) => db.transaction(tx =>
+        },
+        err =>
         {
-            const sql = `select * from ${table}`;
-
-            tx.executeSql(sql, [], (_, { rows }) =>
-            {
-                resolve(rows);
-            }),
-            (_: any, err: any) =>
-			{
-				console.error(err);
-				reject(err);
-				return false;
-			};
-        }));
-    }*/
+            console.error(err);
+            reject(err);
+        },
+        () => resolve(id)));
+    }
 
     /**
      * Busca músicas pelo nome e pelo(s) artista(s).
@@ -77,33 +68,56 @@ export default class SongService
             const words = search.split(" ");
             // Pesquisa separadamente por cada palavra
             // or artist like '%${word}%'
-            words.forEach(word => { where += `or name like '%${word}%'` });
+            words.forEach(word => {
+                where +=
+                    `or ${song.name} like '%${word}%' ` +
+                    `or ${artist.name} like '%${word}%'`
+            });
             where = where.replace('or', 'where');
         }
 
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            const sql = //`select * from ${table} ${where}`;
+            const sql =
                 `select
-                    s.*,
-                    group_concat(a.name, ', ') as artists
-                from ${table} s
-                join artist a
-                    on a.song_id = s.id
-                ${where}
-                group by
-                    s.id, a.song_id`;
+                    id,
+                    name,
+                    (
+                        select
+                            group_concat(${artist.name}, ', ')
+                        from
+                            ${song_artist.table}
+                        left join
+                            ${artist.table} on
+                                ${song_artist.artistId} = ${artist.id}
+                        where
+                            ${song_artist.songId} = id and
+                            ${song_artist.songId} = ${song_artist.songId}
+                    ) as artists
+                from (
+                    select
+                        ${song.id} as id,
+                        ${song.name} as name
+                    from
+                        ${song.table}
+                    left join
+                        ${song_artist.table} on
+                            ${song.id} = ${song_artist.songId}
+                    left join
+                        ${artist.table} on
+                            ${song_artist.artistId} = ${artist.id}
+                    ${where}
+                    group by
+                        ${song.id},
+                        ${song_artist.songId}
+                )`;
 
-            tx.executeSql(sql, [], (_, { rows, rowsAffected }) =>
-            {
-                resolve(rows);
-            }),
-            (_: any, err: any) =>
-            {
-                console.error(err);
-                reject(err);
-                return false;
-            };
+            tx.executeSql(sql, [], (_, { rows }) => resolve(rows));
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
         }));
     }
 
@@ -120,18 +134,18 @@ export default class SongService
             // Deleta folhas da música
             SheetService.deleteBySongId(id);
 
-            const sql = `delete from ${table} where id = ?`;
+            const sql =
+                `delete from ${song.table} where ${song.id} = ?`;
 
             tx.executeSql(sql, [id], (_, { rowsAffected }) =>
             {
                 resolve(rowsAffected);
-            }),
-            (_: any, err: any) =>
-            {
-                console.error(err);
-                reject(err);
-                return false;
-            };
+            });
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
         }));
     }
 }

@@ -4,18 +4,55 @@ import { StyleSheet, Text, View, Pressable, TextInput, ScrollView } from 'react-
 import SongService from '../services/SongService';
 import ArtistService from '../services/ArtistService';
 
+import { Artist } from '../models/Artist';
+
 import { colors } from '../utils/colors';
 
 const NewSongScreen: React.FC<any> = ({ navigation }) =>
 {
     const [name, setName] = useState('');
-    const [artists, setArtists] = useState<string[]>(['']);
+    const [artists, setArtists] = useState<Artist[]>([{ name: '' }]);
+
+    const [invalidName, setInvalidName] = useState(false);
+    const [invalidArtists, setInvalidArtists] = useState(false);
 
     function handleSubmit()
     {
-        SongService.create({ name })
+        // Validar artistas
+        let validArtist = false;
+        for(const artist of artists)
+            if(artist.name.trim().length > 0)
+            {
+                validArtist = true;
+                break;
+            }
+
+        let invalid = false;
+        
+        // Validar nome
+        if(name.trim().length === 0)
+        {
+            setInvalidName(true);
+            invalid = true;
+        }
+
+        // Validar artistas
+        if(!validArtist)
+        {
+            setInvalidArtists(true);
+            invalid = true;
+        }
+
+        // Validar
+        if(invalid)
+            return;
+
+        /*SongService.create({ name })
         .then(res =>
         {
+            console.log('AAAAAAAAAAAAA');
+            console.log(res);
+
             ArtistService.create(res, artists).then(() =>
                 navigation.navigate('Home', { update: true })
             )
@@ -29,7 +66,11 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
         {
             console.error(err);
             alert(err);
-        });
+        });*/
+
+        SongService.create({ name }, artists)
+        .then(() => navigation.navigate('Home', { update: true }))
+        .catch(err => alert(err));
     }
 
     return (
@@ -38,9 +79,17 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>Nome</Text>
                     <TextInput
-                        style={[ styles.input, styles.textInput ]}
+                        style={[
+                            styles.input,
+                            styles.textInput,
+                            invalidName ? { borderColor: '#e34a40' } : {}
+                        ]}
                         value={name}
-                        onChangeText={text => setName(text)}
+                        onChangeText={text =>
+                        {
+                            setInvalidName(false);
+                            setName(text);
+                        }}
                     />
                 </View>
 
@@ -51,20 +100,26 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
                             {artists.map((artist, i) =>
                                 <View
                                     key={i}
-                                    style={[ styles.input, {
-                                        marginTop: i !== 0 ? 6 : 0,
-                                        flexDirection: 'row',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'stretch',
-                                    }]}
+                                    style={[
+                                        styles.input,
+                                        {
+                                            marginTop: i !== 0 ? 6 : 0,
+                                            flexDirection: 'row',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'stretch',
+                                        },
+                                        invalidArtists ? { borderColor: '#e34a40' } : {}
+                                    ]}
                                 >
                                     <TextInput
                                         style={styles.textInput}
-                                        value={artist}
+                                        value={artist.name}
                                         onChangeText={text =>
                                         {
+                                            setInvalidArtists(false);
+
                                             const values = [...artists];
-                                            values[i] = text.replace(',', '');
+                                            values[i].name = text.replace(',', '');
                                             setArtists(values);
                                         }}
                                     />
@@ -94,7 +149,7 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
 
                             <Pressable 
                                 style={styles.btnAddArtist}
-                                onPress={() => setArtists([ ...artists, '' ])}
+                                onPress={() => setArtists([ ...artists, { name: '' } ])}
                             >
                                 <Text style={{ fontSize: 18 }}>+</Text>
                             </Pressable>
