@@ -119,7 +119,7 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 				</View>
 			</ScrollView>
 
-			<Pressable
+			{/*<Pressable
 				style={styles.deleteAllBtn}
 				onPress={() =>
 				{
@@ -129,7 +129,7 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 				}}
 			>
 				<Text style={styles.deleteBtnContent}>X</Text>
-			</Pressable>
+			</Pressable>*/}
 
 			<Pressable
 				style={styles.newBtn}

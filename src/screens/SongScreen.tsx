@@ -240,7 +240,11 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                 <View style={{ flex: 1, padding: 12 }}>
                     <View style={styles.header}>
                         <Pressable
-                            onPress={() => navigation.navigate('NewSong', {  })}
+                            onPress={() =>
+                            {
+                                if(enableEdition)
+                                    navigation.navigate('NewSong', { song: route.params.song });
+                            }}
                         >
                             <Text style={{ fontSize: 24 }}>{ name }</Text>
                             <Text style={{ fontSize: 16 }}>{
