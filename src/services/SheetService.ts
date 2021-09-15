@@ -1,4 +1,4 @@
-import { SQLResultSetRowList } from 'expo-sqlite';
+import { SQLResultSetRowList, SQLTransaction } from 'expo-sqlite';
 import { db } from '../database/connection';
 import { Sheet } from '../models/Sheet';
 
@@ -80,25 +80,16 @@ export default class SheetService
 
     /**
      * Deleta paginas por ID da música
+     * @param tx Transaction
      * @param songId ID da música
-     * @returns Número de linhas afetadas
      */
-    static deleteBySongId(songId: number): Promise<number>
+    static deleteBySongIdTx(tx: SQLTransaction, songId: number)
     {
-        return new Promise((resolve, reject) => db.transaction(tx =>
-        {
-            const sql = `delete from ${sheet.table} where ${sheet.songId} = ?`;
+        const sql =
+            `delete from ${sheet.table}
+            where ${sheet.songId} = ?`;
 
-            tx.executeSql(sql, [songId], (_, { rowsAffected }) =>
-            {
-                resolve(rowsAffected);
-            });
-        },
-        err =>
-        {
-            console.error(err);
-            reject(err);
-        }));
+        tx.executeSql(sql, [songId]);
     }
 
     /**
