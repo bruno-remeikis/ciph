@@ -3,7 +3,7 @@ import { db } from '../database/connection';
 
 import SheetService from './SheetService';
 import ArtistService, { artist } from './ArtistService';
-import { song_artist } from './SongArtistService';
+import SongArtistService, { song_artist } from './SongArtistService';
 
 import { Song } from '../models/Song';
 import { Artist } from '../models/Artist';
@@ -154,7 +154,10 @@ export default class SongService
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
             // Deleta folhas da música
-            SheetService.deleteBySongId(id);
+            SheetService.deleteBySongIdTx(tx, id);
+
+            // Deletar link com músicas
+            SongArtistService.deleteBySongIdTx(tx, id);
 
             const sql =
                 `delete from ${song.table} where ${song.id} = ?`;

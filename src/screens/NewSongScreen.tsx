@@ -7,6 +7,7 @@ import ArtistService from '../services/ArtistService';
 import { Artist } from '../models/Artist';
 
 import { colors } from '../utils/colors';
+import SongArtistService from '../services/SongArtistService';
 
 const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 {
@@ -45,6 +46,8 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     const [researchArtists, setResearchArtists] = useState<Artist[]>([]);
     // Index do campo de artista com foco (usado pra exibir 'researchArtists')
     const [currentFocusIndex, setCurrentFocusIndex] = useState<number | null>(null);
+    // IDs de artistas já utilizados (para que não sejam exibidos na pesquisa)
+    const [restrictedIds, setRestrictedIds] = useState<number[]>([]);
 
     const [invalidName, setInvalidName] = useState(false);
     const [invalidArtists, setInvalidArtists] = useState(false);
@@ -86,10 +89,58 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
         if(updateScreen)
         {
-            if(name !== initialName  && id)
+            if(id === null)
+                return;
+
+            let back = true;
+
+            // Atualizar nome da música
+            if(name !== initialName)
                 SongService.update({ id, name })
-                .then(() => navigation.navigate('Home', { update: true }))
-                .catch(err => alert(err));
+                .catch(err =>
+                {
+                    back = false;
+                    alert(err);
+                });
+
+            // Deletar link entre artistas já existentes e a música
+            if(deletedArtistIds.length !== 0)
+                SongArtistService.delete(id, deletedArtistIds)
+                .catch(err =>
+                {
+                    back = false;
+                    alert(err);
+                });
+
+            const newArtists: Artist[] = [];
+            const oldArtistIds: number[] = [];
+            
+            artists.forEach(art =>
+            {
+                if(art.obj.id === undefined)
+                    newArtists.push(art.obj);
+                else if(!art.initial)
+                    oldArtistIds.push(art.obj.id);
+            });
+
+            // Criar novos artistas e linka-los à música
+            ArtistService.create(id, newArtists)
+            .catch(err =>
+            {
+                back = false;
+                alert(err);
+            })
+
+            // Linkar artistas já existentes à música
+            SongArtistService.create(id, oldArtistIds)
+            .catch(err =>
+            {
+                back = false;
+                alert(err);
+            })
+
+            if(back)
+                navigation.goBack();
         }
         else
         {
@@ -107,9 +158,17 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
             return;
         }
 
-        ArtistService.findByName(text.trim())
-        .then((res: any) => { console.log(res._array); setResearchArtists(res._array)})
+        ArtistService.findByName(text.trim(), restrictedIds)
+        .then((res: any) => setResearchArtists(res._array))
         .catch(err => alert(err));
+    }
+
+    function handleDelete()
+    {
+        if(id !== null)
+            SongService.delete(id)
+            .then(() => navigation.navigate('Home', { update: true }))
+            .catch(err => alert(err));
     }
 
 
@@ -123,12 +182,15 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     {
         if(id)
             ArtistService.findBySongId(id)
-            .then((res: any) => setArtists(
-                res._array.map((obj: Artist) =>
+            .then((res: any) =>
+            {
+                setArtists(res._array.map((obj: Artist) =>
                 {
                     return { obj, initial: true };
-                })
-            ))
+                }));
+
+                setRestrictedIds(res._array.map(({ id }: Artist) => id));
+            })
             .catch(err => alert(err));
     },
     [id]);
@@ -158,124 +220,173 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Artistas / bandas</Text>
+                    <Text style={styles.label}>Artistas / bandass</Text>
                     <View style={{ flexDirection: 'row' }}>
                         <View style={{ flex: 1, flexGrow: 1 }}>
                             {artists.map((artist, i) =>
-                                <View key={i}>
-                                    <View
-                                        style={[
-                                            styles.input,
-                                            {
-                                                marginTop: i !== 0 ? 6 : 0,
-                                                flexDirection: 'row',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'stretch',
-                                            },
-                                            invalidArtists
-                                                ? { borderColor: '#e34a40' }
-                                                : artist.obj.id
-                                                    ? {
-                                                        borderColor: colors.primary,
-                                                        backgroundColor: `rgba(${colors.primaryRGB}, 0.2)`
-                                                    }
-                                                    : {}
-                                        ]}
-                                    >
-                                        <TextInput
-                                            style={styles.textInput}
-                                            value={artist.obj.name}
-                                            onChangeText={text =>
-                                            {
-                                                setInvalidArtists(false);
+                            {
+                                const deletable = artists.length > 1 || artists[0].obj.id;
+                                const newArtist =
+                                    currentFocusIndex !== i &&
+                                    !artist.obj.id &&
+                                    artist.obj.name.trim().length !== 0;
 
-                                                const values = [...artists];
-                                                values[i].obj.name = text.replace(',', '');
-                                                setArtists(values);
-                                                handleSearch(text);
-                                            }}
-                                            onFocus={() =>
-                                            {
-                                                handleSearch(artist.obj.name);
-                                                setCurrentFocusIndex(i);
-                                            }}
-                                            onBlur={() =>
-                                            {
-                                                setCurrentFocusIndex(null);
-                                            }}
-                                            editable={!artist.obj.id}
-                                        />
-
-                                        {artists.length > 1 || artists[0].obj.id ?
-                                            <Pressable
-                                                style={{
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-around',
-                                                    width: 30,
-                                                }}
-                                                onPress={() =>
+                                return (
+                                    <View key={i}>
+                                        <View
+                                            style={[
+                                                styles.input,
                                                 {
-                                                    const array = [...artists];
+                                                    marginTop: i !== 0 ? 6 : 0,
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'stretch',
+                                                },
+                                                invalidArtists
+                                                    ? { borderColor: '#e34a40' }
+                                                    : artist.obj.id
+                                                        ? {
+                                                            borderColor: colors.primary,
+                                                            backgroundColor: `rgba(${colors.primaryRGB}, 0.2)`
+                                                        }
+                                                        : {}
+                                            ]}
+                                        >
+                                            <TextInput
+                                                style={styles.textInput}
+                                                value={artist.obj.name}
+                                                onChangeText={text =>
+                                                {
+                                                    setInvalidArtists(false);
 
-                                                    // Se for o último E possuir ID
-                                                    if(array.length === 1 && array[0].obj.id)
-                                                        array.push({ obj: { name: '' } });
-
-                                                    // Adiciona artista à lista de deletados
-                                                    // para que, posteriormente, possa ser deletado do BD
-                                                    if(artist.initial && artist.obj.id)
-                                                        setDeletedArtistIds([ ...deletedArtistIds, artist.obj.id ]);
-
-                                                    array.splice(i, 1);
-                                                    setArtists(array);
+                                                    const values = [...artists];
+                                                    values[i].obj.name = text.replace(',', '');
+                                                    setArtists(values);
+                                                    handleSearch(text);
                                                 }}
-                                            >
-                                                <Text style={{ fontSize: 10, textAlignVertical: 'center' }}>X</Text>
-                                            </Pressable>
+                                                onFocus={() =>
+                                                {
+                                                    handleSearch(artist.obj.name);
+                                                    setCurrentFocusIndex(i);
+                                                }}
+                                                onBlur={() =>
+                                                {
+                                                    setCurrentFocusIndex(null);
+                                                }}
+                                                editable={!artist.obj.id}
+                                            />
+
+                                            {newArtist ?
+                                                <Text style={{
+                                                    alignSelf: 'center',
+                                                    color: colors.primary,
+                                                    fontSize: 12,
+                                                    marginRight: deletable ? 0 : 12,
+                                                }}>new</Text>
+                                            : null}
+
+                                            {deletable ?
+                                                <Pressable
+                                                    style={{
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-around',
+                                                        width: 30,
+                                                    }}
+                                                    onPress={() =>
+                                                    {
+                                                        const array = [...artists];
+
+                                                        // Se for o último E possuir ID
+                                                        if(array.length === 1 && array[0].obj.id)
+                                                            array.push({ obj: { name: '' } });
+
+                                                        // Se for um artista já cadastrado:
+                                                        if(artist.obj.id)
+                                                        {
+                                                            // Remove-o da lista de artistas restritos
+                                                            // para que volte a aparecer nas pesquisar durante
+                                                            // o preenchimento dos TextInput de artistas
+                                                            setRestrictedIds(restrictedIds.filter(restId =>
+                                                                restId !== artist.obj.id
+                                                            ));
+
+                                                            // Adiciona artista à lista de deletados
+                                                            // para que, posteriormente, possa ser deletado do BD
+                                                            if(artist.initial)
+                                                                setDeletedArtistIds([ ...deletedArtistIds, artist.obj.id ]);
+                                                        }
+
+                                                        array.splice(i, 1);
+                                                        setArtists(array);
+                                                    }}
+                                                >
+                                                    <Text style={{ fontSize: 10, textAlignVertical: 'center' }}>X</Text>
+                                                </Pressable>
+                                            : null}
+                                        </View>
+
+                                        {currentFocusIndex !== null &&
+                                            currentFocusIndex === i &&
+                                            researchArtists.length !== 0 ?
+                                            <View style={{ position: 'relative' }}>
+                                                <View style={{
+                                                    position: 'absolute',
+                                                    zIndex: 1,
+                                                    left: 0,
+                                                    right: 0,
+                                                    backgroundColor: 'white',
+                                                    borderWidth: 1,
+                                                    borderTopWidth: 0,
+                                                    borderColor: colors.inputBorder,
+                                                }}>
+                                                    {researchArtists.map((researchArtist, j) =>
+                                                        <Pressable
+                                                            key={j}
+                                                            style={{
+                                                                backgroundColor: j % 2 === 0 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+                                                                paddingHorizontal: 12,
+                                                                paddingVertical: 6,
+                                                            }}
+                                                            onPress={() =>
+                                                            {
+                                                                const array = [...artists];
+                                                                array[i] = { obj: researchArtist };
+                                                                //setCurrentFocusIndes(null);
+
+                                                                if(researchArtist.id !== undefined)
+                                                                {
+                                                                    // Adiciona à lista de artistas já adicionados
+                                                                    // para que não volte a aparecer nas pesquisas
+                                                                    setRestrictedIds([ ...restrictedIds, researchArtist.id ]);
+                                                                
+                                                                    if(updateScreen)
+                                                                        // Remove artista da lista dos que devem ser deletados.
+                                                                        // Isso ocorrerá caso o ítem seja inicial. Por isso,
+                                                                        // deve ser reconfigurado como initial = true
+                                                                        setDeletedArtistIds(deletedArtistIds.filter(artistId =>
+                                                                        {
+                                                                            if(artistId === researchArtist.id)
+                                                                            {
+                                                                                array[i].initial = true;
+                                                                                return false;
+                                                                            }
+        
+                                                                            return true;
+                                                                        }));
+                                                                }
+
+                                                                setArtists(array);
+                                                            }}
+                                                        >
+                                                            <Text>{ researchArtist.name }</Text>
+                                                        </Pressable>
+                                                    )}
+                                                </View>
+                                            </View>
                                         : null}
                                     </View>
-
-                                    {currentFocusIndex !== null &&
-                                     currentFocusIndex === i &&
-                                     researchArtists.length !== 0 ?
-                                        <View style={{ position: 'relative' }}>
-                                            <View style={{
-                                                position: 'absolute',
-                                                zIndex: 1,
-                                                left: 0,
-                                                right: 0,
-                                                backgroundColor: 'white',
-                                                //paddingVertical: 4,
-                                                //marginHorizontal: 4,
-                                                borderWidth: 1,
-                                                borderTopWidth: 0,
-                                                borderColor: colors.inputBorder,
-                                                //borderTopLeftRadius: 8,
-                                            }}>
-                                                {researchArtists.map((researchArtist, j) =>
-                                                    <Pressable
-                                                        key={j}
-                                                        style={{
-                                                            backgroundColor: j % 2 === 0 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-                                                            paddingHorizontal: 12,
-                                                            paddingVertical: 6,
-                                                        }}
-                                                        onPress={() =>
-                                                        {
-                                                            const array = [...artists];
-                                                            array[i] = { obj: researchArtist };
-                                                            setArtists(array);
-                                                            //setCurrentFocusIndes(null);
-                                                        }}
-                                                    >
-                                                        <Text>{ researchArtist.name }</Text>
-                                                    </Pressable>
-                                                )}
-                                            </View>
-                                        </View>
-                                    : null}
-                                </View>
-                            )}
+                                );
+                            })}
                         </View>
 
                         <View style={{ marginLeft: 8 }}>
@@ -307,7 +418,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                 alignSelf: 'center',
                                 marginRight: 18,
                             }}
-                            onPress={() => alert('a')}
+                            onPress={handleDelete}
                         >
                             <Text style={{
                                 textAlignVertical: 'center',

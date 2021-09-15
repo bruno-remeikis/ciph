@@ -17,74 +17,13 @@ export default class ArtistService
      * Insere uma nova entidade no banco
      * 
      * @param songId ID da música
-     * @param obj Entidade a ser inserida
-     * @returns IDs das entidades recém inceridas
-     */
-    /*static createLinked(songId: number, name: string): Promise<number>
-    {
-        return new Promise(async (resolve, reject) => db.transaction(tx =>
-        {
-            const sqlArtist = `insert into ${table} (name) values (?)`;
-            const sqlSongArtist = `insert into ${table} (song_id, music_id) values (?, ?)`;
-
-            await tx.executeSql(sqlArtist, []);
-
-            tx.executeSql(sql, values, (_, { rowsAffected }) =>
-            {
-                if(rowsAffected > 0)
-                    resolve(rowsAffected);
-                else
-                    reject("Error inserting objs: " + JSON.stringify(names));
-            },
-            (_, err) =>
-            {
-                console.error(err);
-                reject(err);
-                return false;
-            });
-        },
-        err =>
-        {
-            console.error(err);
-            reject(err);
-        }));
-    }*/
-
-    /**
-     * Insere uma nova entidade no banco
-     * 
-     * @param songId ID da música
      * @param artists Lista de entidades a serem inseridas
      */
     static create(songId: number, artists: Artist[]): Promise<boolean>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            if(artists.length === 0)
-            {
-                resolve(false);
-                return;
-            }
-
-            const sql =
-                `insert into ${artist.table} (
-                    ${artist.name}
-                ) values (?)`;
-
-            artists.forEach(artist =>
-            {
-                // Se artist possuir ID: artista já existe no BD
-                if(artist.id)
-                    SongArtistService.create(songId, artist.id);
-                else
-                    tx.executeSql(sql, [], (_, { rowsAffected, insertId }) =>
-                    {
-                        if(rowsAffected > 0)
-                            SongArtistService.create(songId, insertId);
-                        else
-                            console.error("Error inserting obj: " + JSON.stringify(artist));
-                    });
-            });
+            ArtistService.createTx(tx, songId, artists);
         },
         err =>
         {
@@ -152,10 +91,19 @@ export default class ArtistService
         }));
     }
 
-    static findByName(name: string): Promise<SQLResultSetRowList>
+    static findByName(name: string, restrictedIds: number[]): Promise<SQLResultSetRowList>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
+            let where = "";
+            restrictedIds.forEach(id => where += id + ", ");
+
+            if(where.length > 0)
+            {
+                where = where.slice(0, -2); // <- Remover ultimo ", "
+                where = ` and ${artist.id} not in (${where})`;
+            }
+
             const sql =
                 `select
                     ${artist.id} as id,
@@ -163,8 +111,9 @@ export default class ArtistService
                 from
                     ${artist.table}
                 where
-                    ${artist.name} like '%${name}%'`;
-            
+                    ${artist.name} like '%${name}%'
+                    ${where}`;
+
             tx.executeSql(sql, [], (_, { rows }) => resolve(rows));
         },
         err =>
