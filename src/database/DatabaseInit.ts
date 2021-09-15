@@ -29,7 +29,7 @@ export default class DatabaseInit
 
             `create table if not exists ${artist.table} (
                 ${artist.id} integer primary key autoincrement,
-                ${artist.name} text unique not null
+                ${artist.name} text not null
             );`,
 
             `create table if not exists ${song_artist.table} (
