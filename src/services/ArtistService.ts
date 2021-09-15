@@ -1,7 +1,9 @@
 import { SQLResultSetRowList, SQLTransaction } from 'expo-sqlite';
 import { db } from '../database/connection';
+
+import SongArtistService, { song_artist } from './SongArtistService';
+
 import { Artist } from '../models/Artist';
-import SongArtistService from './SongArtistService';
 
 export const artist = {
     table: 'tb_artist',
@@ -125,27 +127,50 @@ export default class ArtistService
      * @param songId ID da música
      * @returns Lista de artistas
      */
-    /*static findBySongId(songId: number): Promise<SQLResultSetRowList>
+    static findBySongId(songId: number): Promise<SQLResultSetRowList>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            const sql = `select * from ${table} where song_id = ?`;
+            const sql =
+                `select
+                    ${artist.id} as id,
+                    ${artist.name} as name
+                from
+                    ${artist.table}
+                inner join
+                    ${song_artist.table} on
+                        ${artist.id} = ${song_artist.artistId}
+                where
+                    ${song_artist.songId} = ?`;
 
-            tx.executeSql(sql, [songId], (_, { rows }) =>
-            {
-                resolve(rows);
-            }),
-            (_: any, err: any) =>
-            {
-                console.error(err);
-                reject(err);
-                return false;
-            };
+            tx.executeSql(sql, [songId], (_, { rows }) => resolve(rows));
         },
         err =>
         {
             console.error(err);
             reject(err);
         }));
-    }*/
+    }
+
+    static findByName(name: string): Promise<SQLResultSetRowList>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            const sql =
+                `select
+                    ${artist.id} as id,
+                    ${artist.name} as name
+                from
+                    ${artist.table}
+                where
+                    ${artist.name} like '%${name}%'`;
+            
+            tx.executeSql(sql, [], (_, { rows }) => resolve(rows));
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        }));
+    }
 }

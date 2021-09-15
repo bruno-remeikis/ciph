@@ -8,20 +8,57 @@ import { Artist } from '../models/Artist';
 
 import { colors } from '../utils/colors';
 
-const NewSongScreen: React.FC<any> = ({ navigation }) =>
+const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 {
-    const [name, setName] = useState('');
-    const [artists, setArtists] = useState<Artist[]>([{ name: '' }]);
+    // ---------- CONSTS ---------- //
+
+    const id: number | null = route.params?.song?.id
+        ? route.params.song.id
+        : null;
+
+    const updateScreen = id ? true : false;
+    
+    const initialName: string | null = route.params?.song?.name
+        ? route.params.song.name
+        : null;
+
+
+
+    // ---------- TYPES ---------- //
+
+    type ArtistProps = {
+        obj: Artist;
+        initial?: boolean;
+    }
+
+
+
+    // ---------- STATES ---------- //
+
+    const [name, setName] = useState(initialName ? initialName : '');
+    const [artists, setArtists] = useState<ArtistProps[]>([{ obj: { name: '' } }]);
+    // IDs dos artistas iniciais (usado na tela de update)
+    //const [initialArtistIds, setInitialArtistIds] = useState<number[]>([]);
+    // IDs dos artistas deletados (usado na tela de update)
+    const [deletedArtistIds, setDeletedArtistIds] = useState<number[]>([]);
+    // Artistas da pesquisa (exibidos com )
+    const [researchArtists, setResearchArtists] = useState<Artist[]>([]);
+    // Index do campo de artista com foco (usado pra exibir 'researchArtists')
+    const [currentFocusIndex, setCurrentFocusIndex] = useState<number | null>(null);
 
     const [invalidName, setInvalidName] = useState(false);
     const [invalidArtists, setInvalidArtists] = useState(false);
+
+
+
+    // ---------- FUNCTIONS ---------- //
 
     function handleSubmit()
     {
         // Validar artistas
         let validArtist = false;
         for(const artist of artists)
-            if(artist.name.trim().length > 0)
+            if(artist.obj.name.trim().length > 0)
             {
                 validArtist = true;
                 break;
@@ -47,34 +84,61 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
         if(invalid)
             return;
 
-        /*SongService.create({ name })
-        .then(res =>
+        if(updateScreen)
         {
-            console.log('AAAAAAAAAAAAA');
-            console.log(res);
-
-            ArtistService.create(res, artists).then(() =>
-                navigation.navigate('Home', { update: true })
-            )
-            .catch(err =>
-            {
-                console.error(err);
-                alert(err);
-            });
-        })
-        .catch(err =>
+            if(name !== initialName  && id)
+                SongService.update({ id, name })
+                .then(() => navigation.navigate('Home', { update: true }))
+                .catch(err => alert(err));
+        }
+        else
         {
-            console.error(err);
-            alert(err);
-        });*/
+            SongService.create({ name }, artists.map(({ obj }) => obj))
+            .then(() => navigation.navigate('Home', { update: true }))
+            .catch(err => alert(err));
+        }
+    }
+    
+    function handleSearch(text: string)
+    {
+        if(text.trim().length === 0)
+        {
+            setResearchArtists([]);
+            return;
+        }
 
-        SongService.create({ name }, artists)
-        .then(() => navigation.navigate('Home', { update: true }))
+        ArtistService.findByName(text.trim())
+        .then((res: any) => { console.log(res._array); setResearchArtists(res._array)})
         .catch(err => alert(err));
     }
 
+
+
+    // ---------- EFFECTS ---------- //
+
+    /**
+     * Carrega os artistas caso uma música tenha sido passada para a rota
+     */
+    useEffect(() =>
+    {
+        if(id)
+            ArtistService.findBySongId(id)
+            .then((res: any) => setArtists(
+                res._array.map((obj: Artist) =>
+                {
+                    return { obj, initial: true };
+                })
+            ))
+            .catch(err => alert(err));
+    },
+    [id]);
+
+
+
+    // ---------- RETURN ---------- //
+
     return (
-        <ScrollView>
+        <ScrollView keyboardShouldPersistTaps='handled'>
             <View style={styles.container}>
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>Nome</Text>
@@ -98,48 +162,118 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
                     <View style={{ flexDirection: 'row' }}>
                         <View style={{ flex: 1, flexGrow: 1 }}>
                             {artists.map((artist, i) =>
-                                <View
-                                    key={i}
-                                    style={[
-                                        styles.input,
-                                        {
-                                            marginTop: i !== 0 ? 6 : 0,
-                                            flexDirection: 'row',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'stretch',
-                                        },
-                                        invalidArtists ? { borderColor: '#e34a40' } : {}
-                                    ]}
-                                >
-                                    <TextInput
-                                        style={styles.textInput}
-                                        value={artist.name}
-                                        onChangeText={text =>
-                                        {
-                                            setInvalidArtists(false);
-
-                                            const values = [...artists];
-                                            values[i].name = text.replace(',', '');
-                                            setArtists(values);
-                                        }}
-                                    />
-
-                                    {artists.length > 1 &&
-                                    <Pressable
-                                        style={{
-                                            alignItems: 'center',
-                                            justifyContent: 'space-around',
-                                            width: 30,
-                                        }}
-                                        onPress={() =>
-                                        {
-                                            const array = [...artists];
-                                            array.splice(i, 1);
-                                            setArtists(array);
-                                        }}
+                                <View key={i}>
+                                    <View
+                                        style={[
+                                            styles.input,
+                                            {
+                                                marginTop: i !== 0 ? 6 : 0,
+                                                flexDirection: 'row',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'stretch',
+                                            },
+                                            invalidArtists
+                                                ? { borderColor: '#e34a40' }
+                                                : artist.obj.id
+                                                    ? {
+                                                        borderColor: colors.primary,
+                                                        backgroundColor: `rgba(${colors.primaryRGB}, 0.2)`
+                                                    }
+                                                    : {}
+                                        ]}
                                     >
-                                        <Text style={{ fontSize: 10, textAlignVertical: 'center' }}>X</Text>
-                                    </Pressable>}
+                                        <TextInput
+                                            style={styles.textInput}
+                                            value={artist.obj.name}
+                                            onChangeText={text =>
+                                            {
+                                                setInvalidArtists(false);
+
+                                                const values = [...artists];
+                                                values[i].obj.name = text.replace(',', '');
+                                                setArtists(values);
+                                                handleSearch(text);
+                                            }}
+                                            onFocus={() =>
+                                            {
+                                                handleSearch(artist.obj.name);
+                                                setCurrentFocusIndex(i);
+                                            }}
+                                            onBlur={() =>
+                                            {
+                                                setCurrentFocusIndex(null);
+                                            }}
+                                            editable={!artist.obj.id}
+                                        />
+
+                                        {artists.length > 1 || artists[0].obj.id ?
+                                            <Pressable
+                                                style={{
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-around',
+                                                    width: 30,
+                                                }}
+                                                onPress={() =>
+                                                {
+                                                    const array = [...artists];
+
+                                                    // Se for o último E possuir ID
+                                                    if(array.length === 1 && array[0].obj.id)
+                                                        array.push({ obj: { name: '' } });
+
+                                                    // Adiciona artista à lista de deletados
+                                                    // para que, posteriormente, possa ser deletado do BD
+                                                    if(artist.initial && artist.obj.id)
+                                                        setDeletedArtistIds([ ...deletedArtistIds, artist.obj.id ]);
+
+                                                    array.splice(i, 1);
+                                                    setArtists(array);
+                                                }}
+                                            >
+                                                <Text style={{ fontSize: 10, textAlignVertical: 'center' }}>X</Text>
+                                            </Pressable>
+                                        : null}
+                                    </View>
+
+                                    {currentFocusIndex !== null &&
+                                     currentFocusIndex === i &&
+                                     researchArtists.length !== 0 ?
+                                        <View style={{ position: 'relative' }}>
+                                            <View style={{
+                                                position: 'absolute',
+                                                zIndex: 1,
+                                                left: 0,
+                                                right: 0,
+                                                backgroundColor: 'white',
+                                                //paddingVertical: 4,
+                                                //marginHorizontal: 4,
+                                                borderWidth: 1,
+                                                borderTopWidth: 0,
+                                                borderColor: colors.inputBorder,
+                                                //borderTopLeftRadius: 8,
+                                            }}>
+                                                {researchArtists.map((researchArtist, j) =>
+                                                    <Pressable
+                                                        key={j}
+                                                        style={{
+                                                            backgroundColor: j % 2 === 0 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+                                                            paddingHorizontal: 12,
+                                                            paddingVertical: 6,
+                                                        }}
+                                                        onPress={() =>
+                                                        {
+                                                            const array = [...artists];
+                                                            array[i] = { obj: researchArtist };
+                                                            setArtists(array);
+                                                            //setCurrentFocusIndes(null);
+                                                        }}
+                                                    >
+                                                        <Text>{ researchArtist.name }</Text>
+                                                    </Pressable>
+                                                )}
+                                            </View>
+                                        </View>
+                                    : null}
                                 </View>
                             )}
                         </View>
@@ -149,7 +283,7 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
 
                             <Pressable 
                                 style={styles.btnAddArtist}
-                                onPress={() => setArtists([ ...artists, { name: '' } ])}
+                                onPress={() => setArtists([ ...artists, { obj: { name: '' } } ])}
                             >
                                 <Text style={{ fontSize: 18 }}>+</Text>
                             </Pressable>
@@ -157,12 +291,32 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
                     </View>
                 </View>
 
-                <Pressable
-                    style={[styles.submit, styles.inputGroup, { marginBottom: 0 }]}
-                    onPress={handleSubmit}
-                >
-                    <Text style={styles.submitContent}>Adicionar</Text>
-                </Pressable>
+                <View style={[ styles.inputGroup, { flexDirection: 'row-reverse' } ]}>
+                    <Pressable
+                        style={[styles.submit]}
+                        onPress={handleSubmit}
+                    >
+                        <Text style={styles.submitContent}>
+                            {updateScreen ? 'Salvar' : 'Adicionar'}
+                        </Text>
+                    </Pressable>
+
+                    {id ?
+                        <Pressable
+                            style={{
+                                alignSelf: 'center',
+                                marginRight: 18,
+                            }}
+                            onPress={() => alert('a')}
+                        >
+                            <Text style={{
+                                textAlignVertical: 'center',
+                                color: 'red',
+                                fontSize: 14
+                            }}>Excluir</Text>
+                        </Pressable>
+                    : null}
+                </View>
             </View>
         </ScrollView>
     );
@@ -190,6 +344,7 @@ const styles = StyleSheet.create({
     },
     textInput: {
         flex: 1,
+        color: 'black',
         paddingHorizontal: 14,
         paddingVertical: 4,
     },
@@ -215,9 +370,8 @@ const styles = StyleSheet.create({
     },
 
     submit: {
-        alignSelf: 'flex-end',
         backgroundColor: colors.primary,
-        paddingHorizontal: 14,
+        paddingHorizontal: 18,
         paddingVertical: 12,
         borderRadius: 999,
     },
