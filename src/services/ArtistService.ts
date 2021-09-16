@@ -66,27 +66,60 @@ export default class ArtistService
      * @param songId ID da música
      * @returns Lista de artistas
      */
-    /*static findBySongId(songId: number): Promise<SQLResultSetRowList>
+    static findBySongId(songId: number): Promise<SQLResultSetRowList>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            const sql = `select * from ${table} where song_id = ?`;
+            const sql =
+                `select
+                    ${artist.id} as id,
+                    ${artist.name} as name
+                from
+                    ${artist.table}
+                inner join
+                    ${song_artist.table} on
+                        ${artist.id} = ${song_artist.artistId}
+                where
+                    ${song_artist.songId} = ?`;
 
-            tx.executeSql(sql, [songId], (_, { rows }) =>
-            {
-                resolve(rows);
-            }),
-            (_: any, err: any) =>
-            {
-                console.error(err);
-                reject(err);
-                return false;
-            };
+            tx.executeSql(sql, [songId], (_, { rows }) => resolve(rows));
         },
         err =>
         {
             console.error(err);
             reject(err);
         }));
-    }*/
+    }
+
+    static findByName(name: string, restrictedIds: number[]): Promise<SQLResultSetRowList>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            let where = "";
+            restrictedIds.forEach(id => where += id + ", ");
+
+            if(where.length > 0)
+            {
+                where = where.slice(0, -2); // <- Remover ultimo ", "
+                where = ` and ${artist.id} not in (${where})`;
+            }
+
+            const sql =
+                `select
+                    ${artist.id} as id,
+                    ${artist.name} as name
+                from
+                    ${artist.table}
+                where
+                    ${artist.name} like '%${name}%'
+                    ${where}`;
+
+            tx.executeSql(sql, [], (_, { rows }) => resolve(rows));
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        }));
+    }
 }

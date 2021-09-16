@@ -121,6 +121,51 @@ export default class SongService
         }));
     }
 
+    static findById(id: number)//: Promise<SQLResultSetRowList>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            const sql =
+                `select
+                    id,
+                    name,
+                    (
+                        select
+                            group_concat(${artist.name}, ', ')
+                        from
+                            ${song_artist.table}
+                        left join
+                            ${artist.table} on
+                                ${song_artist.artistId} = ${artist.id}
+                        where
+                            ${song_artist.songId} = id and
+                            ${song_artist.songId} = ${song_artist.songId}
+                    ) as artists
+                from (
+                    select
+                        ${song.id} as id,
+                        ${song.name} as name
+                    from
+                        ${song.table}
+                    where
+                        ${song.id} = ?
+                )`;
+
+            tx.executeSql(sql, [id], (_, { rows }) =>
+            {
+                if(rows.length !== 0)
+                    resolve(rows.item(0));
+                else
+                    reject();
+            });
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        }));
+    }
+
     static update(obj: Song)
     {
         return new Promise((resolve, reject) => db.transaction(tx =>

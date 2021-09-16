@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, Pressable, TextInput, ScrollView } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
 import SongService from '../services/SongService';
 import ArtistService from '../services/ArtistService';
@@ -9,7 +10,7 @@ import { Artist } from '../models/Artist';
 import { colors } from '../utils/colors';
 import SongArtistService from '../services/SongArtistService';
 
-const NewSongScreen: React.FC<any> = ({ navigation }) =>
+const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 {
     // ---------- CONSTS ---------- //
 
@@ -52,12 +53,16 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
     const [invalidName, setInvalidName] = useState(false);
     const [invalidArtists, setInvalidArtists] = useState(false);
 
+
+
+    // ---------- FUNCTIONS ---------- //
+
     function handleSubmit()
     {
         // Validar artistas
         let validArtist = false;
         for(const artist of artists)
-            if(artist.name.trim().length > 0)
+            if(artist.obj.name.trim().length > 0)
             {
                 validArtist = true;
                 break;
@@ -92,12 +97,14 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
 
             // Atualizar nome da música
             if(name !== initialName)
+            {
                 SongService.update({ id, name })
                 .catch(err =>
                 {
                     back = false;
                     alert(err);
                 });
+            }
 
             // Deletar link entre artistas já existentes e a música
             if(deletedArtistIds.length !== 0)
@@ -136,12 +143,20 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
             })
 
             if(back)
+            {
+                SecureStore.setItemAsync('update-songs', 'true');
                 navigation.goBack();
+            }
         }
         else
         {
             SongService.create({ name }, artists.map(({ obj }) => obj))
-            .then(() => navigation.navigate('Home', { update: true }))
+            .then(() =>
+            {
+                SecureStore.setItemAsync('update-songs', 'true')
+                .then(() => navigation.goBack());
+                //navigation.navigate('Home', { update: true }))
+            })
             .catch(err => alert(err));
         }
     }
@@ -150,20 +165,25 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
     {
         if(text.trim().length === 0)
         {
-            console.error(err);
-            alert(err);
-        });*/
+            setResearchArtists([]);
+            return;
+        }
 
         ArtistService.findByName(text.trim(), restrictedIds)
-        .then((res: any) => setResearchArtists(res._array))
-        .catch(err => alert(err));
+            .then((res: any) => setResearchArtists(res._array))
+            .catch(err => alert(err));
     }
 
     function handleDelete()
     {
         if(id !== null)
             SongService.delete(id)
-            .then(() => navigation.navigate('Home', { update: true }))
+            .then(() =>
+            {
+                SecureStore.setItemAsync('update-songs', 'true')
+                    .then(() => navigation.goBack());
+                //navigation.navigate('Home', { update: true }))
+            })
             .catch(err => alert(err));
     }
 
@@ -196,7 +216,7 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
     // ---------- RETURN ---------- //
 
     return (
-        <ScrollView>
+        <ScrollView keyboardShouldPersistTaps='handled'>
             <View style={styles.container}>
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>Nome</Text>
@@ -390,7 +410,7 @@ const NewSongScreen: React.FC<any> = ({ navigation }) =>
 
                             <Pressable 
                                 style={styles.btnAddArtist}
-                                onPress={() => setArtists([ ...artists, { name: '' } ])}
+                                onPress={() => setArtists([ ...artists, { obj: { name: '' } } ])}
                             >
                                 <Text style={{ fontSize: 18 }}>+</Text>
                             </Pressable>
@@ -477,9 +497,8 @@ const styles = StyleSheet.create({
     },
 
     submit: {
-        alignSelf: 'flex-end',
         backgroundColor: colors.primary,
-        paddingHorizontal: 14,
+        paddingHorizontal: 18,
         paddingVertical: 12,
         borderRadius: 999,
     },

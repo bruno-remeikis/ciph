@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, TextInput } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
 import SongService from '../services/SongService';
 import { Song } from '../models/Song';
@@ -26,9 +27,9 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 		setSearch(text);
 
 		SongService.find(text)
-		.then((res: any) => setSongs(res._array))
-		.catch(err => alert(err))
-		.finally(() => setSearching(false));
+			.then((res: any) => setSongs(res._array))
+			.catch(err => alert(err))
+			.finally(() => setSearching(false));
 	}
 
 
@@ -36,18 +37,31 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 	// ---------- EFFECTS ----------
 
 	/**
+	 * Carrega músicas ao abrir app
+	 */
+	useEffect(() => searchSongs(""), []);
+
+	/**
 	 * Carrega as músicas quando esta tela ganha foco e caso seja necessário
 	 */
 	useEffect(() =>
 	{
-		//This will run whenever params change
-		const { params = {} } = route;
-		
-	   	//your logic here
-		if(params.update)
-			searchSongs(search);
-   	},
-	[route]);
+		const unsubscribe = navigation.addListener('focus', () =>
+		{
+			SecureStore.getItemAsync('update-songs').then(res =>
+			{
+				if(res === 'true')
+				{
+					searchSongs(search);
+					SecureStore.deleteItemAsync('update-songs');
+				}
+			});
+		});
+	
+		// Return the function to unsubscribe from the event so it gets removed on unmount
+		return unsubscribe;
+	},
+	[navigation]);
 
 	/**
 	 * Atualiza mensagem de status
@@ -76,7 +90,10 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 
 	return (
 		<View style={styles.container}>
-			<ScrollView style={styles.scrollView}>
+			<ScrollView
+				style={styles.scrollView}
+				keyboardShouldPersistTaps='handled'
+			>
 				<View style={styles.mainContent}>
 					<View style={styles.search}>
 						<TextInput

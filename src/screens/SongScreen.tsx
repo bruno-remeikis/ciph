@@ -6,6 +6,7 @@ import { Sheet } from '../models/Sheet';
 
 import SheetService from '../services/SheetService';
 import { colors } from '../utils/colors';
+import SongService from '../services/SongService';
 
 
 
@@ -26,6 +27,11 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
 
     // ---------- STATES ----------
+
+    const [nameInfo, setNameInfo] = useState(name);
+    const [artistsInfo, setArtistsInfo] = useState(
+        artists && typeof artists === 'string' ? artists : ''
+    );
 
     const [modalVisible, setModalVisible] = useState(false);
     // Guarda se a View interna (conteúdo) do Modal foi tocada
@@ -185,6 +191,30 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
     },
     [navigation]);
 
+    /**
+	 * Carrega a música quando esta tela ganha foco e caso seja necessário
+	 */
+    useEffect(() =>
+    {
+        const unsubscribe = navigation.addListener('focus', () =>
+        {
+            SecureStore.getItemAsync('update-songs').then(res =>
+            {
+                if(res === 'true')
+                    SongService.findById(id).then((res: any) =>
+                    {
+                        setNameInfo(res.name);
+                        setArtistsInfo(res.artists);
+                    })
+                    .catch(err => alert(err));
+            });
+        });
+    
+        // Return the function to unsubscribe from the event so it gets removed on unmount
+        return unsubscribe;
+    },
+    [navigation]);
+
 
 
     // ---------- RETURN ----------
@@ -240,14 +270,14 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                 <View style={{ flex: 1, padding: 12 }}>
                     <View style={styles.header}>
                         <Pressable
-                            onPress={() => navigation.navigate('NewSong', {  })}
+                            onPress={() =>
+                            {
+                                if(enableEdition)
+                                    navigation.navigate('NewSong', { song: route.params.song });
+                            }}
                         >
-                            <Text style={{ fontSize: 24 }}>{ name }</Text>
-                            <Text style={{ fontSize: 16 }}>{
-                                artists && typeof artists === 'string'
-                                    ? artists
-                                    : ''
-                            }</Text>
+                            <Text style={{ fontSize: 24 }}>{ nameInfo }</Text>
+                            <Text style={{ fontSize: 16 }}>{ artistsInfo }</Text>
                         </Pressable>
 
                         <View>
