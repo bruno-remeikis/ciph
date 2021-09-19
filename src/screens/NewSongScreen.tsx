@@ -52,54 +52,27 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     // IDs de artistas já utilizados (para que não sejam exibidos na pesquisa)
     const [restrictedIds, setRestrictedIds] = useState<number[]>([]);
 
-    const [invalidName, setInvalidName] = useState(false);
-    const [unfilledArtists, setUnfilledArtists] = useState(false);
+    //const [invalidName, setInvalidName] = useState(false);
+    //const [unfilledArtists, setUnfilledArtists] = useState(false);
+
+    const [disabledSubmit, setDisabledSubmit] = useState<boolean>(true);
 
 
 
     // ---------- FUNCTIONS ---------- //
 
+    /**
+     * ATENÇÃO: Dados devem ser validados antes por 'validateSubmit()'
+     */
     function handleSubmit()
     {
-        let existing: boolean = false;
-        let equals: boolean = false;
-        let unfilledArtist = true;
-        let invalidName: boolean = false;
-
         const validArtists: ArtistProps[] = [];
 
         // Validar artistas
         for(const artist of artists)
             if(artist.obj.name.trim().length !== 0)
-            {
-                if(artist.existing)
-                {
-                    existing = true;
-                    continue;
-                }
-
-                if(artist.equals !== undefined)
-                {
-                    equals = true;
-                    continue;
-                }
-            
                 // Adicionar artista a ser persistido
-                unfilledArtist = false;
                 validArtists.push(artist);
-            }
-
-        // Validar nome
-        if(name.trim().length === 0)
-            invalidName = true;
-
-        // Validar todos os campos
-        if(existing || equals || invalidName || unfilledArtist)
-        {
-            setInvalidName(invalidName);
-            setUnfilledArtists(unfilledArtist);
-            return;
-        }
 
         if(updateScreen)
         {
@@ -204,8 +177,6 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     {
         newValue = newValue.replace(',', '');
 
-        setUnfilledArtists(false);
-
         const updArtists: ArtistProps[] = [...artists];
         const oldArtistName = artist.obj.name.trim().toUpperCase();
         const newArtistName = newValue.trim().toUpperCase();
@@ -252,6 +223,38 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
         // Atualiza nome
         updArtists[i].obj.name = newValue;
         setArtists(updArtists);
+
+        validadeSubmit(name, updArtists);
+    }
+
+    function validadeSubmit(name: string, arts: ArtistProps[])
+    {
+        let unfilledArtists = true;
+
+        // Validar nome
+        if(name.trim().length === 0)
+        {
+            setDisabledSubmit(true);
+            return;
+        }
+
+        // Validar artistas
+        for(const artist of artists)
+        {
+            if(artist.obj.name.trim().length !== 0)
+            {
+                if(artist.existing || artist.equals !== undefined)
+                {
+                    setDisabledSubmit(true);
+                    return;
+                }
+
+                unfilledArtists = false;
+            }
+        }
+
+        console.log('aaa');
+        setDisabledSubmit(unfilledArtists);
     }
 
 
@@ -287,19 +290,12 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>Nome</Text>
                     <TextInput
-                        style={[
-                            styles.input,
-                            styles.textInput,
-                            invalidName ? {
-                                backgroundColor: `rgba(${colors.errorRGB}, 0.08)`,
-                                borderColor: colors.error,
-                            } : {}
-                        ]}
+                        style={[ styles.input, styles.textInput ]}
                         value={name}
                         onChangeText={text =>
                         {
-                            setInvalidName(false);
                             setName(text);
+                            validadeSubmit(text, artists);
                         }}
                     />
                 </View>
@@ -317,7 +313,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                     artist.obj.name.trim().length !== 0;
 
                                 let statusStyle = {};
-                                if(unfilledArtists || artist.existing || artist.equals !== undefined)
+                                if(artist.existing || artist.equals !== undefined)
                                     statusStyle = {
                                         backgroundColor: `rgba(${colors.errorRGB}, 0.08)`,
                                         borderColor: colors.error,
@@ -347,13 +343,12 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                                 value={artist.obj.name}
                                                 onChangeText={text =>
                                                 {
-                                                    validateArtists(artist, i, text);
                                                     handleSearch(text);
+                                                    validateArtists(artist, i, text);
+                                                    //validadeSubmit();
                                                 }}
                                                 onFocus={() =>
                                                 {
-                                                    //validateArtists(artist, i);
-
                                                     handleSearch(artist.obj.name);
                                                     setCurrentFocusIndex(i);
                                                 }}
@@ -523,10 +518,15 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
                 <View style={[ styles.inputGroup, { flexDirection: 'row-reverse' } ]}>
                     <Pressable
-                        style={[styles.submit]}
+                        style={[styles.submit, disabledSubmit ? {
+                            backgroundColor: 'rgba(0, 0, 0, 0.06)'
+                        } : {}]}
                         onPress={handleSubmit}
+                        disabled={disabledSubmit}
                     >
-                        <Text style={styles.submitContent}>
+                        <Text style={[styles.submitContent, disabledSubmit ? {
+                            color: 'rgba(0, 0, 0, 0.36)'
+                        } : {}]}>
                             {updateScreen ? 'Salvar' : 'Adicionar'}
                         </Text>
                     </Pressable>
@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
     },
     textInput: {
         flex: 1,
-        color: 'black',
+        color: colors.text,
         paddingHorizontal: 14,
         paddingVertical: 4,
     },
@@ -606,6 +606,7 @@ const styles = StyleSheet.create({
         borderRadius: 999,
     },
     submitContent: {
+        color: colors.text,
         fontSize: 16,
     },
 });
