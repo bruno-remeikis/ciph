@@ -227,17 +227,12 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                 }
                 else if(newArtistName === artists[j].obj.name.trim().toUpperCase())
                 {
-                    console.log('nomes iguais');
-
                     if(updArtists[j].obj.id !== undefined)
                     {
-                        console.log('já existente');
                         existing = true;
-                        console.log(updArtists);
                     }
                     else
                     {
-                        console.log('iguais');
                         equals = newArtistName;
                         updArtists[j].equals = newArtistName;
                     }
@@ -257,56 +252,6 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
         // Atualiza nome
         updArtists[i].obj.name = newValue;
         setArtists(updArtists);
-
-        /*setArtists(artists.map((art, j) =>
-        {
-            if(i !== j && artName === artists[j].obj.name.trim().toUpperCase())
-            {
-                if(artists[j].obj.id === undefined)
-                    return { ...art, equals: true };
-                return { ...art, existing: true };
-            }
-            else
-            {
-
-            }
-
-            return { ...art, existing: false, equals: false };
-        }));*/
-
-        // Procurar se nome já foi inserido em outra linha
-        /*for(let j = 0; j < artists.length; j++)
-        {
-            if(i !== j && artName === artists[j].obj.name.trim().toUpperCase())
-            {
-                if(artists[j].obj.id === undefined)
-                {
-                    console.log('\n-----------------------');
-                    console.log('EQUALS');
-                    
-                    setArtists(artists.map((art, k) =>{
-                        // Se for o atrist ou for o que tem o mesmo nome:
-                        return k === i || k === j
-                            ? { ...art, equals: true }
-                            : art
-                    }));
-
-                    //artist.equals = true;
-                    //artists[j].equals = true;
-
-                    console.log(artists[i]);
-                    console.log(artists[j]);
-                }
-                else
-                {
-                    setArtists(artists.map((art, k) =>
-                        i === k ? { ...art, existing: true } : art
-                    ));
-                    //artist.existing = true;
-                    break;
-                }
-            }
-        }*/
     }
 
 
