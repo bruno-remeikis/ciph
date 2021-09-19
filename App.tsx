@@ -3,7 +3,7 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import DatabaseInit from './src/database/DatabaseInit';
+import Database from './src/database/Database';
 
 import { Song } from './src/models/Song';
 
@@ -23,7 +23,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App()
 {
-	new DatabaseInit;
+	Database.init();
 
 	return (
 		<NavigationContainer>

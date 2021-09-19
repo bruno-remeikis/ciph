@@ -323,7 +323,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                                 saveSheetContent();
                                                 setCurrentSheet(sheet);
                                             }
-                                            else
+                                            else if(enableEdition)
                                                 openModal(sheet);
                                         }}
                                     >
@@ -335,9 +335,16 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                             <View style={{ flexDirection: 'column-reverse' }}>
                                 <Pressable
                                     style={styles.tab}
-                                    onPress={createSheet}
+                                    onPress={() =>
+                                    {
+                                        if(enableEdition)
+                                            createSheet();
+                                    }}
                                 >
-                                    <Text style={styles.tabContent}>+</Text>
+                                    <Text style={[
+                                        styles.tabContent,
+                                        { color: !enableEdition ? 'rgba(0, 0, 0, 0.4)' : 'black' },
+                                    ]}>+</Text>
                                 </Pressable>
                             </View>
                         </ScrollView>

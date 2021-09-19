@@ -91,7 +91,7 @@ export default class ArtistService
         }));
     }
 
-    static findByName(name: string, restrictedIds: number[]): Promise<SQLResultSetRowList>
+    static findByNameSearch(name: string, restrictedIds: number[]): Promise<SQLResultSetRowList>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
@@ -115,6 +115,34 @@ export default class ArtistService
                     ${where}`;
 
             tx.executeSql(sql, [], (_, { rows }) => resolve(rows));
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        }));
+    }
+
+    static findByName(name: string): Promise<Artist | null>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            const sql =
+            `select
+                ${artist.id} as id,
+                ${artist.name} as name
+            from
+                ${artist.table}
+            where
+                ${artist.name} like ?`;
+
+            tx.executeSql(sql, [name], (_, { rows }) =>
+            {
+                if(rows.length !== 0)
+                    resolve(rows.item(0));
+                else
+                    resolve(null);
+            });
         },
         err =>
         {

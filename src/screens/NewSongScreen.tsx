@@ -30,7 +30,9 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
     type ArtistProps = {
         obj: Artist;
-        initial?: boolean;
+        initial?: boolean; // <- Foi carregado inicialmente? (apenas para updateScreem)
+        existing?: boolean; // <- Exite outro com mesmo nome no banco?
+        equals?: string; // <- Existe outro com mesmo nome na lista? Se sim, qual?
     }
 
 
@@ -51,7 +53,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     const [restrictedIds, setRestrictedIds] = useState<number[]>([]);
 
     const [invalidName, setInvalidName] = useState(false);
-    const [invalidArtists, setInvalidArtists] = useState(false);
+    const [unfilledArtists, setUnfilledArtists] = useState(false);
 
 
 
@@ -59,34 +61,45 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
     function handleSubmit()
     {
+        let existing: boolean = false;
+        let equals: boolean = false;
+        let unfilledArtist = true;
+        let invalidName: boolean = false;
+
+        const validArtists: ArtistProps[] = [];
+
         // Validar artistas
-        let validArtist = false;
         for(const artist of artists)
-            if(artist.obj.name.trim().length > 0)
+            if(artist.obj.name.trim().length !== 0)
             {
-                validArtist = true;
-                break;
+                if(artist.existing)
+                {
+                    existing = true;
+                    continue;
+                }
+
+                if(artist.equals !== undefined)
+                {
+                    equals = true;
+                    continue;
+                }
+            
+                // Adicionar artista a ser persistido
+                unfilledArtist = false;
+                validArtists.push(artist);
             }
 
-        let invalid = false;
-        
         // Validar nome
         if(name.trim().length === 0)
-        {
-            setInvalidName(true);
-            invalid = true;
-        }
+            invalidName = true;
 
-        // Validar artistas
-        if(!validArtist)
+        // Validar todos os campos
+        if(existing || equals || invalidName || unfilledArtist)
         {
-            setInvalidArtists(true);
-            invalid = true;
-        }
-
-        // Validar
-        if(invalid)
+            setInvalidName(invalidName);
+            setUnfilledArtists(unfilledArtist);
             return;
+        }
 
         if(updateScreen)
         {
@@ -118,7 +131,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
             const newArtists: Artist[] = [];
             const oldArtistIds: number[] = [];
             
-            artists.forEach(art =>
+            validArtists.forEach(art =>
             {
                 if(art.obj.id === undefined)
                     newArtists.push(art.obj);
@@ -150,7 +163,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
         }
         else
         {
-            SongService.create({ name }, artists.map(({ obj }) => obj))
+            SongService.create({ name }, validArtists.map(({ obj }) => obj))
             .then(() =>
             {
                 SecureStore.setItemAsync('update-songs', 'true')
@@ -169,7 +182,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
             return;
         }
 
-        ArtistService.findByName(text.trim(), restrictedIds)
+        ArtistService.findByNameSearch(text.trim(), restrictedIds)
             .then((res: any) => setResearchArtists(res._array))
             .catch(err => alert(err));
     }
@@ -187,6 +200,114 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
             .catch(err => alert(err));
     }
 
+    function validateArtists(artist: ArtistProps, i: number, newValue: string)
+    {
+        newValue = newValue.replace(',', '');
+
+        setUnfilledArtists(false);
+
+        const updArtists: ArtistProps[] = [...artists];
+        const oldArtistName = artist.obj.name.trim().toUpperCase();
+        const newArtistName = newValue.trim().toUpperCase();
+
+        let existing: boolean = false;
+        let equals: string | undefined = undefined;
+
+        const oldEqualIds: number[] = [];
+
+        updArtists.forEach((art, j) =>
+        {
+            if(i !== j)
+            {
+                // Guarda 'equals' antigos para, talvez, removê-los posteriormente
+                if(art.equals !== undefined
+                && art.equals === oldArtistName)
+                {
+                    oldEqualIds.push(j);
+                }
+                else if(newArtistName === artists[j].obj.name.trim().toUpperCase())
+                {
+                    console.log('nomes iguais');
+
+                    if(updArtists[j].obj.id !== undefined)
+                    {
+                        console.log('já existente');
+                        existing = true;
+                        console.log(updArtists);
+                    }
+                    else
+                    {
+                        console.log('iguais');
+                        equals = newArtistName;
+                        updArtists[j].equals = newArtistName;
+                    }
+                }
+            }
+
+            //return { ...art, existing: false, equals: false };
+        });
+
+        updArtists[i].existing = existing;
+        updArtists[i].equals = equals;
+
+        // Remove 'equals' antigos
+        if(oldEqualIds.length === 1)
+            updArtists[oldEqualIds[0]].equals = undefined;
+
+        // Atualiza nome
+        updArtists[i].obj.name = newValue;
+        setArtists(updArtists);
+
+        /*setArtists(artists.map((art, j) =>
+        {
+            if(i !== j && artName === artists[j].obj.name.trim().toUpperCase())
+            {
+                if(artists[j].obj.id === undefined)
+                    return { ...art, equals: true };
+                return { ...art, existing: true };
+            }
+            else
+            {
+
+            }
+
+            return { ...art, existing: false, equals: false };
+        }));*/
+
+        // Procurar se nome já foi inserido em outra linha
+        /*for(let j = 0; j < artists.length; j++)
+        {
+            if(i !== j && artName === artists[j].obj.name.trim().toUpperCase())
+            {
+                if(artists[j].obj.id === undefined)
+                {
+                    console.log('\n-----------------------');
+                    console.log('EQUALS');
+                    
+                    setArtists(artists.map((art, k) =>{
+                        // Se for o atrist ou for o que tem o mesmo nome:
+                        return k === i || k === j
+                            ? { ...art, equals: true }
+                            : art
+                    }));
+
+                    //artist.equals = true;
+                    //artists[j].equals = true;
+
+                    console.log(artists[i]);
+                    console.log(artists[j]);
+                }
+                else
+                {
+                    setArtists(artists.map((art, k) =>
+                        i === k ? { ...art, existing: true } : art
+                    ));
+                    //artist.existing = true;
+                    break;
+                }
+            }
+        }*/
+    }
 
 
     // ---------- EFFECTS ---------- //
@@ -224,7 +345,10 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                         style={[
                             styles.input,
                             styles.textInput,
-                            invalidName ? { borderColor: '#e34a40' } : {}
+                            invalidName ? {
+                                backgroundColor: `rgba(${colors.errorRGB}, 0.08)`,
+                                borderColor: colors.error,
+                            } : {}
                         ]}
                         value={name}
                         onChangeText={text =>
@@ -236,36 +360,41 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={styles.label}>Artistas / bandass</Text>
+                    <Text style={styles.label}>Artistas / bandas</Text>
                     <View style={{ flexDirection: 'row' }}>
                         <View style={{ flex: 1, flexGrow: 1 }}>
                             {artists.map((artist, i) =>
                             {
                                 const deletable = artists.length > 1 || artists[0].obj.id;
-                                const newArtist =
-                                    currentFocusIndex !== i &&
-                                    !artist.obj.id &&
+                                const showStatus =
+                                    //currentFocusIndex !== i &&
+                                    artist.obj.id === undefined &&
                                     artist.obj.name.trim().length !== 0;
+
+                                let statusStyle = {};
+                                if(unfilledArtists || artist.existing || artist.equals !== undefined)
+                                    statusStyle = {
+                                        backgroundColor: `rgba(${colors.errorRGB}, 0.08)`,
+                                        borderColor: colors.error,
+                                    };
+                                else if(artist.obj.id !== undefined)
+                                    statusStyle = {
+                                        backgroundColor: `rgba(${colors.primaryRGB}, 0.2)`,
+                                        borderColor: colors.primary,
+                                    };
 
                                 return (
                                     <View key={i}>
                                         <View
                                             style={[
                                                 styles.input,
+                                                statusStyle,
                                                 {
                                                     marginTop: i !== 0 ? 6 : 0,
                                                     flexDirection: 'row',
                                                     justifyContent: 'space-between',
                                                     alignItems: 'stretch',
-                                                },
-                                                invalidArtists
-                                                    ? { borderColor: '#e34a40' }
-                                                    : artist.obj.id
-                                                        ? {
-                                                            borderColor: colors.primary,
-                                                            backgroundColor: `rgba(${colors.primaryRGB}, 0.2)`
-                                                        }
-                                                        : {}
+                                                }
                                             ]}
                                         >
                                             <TextInput
@@ -273,32 +402,61 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                                 value={artist.obj.name}
                                                 onChangeText={text =>
                                                 {
-                                                    setInvalidArtists(false);
-
-                                                    const values = [...artists];
-                                                    values[i].obj.name = text.replace(',', '');
-                                                    setArtists(values);
+                                                    validateArtists(artist, i, text);
                                                     handleSearch(text);
                                                 }}
                                                 onFocus={() =>
                                                 {
+                                                    //validateArtists(artist, i);
+
                                                     handleSearch(artist.obj.name);
                                                     setCurrentFocusIndex(i);
                                                 }}
                                                 onBlur={() =>
                                                 {
+                                                    // Verificar se nome está entre os pesquisados.
+                                                    // Se sim, substitui a linha pelo pesquisado encontrado
+                                                    if(!artist.existing && artist.equals === undefined)
+                                                    // Roda todos os artistas pesquisados
+                                                        for(let j = 0; j < researchArtists.length; j++)
+                                                        {
+                                                            const researchArt = researchArtists[j];
+
+                                                            // Se nome do pesquisado for igual ao do campo
+                                                            if(artist.obj.name.trim().toUpperCase() === researchArt.name.toUpperCase())
+                                                            {
+                                                                // Joga o pesquisado para o campo
+                                                                setArtists(artists.map((art, k) =>
+                                                                {
+                                                                    if(i === k)
+                                                                    {
+                                                                        if(researchArt.id !== undefined)
+                                                                            setRestrictedIds([ ...restrictedIds, researchArt.id ]);
+
+                                                                        return { obj: researchArt };
+                                                                    }
+
+                                                                    return art;
+                                                                }));
+
+                                                                break;
+                                                            }
+                                                        }
+
                                                     setCurrentFocusIndex(null);
                                                 }}
                                                 editable={!artist.obj.id}
                                             />
 
-                                            {newArtist ?
+                                            {showStatus ?
                                                 <Text style={{
                                                     alignSelf: 'center',
-                                                    color: colors.primary,
+                                                    color: artist.existing || artist.equals !== undefined
+                                                        ? colors.errorDark
+                                                        : colors.primary,
                                                     fontSize: 12,
                                                     marginRight: deletable ? 0 : 12,
-                                                }}>new</Text>
+                                                }}>{artist.existing ? 'já inserido' : artist.equals !== undefined ? 'iguais' : 'novo'}</Text>
                                             : null}
 
                                             {deletable ?

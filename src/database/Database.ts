@@ -5,22 +5,17 @@ import { artist } from '../services/ArtistService';
 import { song_artist } from '../services/SongArtistService';
 import { sheet } from '../services/SheetService';
 
-export default class DatabaseInit
+export default class Database
 {
-    constructor()
-    {
-        db.exec([{ sql: 'PRAGMA foreign_keys = ON;', args: [] }], false, () =>
-            console.log('Foreign keys turned on.')
-        );
-
-        DatabaseInit.init();
-    }
-
     /**
      * Constroi as tabelas do banco
      */
     public static init()
     {
+        db.exec([{ sql: 'PRAGMA foreign_keys = ON;', args: [] }], false, () =>
+            console.log('Foreign keys turned on.')
+        );
+
         var sqls = [
             `create table if not exists ${song.table} (
                 ${song.id} integer primary key autoincrement,
@@ -29,7 +24,7 @@ export default class DatabaseInit
 
             `create table if not exists ${artist.table} (
                 ${artist.id} integer primary key autoincrement,
-                ${artist.name} text not null
+                ${artist.name} text unique not null
             );`,
 
             `create table if not exists ${song_artist.table} (
@@ -105,7 +100,7 @@ export default class DatabaseInit
             () =>
             {
                 console.log('Tables have been deleted.');
-                DatabaseInit.init()
+                Database.init()
                     .then(() => resolve(true))
                     .catch(err => reject(err));
             });

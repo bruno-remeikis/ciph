@@ -6,7 +6,7 @@ import SongService from '../services/SongService';
 import { Song } from '../models/Song';
 
 import { colors } from '../utils/colors';
-import DatabaseInit from '../database/DatabaseInit';
+import Database from '../database/Database';
 
 const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 {
@@ -140,7 +140,7 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 				style={styles.deleteAllBtn}
 				onPress={() =>
 				{
-					DatabaseInit.recreate()
+					Database.recreate()
 						.then(() => searchSongs(''))
 						.catch(err => alert(err));
 				}}
