@@ -1,7 +1,7 @@
 import React from 'react';
-
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useKeepAwake } from 'expo-keep-awake';
 
 import Database from './src/database/Database';
 
@@ -23,6 +23,10 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App()
 {
+	// Impedir que tela descanse
+	useKeepAwake();
+
+	// Criar banco de dados
 	Database.init();
 
 	return (
