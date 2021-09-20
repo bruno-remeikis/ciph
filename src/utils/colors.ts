@@ -3,7 +3,7 @@ export const colors = {
     background: '#FAFAFA',
     background2: 'rgb(251, 243, 239)',
 
-	primary: '#D98859',
+	primary: 'rgb(217, 136, 89)',
     primaryRGB: '217, 136, 89',
 
     text: '#0f0f0f',
@@ -13,4 +13,8 @@ export const colors = {
     redLightRGB: '255, 136, 130',
 
     inputBorder: 'rgba(0, 0, 0, 0.2)',
+}
+
+export const opacities = {
+    disabled: 0.65,
 }

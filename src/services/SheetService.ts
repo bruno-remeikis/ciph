@@ -79,20 +79,6 @@ export default class SheetService
     }
 
     /**
-     * Deleta paginas por ID da música
-     * @param tx Transaction
-     * @param songId ID da música
-     */
-    static deleteBySongIdTx(tx: SQLTransaction, songId: number)
-    {
-        const sql =
-            `delete from ${sheet.table}
-            where ${sheet.songId} = ?`;
-
-        tx.executeSql(sql, [songId]);
-    }
-
-    /**
      * Atualiza o título da pagina
      * @param id ID da pagina
      * @param title novo título da pagina
@@ -135,6 +121,44 @@ export default class SheetService
                 where ${sheet.id} = ?`;
 
             tx.executeSql(sql, [content, id], (_, { rowsAffected }) =>
+            {
+                resolve(rowsAffected);
+            });
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        }));
+    }
+
+    /**
+     * Deleta paginas por ID da música
+     * @param tx Transaction
+     * @param songId ID da música
+     */
+    static deleteBySongIdTx(tx: SQLTransaction, songId: number)
+    {
+        const sql =
+            `delete from ${sheet.table}
+            where ${sheet.songId} = ?`;
+
+        tx.executeSql(sql, [songId]);
+    }
+
+    /**
+     * Deleta pagina
+     * @param id ID da pagina
+     * @returns Promise com número de linhas afetadas (number)
+     */
+    static delete(id: number): Promise<number>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            const sql =
+                `delete from ${sheet.table} where ${sheet.id} = ?`;
+
+            tx.executeSql(sql, [id], (_, { rowsAffected }) =>
             {
                 resolve(rowsAffected);
             });

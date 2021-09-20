@@ -1,12 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View, Pressable, TextInput, ScrollView, Modal, Switch, AppState } from 'react-native';
+import { StyleSheet, Text, View, Pressable, TextInput, ScrollView, Switch, AppState } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 import { Sheet } from '../models/Sheet';
 
 import SheetService from '../services/SheetService';
-import { colors } from '../utils/colors';
-import SongService from '../services/SongService';
+
+import { colors, opacities } from '../utils/colors';
+
+import Modal from '../components/Modal';
+import ConfirmModal from '../components/ConfirmModal';
 
 
 
@@ -33,9 +36,10 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
         artists && typeof artists === 'string' ? artists : ''
     );
 
-    const [modalVisible, setModalVisible] = useState(false);
-    // Guarda se a View interna (conteúdo) do Modal foi tocada
-    const [touchIn, setTouchIn] = useState(false);
+    //const [modalVisible, setModalVisible] = useState(false);
+    const [isRenameVisible, setIsRenameVisible] = useState<boolean>(false);
+    const [isDeleteSheetVisible, setIsDeleteSheetVisible] = useState<boolean>(false);
+
     // ID da folha (sheet) a ser renomeada
     const [renamedSheet, setRenamedSheet] = useState<Sheet | null>(null);
     // Valor do novo título da folha (sheet) a ser renomeada
@@ -53,7 +57,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
     // ---------- REFS ----------
 
     const currentSheetRef = useRef(currentSheet);
-    const setCurrentSheet = (newValue: Sheet) =>
+    const setCurrentSheet = (newValue: Sheet | null) =>
     {
         currentSheetRef.current = newValue;
         _setCurrentSheet(newValue);
@@ -97,19 +101,12 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
         setRenamedSheet(sheet);
         setNewSheetTitle(sheet.title);
 
-        setModalVisible(true);
-    }
-
-    function closeModal()
-    {
-        setModalVisible(false);
-        //setRenamedSheet(null);
-        //setNewSheetTitle('');
+        setIsRenameVisible(true);
     }
 
     function saveRenamedSheet()
     {
-        closeModal();
+        setIsRenameVisible(false);
 
         if(renamedSheet && renamedSheet.id)
         {
@@ -150,6 +147,37 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
         if(id)
             SheetService.updateContent(id, content)
             .catch(err => alert(err));
+    }
+
+    function handleDeleteSheet()
+    {
+        if(!currentSheet || currentSheet.id === undefined)
+            return;
+
+        SheetService.delete(currentSheet.id).then(res =>
+        {
+            if(res !== 0)
+            {
+                const updSheets: Sheet[] = [...sheets];
+                let newCurrentSheet = null;
+
+                for(let i = 0; i < sheets.length; i++)
+                {
+                    if(sheets[i].id === currentSheet.id)
+                    {
+                        updSheets.splice(i, 1);
+                        break;
+                    }
+
+                    newCurrentSheet = sheets[i];
+                };
+
+                setSheets(updSheets);
+                setCurrentSheet(newCurrentSheet);
+            }
+        })
+        .catch(err => alert(err))
+        .finally(() => setIsDeleteSheetVisible(false));
     }
 
 
@@ -209,11 +237,6 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                     SecureStore.deleteItemAsync('updated-song');
                 }
             });
-
-            /*SecureStore.getItemAsync('update-songs').then(res =>
-            {
-                console.log(route.params.song);
-            });*/
         });
     
         // Return the function to unsubscribe from the event so it gets removed on unmount
@@ -227,7 +250,68 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
     return (
         <>
+            <ConfirmModal
+                visible={isDeleteSheetVisible}
+                setVisible={setIsDeleteSheetVisible}
+                text='Deseja mesmo excluir esta página?'
+                buttons={[
+                    {
+                        text: 'Excluir',
+                        color: colors.red,
+                        onClick: handleDeleteSheet
+                    },
+                    { text: 'Cancelar' }
+                ]}
+            />
+
             <Modal
+                visible={isRenameVisible}
+                setVisible={setIsRenameVisible}
+            >
+                <View style={{ padding: 10 }}>
+                    <TextInput
+                        style={styles.modalInput}
+                        value={newSheetTitle}
+                        placeholder="Nome da página"
+                        onChangeText={text => setNewSheetTitle(text)}
+                        //autoFocus
+                        selectTextOnFocus
+                    />
+
+                    <View style={styles.modalBtns}>
+                        <View>
+                            <Pressable
+                                style={[styles.modalBtn, { alignSelf: 'flex-start' }]}
+                                onPress={() =>
+                                {
+                                    setIsRenameVisible(false);
+                                    setIsDeleteSheetVisible(true);
+                                }}
+                            >
+                                <Text style={{ color: colors.red }}>Excluir</Text>
+                            </Pressable>
+                        </View>
+
+                        <View style={styles.modalBtns}>
+                            <Pressable
+                                style={styles.modalBtn}
+                                onPress={() => setIsRenameVisible(false)}
+                            >
+                                <Text>Cancelar</Text>
+                            </Pressable>
+
+                            <Pressable
+                                style={styles.modalBtn}
+                                onPress={saveRenamedSheet}
+                            >
+                                <Text style={styles.modalBtnContent}>Salvar</Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/*<Modal
                 animationType='fade'
                 transparent={true}
                 visible={modalVisible}
@@ -246,43 +330,10 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                         style={styles.modalBox}
                         onTouchStart={() => setTouchIn(true)}
                     >
-                        <TextInput
-                            style={styles.modalInput}
-                            value={newSheetTitle}
-                            placeholder="Nome da página"
-                            onChangeText={text => setNewSheetTitle(text)}
-                            //autoFocus
-                            selectTextOnFocus
-                        />
-                        <View style={styles.modalBtns}>
-                            <View>
-                                <Pressable
-                                    style={[styles.modalBtn, { alignSelf: 'flex-start' }]}
-                                    onPress={saveRenamedSheet}
-                                >
-                                    <Text style={{ color: colors.red }}>Excluir</Text>
-                                </Pressable>
-                            </View>
-
-                            <View style={styles.modalBtns}>
-                                <Pressable
-                                    style={styles.modalBtn}
-                                    onPress={closeModal}
-                                >
-                                    <Text>Cancelar</Text>
-                                </Pressable>
-
-                                <Pressable
-                                    style={styles.modalBtn}
-                                    onPress={saveRenamedSheet}
-                                >
-                                    <Text style={styles.modalBtnContent}>Salvar</Text>
-                                </Pressable>
-                            </View>
-                        </View>
+                        
                     </View>
                 </View>
-            </Modal>
+            </Modal>*/}
 
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={{ flex: 1, padding: 12 }}>
@@ -305,7 +356,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                             <Text>Edição {enableEdition ? 'habilitada' : 'desabilitada'}</Text>
                             <Switch
                                 trackColor={{
-                                    true: 'rgb(18, 163, 33)',
+                                    true: 'rgb(49, 204, 65)',
                                     false: 'rgba(0, 0, 0, 0.14)'
                                 }}
                                 thumbColor={colors.primary}
@@ -355,17 +406,19 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
                             <View style={{ flexDirection: 'column-reverse' }}>
                                 <Pressable
-                                    style={styles.tab}
+                                    style={[
+                                        styles.tab,
+                                        !enableEdition ? {
+                                            opacity: opacities.disabled
+                                        } : null
+                                    ]}
                                     onPress={() =>
                                     {
                                         if(enableEdition)
                                             createSheet();
                                     }}
                                 >
-                                    <Text style={[
-                                        styles.tabContent,
-                                        { color: !enableEdition ? 'rgba(0, 0, 0, 0.4)' : 'black' },
-                                    ]}>+</Text>
+                                    <Text style={styles.tabContent}>+</Text>
                                 </Pressable>
                             </View>
                         </ScrollView>
@@ -412,21 +465,8 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 export default SongScreen;
 
 const styles = StyleSheet.create({
-    // MODAL
-    modalBackground: {
-        flex: 1,
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    },
-    modalBox: {
-        backgroundColor: colors.background,
-        padding: 10,
-        borderRadius: 8,
-    },
     modalInput: {
-        width: 280,
+        width: 240,
         marginBottom: 2,
         paddingHorizontal: 14,
         paddingVertical: 6,
@@ -444,7 +484,7 @@ const styles = StyleSheet.create({
     },
     modalBtnContent: {
         color: colors.primary,
-        fontWeight: 'bold',
+        //fontWeight: 'bold',
         fontSize: 16,
     },
 
@@ -469,6 +509,7 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 8,
     },
     tabContent: {
+        color: 'black',
         fontSize: 18,
     },
     sheets: {
