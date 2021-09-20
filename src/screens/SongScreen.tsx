@@ -43,7 +43,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
     const [sheets, setSheets] = useState<Sheet[]>([]);
     // Folha (sheet) aberta no momento
-    const [currentSheet, _setCurrentSheet] = useState<Sheet>();
+    const [currentSheet, _setCurrentSheet] = useState<Sheet | null>();
     const [enableEdition, setEnableEdition] = useState(false);
     const [changed, _setChanged] = useState(false);
     //const [content, setContent] = useState('');
@@ -165,7 +165,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
             setCurrentSheet(res._array.length > 0
                 ? res._array[0]
-                : undefined
+                : null
             );
         })
         .catch(err => alert(err));
@@ -198,16 +198,22 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
     {
         const unsubscribe = navigation.addListener('focus', () =>
         {
-            SecureStore.getItemAsync('update-songs').then(res =>
+            SecureStore.getItemAsync('updated-song').then(res =>
             {
-                if(res === 'true')
-                    SongService.findById(id).then((res: any) =>
-                    {
-                        setNameInfo(res.name);
-                        setArtistsInfo(res.artists);
-                    })
-                    .catch(err => alert(err));
+                if(res)
+                {
+                    const song = JSON.parse(res);
+                    setNameInfo(song.name);
+                    setArtistsInfo(song.artists);
+
+                    SecureStore.deleteItemAsync('updated-song');
+                }
             });
+
+            /*SecureStore.getItemAsync('update-songs').then(res =>
+            {
+                console.log(route.params.song);
+            });*/
         });
     
         // Return the function to unsubscribe from the event so it gets removed on unmount
@@ -249,18 +255,30 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                             selectTextOnFocus
                         />
                         <View style={styles.modalBtns}>
-                            <Pressable
-                                style={styles.modalBtn}
-                                onPress={saveRenamedSheet}
-                            >
-                                <Text style={styles.modalBtnContent}>Salvar</Text>
-                            </Pressable>
-                            <Pressable
-                                style={styles.modalBtn}
-                                onPress={closeModal}
-                            >
-                                <Text>Cancelar</Text>
-                            </Pressable>
+                            <View>
+                                <Pressable
+                                    style={[styles.modalBtn, { alignSelf: 'flex-start' }]}
+                                    onPress={saveRenamedSheet}
+                                >
+                                    <Text style={{ color: colors.red }}>Excluir</Text>
+                                </Pressable>
+                            </View>
+
+                            <View style={styles.modalBtns}>
+                                <Pressable
+                                    style={styles.modalBtn}
+                                    onPress={closeModal}
+                                >
+                                    <Text>Cancelar</Text>
+                                </Pressable>
+
+                                <Pressable
+                                    style={styles.modalBtn}
+                                    onPress={saveRenamedSheet}
+                                >
+                                    <Text style={styles.modalBtnContent}>Salvar</Text>
+                                </Pressable>
+                            </View>
                         </View>
                     </View>
                 </View>
@@ -273,7 +291,10 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                             onPress={() =>
                             {
                                 if(enableEdition)
-                                    navigation.navigate('NewSong', { song: route.params.song });
+                                    navigation.navigate('NewSong', { song: {
+                                        id,
+                                        name: nameInfo
+                                    } });
                             }}
                         >
                             <Text style={{ fontSize: 24 }}>{ nameInfo }</Text>
@@ -405,7 +426,8 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     modalInput: {
-        width: 220,
+        width: 280,
+        marginBottom: 2,
         paddingHorizontal: 14,
         paddingVertical: 6,
         borderWidth: 1,
@@ -413,8 +435,8 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     modalBtns: {
-        flexDirection: 'row-reverse',
-        marginTop: 2,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
     },
     modalBtn: {

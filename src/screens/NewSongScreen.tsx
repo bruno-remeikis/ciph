@@ -9,6 +9,8 @@ import { Artist } from '../models/Artist';
 
 import { colors } from '../utils/colors';
 import SongArtistService from '../services/SongArtistService';
+import { Song } from '../models/Song';
+import { groupConcat } from '../utils/functions';
 
 const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 {
@@ -64,7 +66,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     /**
      * ATENÇÃO: Dados devem ser validados antes por 'validateSubmit()'
      */
-    function handleSubmit()
+    function handleSubmit(artists: ArtistProps[])
     {
         const validArtists: ArtistProps[] = [];
 
@@ -74,6 +76,14 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                 // Adicionar artista a ser persistido
                 validArtists.push(artist);
 
+        // Música para atualização da tela 'SongScreen'
+        const song: Song = {
+            id: id ? id : undefined,
+            name,
+            artists: groupConcat(artists.map(art => art.obj.name)),
+        };
+
+        // UPDATE
         if(updateScreen)
         {
             if(id === null)
@@ -130,18 +140,29 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
             if(back)
             {
+                // Diz à 'HomeScreen' que músicas devem ser atualizadas
                 SecureStore.setItemAsync('update-songs', 'true');
-                navigation.goBack();
+                // Seta a música atualizada (usada para atualizar 'SongScreen')
+                SecureStore.setItemAsync('updated-song', JSON.stringify(song));
+                // Volta para 'SongScreen' e atualiza o título da tela
+                navigation.navigate('Song', { song });
             }
         }
+        // NEW
         else
         {
             SongService.create({ name }, validArtists.map(({ obj }) => obj))
-            .then(() =>
+            .then(res =>
             {
-                SecureStore.setItemAsync('update-songs', 'true')
-                .then(() => navigation.goBack());
-                //navigation.navigate('Home', { update: true }))
+                song.id = res;
+
+                // Diz à 'HomeScreen' que músicas devem ser atualizadas
+                SecureStore.setItemAsync('update-songs', 'true');
+
+                // Impede que, ao clicar em voltar, volte para 'NewSongScreen'
+                navigation.pop(1);
+                // Ir para tela da música
+                navigation.navigate('Song', { song });
             })
             .catch(err => alert(err));
         }
@@ -167,8 +188,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
             .then(() =>
             {
                 SecureStore.setItemAsync('update-songs', 'true')
-                    .then(() => navigation.goBack());
-                //navigation.navigate('Home', { update: true }))
+                    .then(() => navigation.pop(2)); // <- Volta 2 telas
             })
             .catch(err => alert(err));
     }
@@ -253,8 +273,32 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
             }
         }
 
-        console.log('aaa');
         setDisabledSubmit(unfilledArtists);
+    }
+
+    function overwriteArtist(artist: ArtistProps, i: number): ArtistProps[]
+    {
+        // Verificar se nome está entre os pesquisados.
+        // Se sim, substitui a linha pelo pesquisado encontrado
+        if(!artist.existing && artist.equals !== undefined)
+            return artists;
+
+        const artistsAux: ArtistProps[] = [...artists];
+
+        // Roda todos os artistas pesquisados
+        for(const researchArt of researchArtists)
+            // Se nome do pesquisado for igual ao do campo
+            if(artist.obj.name.trim().toUpperCase() === researchArt.name.toUpperCase())
+            {
+                if(researchArt.id !== undefined)
+                    setRestrictedIds([ ...restrictedIds, researchArt.id ]);
+
+                artistsAux[i] = { obj: researchArt };
+                break;
+            }
+
+        setArtists(artistsAux);
+        return artistsAux;
     }
 
 
@@ -315,8 +359,8 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                 let statusStyle = {};
                                 if(artist.existing || artist.equals !== undefined)
                                     statusStyle = {
-                                        backgroundColor: `rgba(${colors.errorRGB}, 0.08)`,
-                                        borderColor: colors.error,
+                                        backgroundColor: `rgba(${colors.redLightRGB}, 0.08)`,
+                                        borderColor: colors.redLight,
                                     };
                                 else if(artist.obj.id !== undefined)
                                     statusStyle = {
@@ -349,40 +393,26 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                                 }}
                                                 onFocus={() =>
                                                 {
+                                                    // Remove marcação de 'já existente' (id !== undefined).
+                                                    // Para isso, seta id como undefined
+                                                    /*if(artist.obj.id !== undefined)
+                                                    {
+                                                        // Remove-o da lista de artistas restritos
+                                                        // para que volte a aparecer nas pesquisar durante
+                                                        // o preenchimento dos TextInput de artistas
+                                                        setRestrictedIds(restrictedIds.filter(restId =>
+                                                            restId !== artist.obj.id
+                                                        ));
+
+                                                        artist.obj.id = undefined;
+                                                    }*/
+
                                                     handleSearch(artist.obj.name);
                                                     setCurrentFocusIndex(i);
                                                 }}
                                                 onBlur={() =>
                                                 {
-                                                    // Verificar se nome está entre os pesquisados.
-                                                    // Se sim, substitui a linha pelo pesquisado encontrado
-                                                    if(!artist.existing && artist.equals === undefined)
-                                                    // Roda todos os artistas pesquisados
-                                                        for(let j = 0; j < researchArtists.length; j++)
-                                                        {
-                                                            const researchArt = researchArtists[j];
-
-                                                            // Se nome do pesquisado for igual ao do campo
-                                                            if(artist.obj.name.trim().toUpperCase() === researchArt.name.toUpperCase())
-                                                            {
-                                                                // Joga o pesquisado para o campo
-                                                                setArtists(artists.map((art, k) =>
-                                                                {
-                                                                    if(i === k)
-                                                                    {
-                                                                        if(researchArt.id !== undefined)
-                                                                            setRestrictedIds([ ...restrictedIds, researchArt.id ]);
-
-                                                                        return { obj: researchArt };
-                                                                    }
-
-                                                                    return art;
-                                                                }));
-
-                                                                break;
-                                                            }
-                                                        }
-
+                                                    overwriteArtist(artist, i);
                                                     setCurrentFocusIndex(null);
                                                 }}
                                                 editable={!artist.obj.id}
@@ -392,7 +422,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                                 <Text style={{
                                                     alignSelf: 'center',
                                                     color: artist.existing || artist.equals !== undefined
-                                                        ? colors.errorDark
+                                                        ? colors.red
                                                         : colors.primary,
                                                     fontSize: 12,
                                                     marginRight: deletable ? 0 : 12,
@@ -521,7 +551,17 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                         style={[styles.submit, disabledSubmit ? {
                             backgroundColor: 'rgba(0, 0, 0, 0.06)'
                         } : {}]}
-                        onPress={handleSubmit}
+                        onPress={() =>
+                        {
+                            const arts = currentFocusIndex !== null
+                                ? overwriteArtist(
+                                    artists[currentFocusIndex],
+                                    currentFocusIndex
+                                )
+                                : artists;
+
+                            handleSubmit(arts);
+                        }}
                         disabled={disabledSubmit}
                     >
                         <Text style={[styles.submitContent, disabledSubmit ? {
@@ -541,7 +581,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                         >
                             <Text style={{
                                 textAlignVertical: 'center',
-                                color: 'red',
+                                color: colors.red,
                                 fontSize: 14
                             }}>Excluir</Text>
                         </Pressable>

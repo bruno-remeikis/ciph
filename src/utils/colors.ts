@@ -8,9 +8,9 @@ export const colors = {
 
     text: '#0f0f0f',
 
-    error: 'rgb(255, 136, 130)',
-    errorRGB: '255, 136, 130',
-    errorDark: 'rgb(255, 63, 51)',
+    red: 'rgb(230, 50, 39)',
+    redLight: 'rgb(255, 136, 130)',
+    redLightRGB: '255, 136, 130',
 
     inputBorder: 'rgba(0, 0, 0, 0.2)',
 }
