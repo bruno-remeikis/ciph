@@ -30,7 +30,13 @@ export default class SheetService
                 ${sheet.content}
             ) values (?, ?, ?)`;
 
-            tx.executeSql(sql, [obj.songId, obj.title, obj.content], (_, { rowsAffected, insertId }) =>
+            const args = [
+                obj.songId,
+                obj.title.trim(),
+                obj.content
+            ];
+
+            tx.executeSql(sql, args, (_, { rowsAffected, insertId }) =>
             {
                 if(rowsAffected > 0)
                     resolve(insertId);

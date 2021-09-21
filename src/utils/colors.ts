@@ -16,5 +16,5 @@ export const colors = {
 }
 
 export const opacities = {
-    disabled: 0.65,
+    disabled: 0.50,
 }

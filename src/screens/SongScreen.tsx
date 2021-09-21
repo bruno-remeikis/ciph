@@ -2,28 +2,42 @@ import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View, Pressable, TextInput, ScrollView, Switch, AppState } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
+// Icons
+import FeatherIcon from 'react-native-vector-icons/Feather';
+
+// Models
 import { Sheet } from '../models/Sheet';
 
+// Services
 import SheetService from '../services/SheetService';
 
+// Utils
 import { colors, opacities } from '../utils/colors';
 
+// Components
 import Modal from '../components/Modal';
 import ConfirmModal from '../components/ConfirmModal';
 
+// Contexts
+import { useUpdated } from '../contexts/Updated';
 
 
-// ---------- CONSTS ----------
+
+// Consts
 
 const tabVerticalPadding = 2;
 
 
 
-// ---------- SCREEN ----------
+// Screen
 
 const SongScreen: React.FC<any> = ({ navigation, route }) =>
 {
-    // ---------- CONSTS ---------- //
+    // ---------- CONTEXTS ----------
+
+    const { updated, setUpdated } = useUpdated();
+
+    // ---------- CONSTS ----------
 
     const { id, name, artists } = route.params.song;
 
@@ -226,7 +240,18 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
     {
         const unsubscribe = navigation.addListener('focus', () =>
         {
-            SecureStore.getItemAsync('updated-song').then(res =>
+            if(typeof updated === 'object')
+            {
+                setNameInfo(updated.name);
+                setArtistsInfo(
+                    typeof updated.artists === 'string'
+                        ? updated.artists
+                        : ''
+                );
+                setUpdated(false);
+            }
+
+            /*SecureStore.getItemAsync('updated-song').then(res =>
             {
                 if(res)
                 {
@@ -236,7 +261,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
                     SecureStore.deleteItemAsync('updated-song');
                 }
-            });
+            });*/
         });
     
         // Return the function to unsubscribe from the event so it gets removed on unmount
@@ -310,30 +335,6 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                     </View>
                 </View>
             </Modal>
-
-            {/*<Modal
-                animationType='fade'
-                transparent={true}
-                visible={modalVisible}
-                onRequestClose={closeModal}
-            >
-                <View
-                    style={styles.modalBackground}
-                    onTouchEnd={() =>
-                    {
-                        if(!touchIn)
-                            closeModal();
-                        setTouchIn(false);
-                    }}
-                >
-                    <View
-                        style={styles.modalBox}
-                        onTouchStart={() => setTouchIn(true)}
-                    >
-                        
-                    </View>
-                </View>
-            </Modal>*/}
 
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={{ flex: 1, padding: 12 }}>
@@ -418,7 +419,13 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                             createSheet();
                                     }}
                                 >
-                                    <Text style={styles.tabContent}>+</Text>
+                                    <FeatherIcon
+                                        style={styles.tabPlus}
+                                        name='plus'
+                                        size={14}
+                                        color='#000000'
+                                    />
+                                    {/*<Text style={styles.tabContent}>+</Text>*/}
                                 </Pressable>
                             </View>
                         </ScrollView>
@@ -450,7 +457,8 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                         style={styles.newSheetBtn}
                                         onPress={createSheet}
                                     >
-                                        <Text style={{ fontSize: 22 }}>+</Text>
+                                        <FeatherIcon name='plus' size={18} color='#000000' />
+                                        {/*<Text style={{ fontSize: 22 }}>+</Text>*/}
                                     </Pressable>
                                 </View>
                             </View>
@@ -511,6 +519,9 @@ const styles = StyleSheet.create({
     tabContent: {
         color: 'black',
         fontSize: 18,
+    },
+    tabPlus: {
+        marginVertical: 4.4,
     },
     sheets: {
         flex: 1,

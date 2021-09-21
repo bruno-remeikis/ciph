@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, TextInput } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
 
+// Icons
+import FeatherIcon from 'react-native-vector-icons/Feather';
+
+// Services
 import SongService from '../services/SongService';
+
+// Models
 import { Song } from '../models/Song';
 
+// Utils
 import { colors } from '../utils/colors';
-import Database from '../database/Database';
+
+// Contexts
+import { useUpdated } from '../contexts/Updated';
 
 const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 {
+	// ---------- CONTEXTS ----------
+
+	const { updated, setUpdated } = useUpdated();
+
+	
+
 	// ---------- STATES ----------
 
 	const [search, setSearch] = useState<string>('');
@@ -42,26 +56,19 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 	useEffect(() => searchSongs(""), []);
 
 	/**
-	 * Carrega as músicas quando esta tela ganha foco e caso seja necessário
+	 * Atualiza músicas
 	 */
 	useEffect(() =>
 	{
-		const unsubscribe = navigation.addListener('focus', () =>
+		console.log(`-> UPDATED: ${updated}`);
+
+		if(updated)
 		{
-			SecureStore.getItemAsync('update-songs').then(res =>
-			{
-				if(res === 'true')
-				{
-					searchSongs(search);
-					SecureStore.deleteItemAsync('update-songs');
-				}
-			});
-		});
-	
-		// Return the function to unsubscribe from the event so it gets removed on unmount
-		return unsubscribe;
+			searchSongs(search);
+			setUpdated(false);
+		}
 	},
-	[navigation]);
+	[updated]);
 
 	/**
 	 * Atualiza mensagem de status
@@ -110,7 +117,7 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 								searchSongs('');
 							}}
 						>
-							<Text style={styles.searchClearBtnText}>X</Text>
+							<FeatherIcon name='x' size={16} color='#000000' />
 						</Pressable>
 					</View>
 
@@ -137,22 +144,10 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 			</ScrollView>
 
 			<Pressable
-				style={styles.deleteAllBtn}
-				onPress={() =>
-				{
-					Database.recreate()
-						.then(() => searchSongs(''))
-						.catch(err => alert(err));
-				}}
-			>
-				<Text style={styles.deleteBtnContent}>X</Text>
-			</Pressable>
-
-			<Pressable
 				style={styles.newBtn}
 				onPress={() => navigation.navigate('NewSong')}
 			>
-				<Text style={styles.newBtnContent}>+</Text>
+				<FeatherIcon name='plus' size={30} color='#ffff' />
 			</Pressable>
 		</View>
   	);
@@ -192,21 +187,14 @@ const styles = StyleSheet.create({
 	},
 	searchInput: {
 		flex: 1,
-
+		
 		paddingHorizontal: 18,
 		paddingVertical: 4,
 	},
 	searchClearBtn: {
 		alignItems: 'center',
-		width: 30,
-		height: '100%',
-		marginRight: 6,
+		marginRight: 12,
 		fontSize: 6,
-	},
-	searchClearBtnText: {
-		flex: 1,
-		textAlignVertical: 'center',
-		fontSize: 12,
 	},
 	searchStatus: {
 		width: '100%',
@@ -245,27 +233,4 @@ const styles = StyleSheet.create({
 		height: 60,
 		borderRadius: 999
 	},
-	newBtnContent: {
-		color: 'white',
-		fontSize: 40
-	},
-
-	deleteAllBtn: {
-		position: 'absolute',
-		bottom: 18,
-		left: 18,
-
-		justifyContent: 'space-around',
-		alignItems: 'center',
-
-		backgroundColor: colors.primary,
-
-		width: 60,
-		height: 60,
-		borderRadius: 999
-	},
-	deleteBtnContent: {
-		color: 'white',
-		fontSize: 26
-	}
 });

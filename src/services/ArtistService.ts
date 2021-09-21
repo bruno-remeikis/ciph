@@ -1,6 +1,8 @@
 import { SQLResultSetRowList, SQLTransaction } from 'expo-sqlite';
 import { db } from '../database/connection';
 
+import { remove } from 'remove-accents';
+
 import SongArtistService, { song_artist } from './SongArtistService';
 
 import { Artist } from '../models/Artist';
@@ -9,6 +11,7 @@ export const artist = {
     table: 'tb_artist',
     id: 'art_id_pk',
     name: 'art_name',
+    unaccentedName: 'art_unaccented_name',
 }
 
 export default class ArtistService
@@ -43,8 +46,9 @@ export default class ArtistService
 
         const sql =
             `insert into ${artist.table} (
-                ${artist.name}
-            ) values (?)`;
+                ${artist.name},
+                ${artist.unaccentedName}
+            ) values (?, ?)`;
 
         artists.forEach(artist =>
         {
@@ -52,11 +56,18 @@ export default class ArtistService
             if(artist.id)
                 SongArtistService.createTx(tx, songId, artist.id);
             else
-                tx.executeSql(sql, [artist.name], (_, { rowsAffected, insertId }) =>
+            {
+                const args = [
+                    artist.name.trim(),
+                    remove(artist.name.trim())
+                ];
+
+                tx.executeSql(sql, args, (_, { rowsAffected, insertId }) =>
                 {
                     if(rowsAffected > 0)
                         SongArtistService.createTx(tx, songId, insertId);
                 });
+            }
         });
     }
 
@@ -95,6 +106,8 @@ export default class ArtistService
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
+            name = remove(name.trim()); // <- Remover acentos
+
             let where = "";
             restrictedIds.forEach(id => where += id + ", ");
 
@@ -111,7 +124,7 @@ export default class ArtistService
                 from
                     ${artist.table}
                 where
-                    ${artist.name} like '%${name}%'
+                    ${artist.unaccentedName} like '%${name}%'
                     ${where}`;
 
             tx.executeSql(sql, [], (_, { rows }) => resolve(rows));

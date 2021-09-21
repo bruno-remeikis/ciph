@@ -1,22 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, Pressable, TextInput, ScrollView } from 'react-native';
-import * as SecureStore from 'expo-secure-store';
 
+// Icons
+import FeatherIcon from 'react-native-vector-icons/Feather';
+
+// Components
 import ConfirmModal from '../components/ConfirmModal';
 
+// Services
 import SongService from '../services/SongService';
 import ArtistService from '../services/ArtistService';
-
-import { Artist } from '../models/Artist';
-
-import { colors, opacities } from '../utils/colors';
 import SongArtistService from '../services/SongArtistService';
+
+// Models
+import { Artist } from '../models/Artist';
 import { Song } from '../models/Song';
+
+// Utils
+import { colors, opacities } from '../utils/colors';
 import { groupConcat } from '../utils/functions';
+
+// Contexts
+import { useUpdated } from '../contexts/Updated';
 
 const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 {
-    // ---------- CONSTS ---------- //
+    // ---------- CONTEXTS ----------
+
+    const { setUpdated } = useUpdated();
+
+
+
+    // ---------- CONSTS ----------
 
     const id: number | null = route.params?.song?.id
         ? route.params.song.id
@@ -30,7 +45,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
 
 
-    // ---------- TYPES ---------- //
+    // ---------- TYPES ----------
 
     type ArtistProps = {
         obj: Artist;
@@ -41,7 +56,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
 
 
-    // ---------- STATES ---------- //
+    // ---------- STATES ----------
 
     const [name, setName] = useState(initialName ? initialName : '');
     const [artists, setArtists] = useState<ArtistProps[]>([{ obj: { name: '' } }]);
@@ -65,26 +80,23 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
 
 
-    // ---------- FUNCTIONS ---------- //
+    // ---------- FUNCTIONS ----------
 
     /**
      * ATENÇÃO: Dados devem ser validados antes por 'validateSubmit()'
      */
     function handleSubmit(artists: ArtistProps[])
     {
-        const validArtists: ArtistProps[] = [];
-
-        // Validar artistas
-        for(const artist of artists)
-            if(artist.obj.name.trim().length !== 0)
-                // Adicionar artista a ser persistido
-                validArtists.push(artist);
+        // Remover campos em branco
+        const validArtists: ArtistProps[] = artists.filter(art =>
+            art.obj.name.trim().length !== 0
+        );
 
         // Música para atualização da tela 'SongScreen'
         const song: Song = {
             id: id ? id : undefined,
             name,
-            artists: groupConcat(artists.map(art => art.obj.name)),
+            artists: groupConcat(validArtists.map(art => art.obj.name)),
         };
 
         // UPDATE
@@ -145,10 +157,12 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
             if(back)
             {
                 // Diz à 'HomeScreen' que músicas devem ser atualizadas
-                SecureStore.setItemAsync('update-songs', 'true');
+                //SecureStore.setItemAsync('update-songs', 'true');
                 // Seta a música atualizada (usada para atualizar 'SongScreen')
-                SecureStore.setItemAsync('updated-song', JSON.stringify(song));
+                //SecureStore.setItemAsync('updated-song', JSON.stringify(song));
                 // Volta para 'SongScreen' e atualiza o título da tela
+
+                setUpdated(song);
                 navigation.navigate('Song', { song });
             }
         }
@@ -161,7 +175,8 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                 song.id = res;
 
                 // Diz à 'HomeScreen' que músicas devem ser atualizadas
-                SecureStore.setItemAsync('update-songs', 'true');
+                setUpdated(true);
+                //SecureStore.setItemAsync('update-songs', 'true');
 
                 // Impede que, ao clicar em voltar, volte para 'NewSongScreen'
                 navigation.pop(1);
@@ -191,8 +206,11 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
             SongService.delete(id)
             .then(() =>
             {
-                SecureStore.setItemAsync('update-songs', 'true')
-                    .then(() => navigation.pop(2)); // <- Volta 2 telas
+                /*SecureStore.setItemAsync('update-songs', 'true')
+                    .then(() => navigation.pop(2)); // <- Volta 2 telas*/
+
+                setUpdated(true);
+                navigation.pop(2); // <- Volta 2 telas
             })
             .catch(err => alert(err));
     }
@@ -306,7 +324,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     }
 
 
-    // ---------- EFFECTS ---------- //
+    // ---------- EFFECTS ----------
 
     /**
      * Carrega os artistas caso uma música tenha sido passada para a rota
@@ -330,7 +348,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
 
 
-    // ---------- RETURN ---------- //
+    // ---------- RETURN ----------
 
     return (
         <>
@@ -559,7 +577,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                     style={styles.btnAddArtist}
                                     onPress={() => setArtists([ ...artists, { obj: { name: '' } } ])}
                                 >
-                                    <Text style={{ fontSize: 18 }}>+</Text>
+                                    <FeatherIcon name='plus' size={15} color='#000000' />
                                 </Pressable>
                             </View>
                         </View>

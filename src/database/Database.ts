@@ -19,12 +19,14 @@ export default class Database
         var sqls = [
             `create table if not exists ${song.table} (
                 ${song.id} integer primary key autoincrement,
-                ${song.name} text not null
+                ${song.name} text not null,
+                ${song.unaccentedName} text not null
             );`,
 
             `create table if not exists ${artist.table} (
                 ${artist.id} integer primary key autoincrement,
-                ${artist.name} text unique not null
+                ${artist.name} text unique not null,
+                ${artist.unaccentedName} text not null
             );`,
 
             `create table if not exists ${song_artist.table} (
@@ -46,7 +48,7 @@ export default class Database
 
                 foreign key (${sheet.songId})
                     references ${song.table} (${song.id})
-            );`
+            );`,
         ];
 
         return new Promise((resolve, reject) => db.transaction(tx =>

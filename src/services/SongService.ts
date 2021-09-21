@@ -7,11 +7,13 @@ import SongArtistService, { song_artist } from './SongArtistService';
 
 import { Song } from '../models/Song';
 import { Artist } from '../models/Artist';
+import { remove } from 'remove-accents';
 
 export const song = {
     table: 'tb_song',
     id: 'sng_id_pk',
-    name: 'sng_name'
+    name: 'sng_name',
+    unaccentedName: 'sng_unaccented_name',
 }
 
 export default class SongService
@@ -31,10 +33,16 @@ export default class SongService
         {
             const sql =
                 `insert into ${song.table} (
-                    ${song.name}
-                ) values (?)`;
+                    ${song.name},
+                    ${song.unaccentedName}
+                ) values (?, ?)`;
 
-            tx.executeSql(sql, [obj.name.trim()], (_, { rowsAffected, insertId }) =>
+            const args = [
+                obj.name.trim(),
+                remove(obj.name.trim())
+            ];
+
+            tx.executeSql(sql, args, (_, { rowsAffected, insertId }) =>
             {
                 if(rowsAffected > 0)
                 {
@@ -67,11 +75,12 @@ export default class SongService
             // Quebra a pesquisa por palavras
             const words = search.split(" ");
             // Pesquisa separadamente por cada palavra
-            // or artist like '%${word}%'
-            words.forEach(word => {
+            words.forEach(word =>
+            {
+                word = remove(word); // < -Remover acentos
                 where +=
-                    `or ${song.name} like '%${word}%' ` +
-                    `or ${artist.name} like '%${word}%'`
+                    `or ${song.unaccentedName} like '%${word}%' ` +
+                    `or ${artist.unaccentedName} like '%${word}%' `
             });
             where = where.replace('or', 'where');
         }
