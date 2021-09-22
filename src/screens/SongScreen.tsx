@@ -4,6 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 
 // Icons
 import FeatherIcon from 'react-native-vector-icons/Feather';
+import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Models
 import { Sheet } from '../models/Sheet';
@@ -353,11 +354,22 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                             <Text style={{ fontSize: 16 }}>{ artistsInfo }</Text>
                         </Pressable>
 
-                        <View>
-                            <Text>Edição {enableEdition ? 'habilitada' : 'desabilitada'}</Text>
+                        <View style={{
+                            alignItems: 'center',
+                            backgroundColor: `rgba(${colors.primaryRGB}, 0.24)`,
+                            paddingHorizontal: 4,
+                            paddingVertical: 6,
+                            borderRadius: 8,
+                        }}>
+                            <MaterialCommunityIcon
+                                name={enableEdition ? 'pencil' : 'pencil-off'}
+                                size={20}
+                                color='#000000'
+                            />
+                            
                             <Switch
                                 trackColor={{
-                                    true: 'rgb(49, 204, 65)',
+                                    true: 'rgb(111, 184, 0)',
                                     false: 'rgba(0, 0, 0, 0.14)'
                                 }}
                                 thumbColor={colors.primary}
@@ -499,7 +511,7 @@ const styles = StyleSheet.create({
     // HEADER
     header: {
         flexDirection: 'row',
-        alignItems: 'center',
+        //alignItems: 'center',
         justifyContent: 'space-between',
     },
 

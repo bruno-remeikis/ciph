@@ -60,8 +60,6 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 	 */
 	useEffect(() =>
 	{
-		console.log(`-> UPDATED: ${updated}`);
-
 		if(updated)
 		{
 			searchSongs(search);
