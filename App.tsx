@@ -50,24 +50,29 @@ const HomeHeader: React.FC = () =>
 
 	return (
 		<>
-			<Pressable onPress={() => setIsMenuVisible(true)}>
+			<Pressable
+				style={styles.menuBtn}
+				onPress={() => setIsMenuVisible(true)}
+			>
 				<EntypoIcon name='dots-three-vertical' size={18} color='#ffffff' />
 			</Pressable>
 
 			{/* Menú */}
 			<Modal
+				style={styles.menuContainer}
 				visible={isMenuVisible}
 				setVisible={setIsMenuVisible}
 			>
 				<Pressable
-					style={{ padding: 12 }}
+					style={styles.menuItem}
 					onPress={() =>
 					{
 						setIsMenuVisible(false);
 						setIsConfirmResetVisible(true);
 					}}
 				>
-					<Text>Resetar dados</Text>
+					<FeatherIcon name='trash-2' size={menuIconSize} color={colors.red} />
+					<Text style={[styles.menuItemContent, {color: colors.red}]}>Resetar dados</Text>
 				</Pressable>
 			</Modal>
 
@@ -117,7 +122,7 @@ const SongHeader: React.FC<SongHeaderProps> = ({ route, navigation }) =>
 	function handleDelete()
     {
 		setIsConfirmDeleteVisible(false);
-		
+
         if(song.id !== undefined)
             SongService.delete(song.id)
             .then(() =>
@@ -130,67 +135,54 @@ const SongHeader: React.FC<SongHeaderProps> = ({ route, navigation }) =>
 
 	return (
 		<>
-			<Pressable onPress={() => setIsMenuVisible(true) }>
+			<Pressable
+				style={styles.menuBtn}
+				onPress={() => setIsMenuVisible(true)}
+			>
 				<EntypoIcon name='dots-three-vertical' size={18} color='#ffffff' />
 			</Pressable>
 
 			{/* Menú */}
 			<Modal
+				style={styles.menuContainer}
 				visible={isMenuVisible}
 				setVisible={setIsMenuVisible}
 			>
-				<View style={styles.menuContainer}>
-					{/* Editar */}
-					<Pressable
-						style={styles.menuItem}
-						onPress={() =>
-						{
-							setIsMenuVisible(false);
-							navigation.navigate('NewSong', { song });
-						}}
-					>
-						<FeatherIcon name='edit-2' size={menuIconSize} color={colors.text} />
-						<Text style={styles.menuItemContent}>Editar</Text>
-					</Pressable>
-
-					{/* Deletar */}
-					<Pressable
-						style={styles.menuItem}
-						onPress={() => setIsConfirmDeleteVisible(true)}
-					>
-						<FeatherIcon name='x' size={menuIconSize} color={colors.text} />
-						<Text style={styles.menuItemContent}>Deletar</Text>
-					</Pressable>
-
-					{/* Sobre */}
-					<Pressable
-						style={styles.menuItem}
-						onPress={() =>
-						{
-							setIsMenuVisible(false);
-							setIsInfoVisible(true);
-						}}
-					>
-						<FeatherIcon name='info' size={menuIconSize} color={colors.text} />
-						<Text style={styles.menuItemContent}>Sobre</Text>
-					</Pressable>
-				</View>
-			</Modal>
-
-			{/* Confirmar delete */}
-			<ConfirmModal
-				visible={isConfirmDeleteVisible}
-				setVisible={setIsConfirmDeleteVisible}
-				text='Deseja mesmo excluir esta música?'
-				buttons={[
+				{/* Editar */}
+				<Pressable
+					style={styles.menuItem}
+					onPress={() =>
 					{
-						text: 'Excluir',
-						color: colors.red,
-						onClick: handleDelete
-					},
-					{ text: 'Cancelar' }
-				]}
-			/>
+						setIsMenuVisible(false);
+						navigation.navigate('NewSong', { song });
+					}}
+				>
+					<FeatherIcon name='edit-2' size={menuIconSize} color={colors.text} />
+					<Text style={styles.menuItemContent}>Editar</Text>
+				</Pressable>
+
+				{/* Sobre */}
+				<Pressable
+					style={styles.menuItem}
+					onPress={() =>
+					{
+						setIsMenuVisible(false);
+						setIsInfoVisible(true);
+					}}
+				>
+					<FeatherIcon name='info' size={menuIconSize} color={colors.text} />
+					<Text style={styles.menuItemContent}>Sobre</Text>
+				</Pressable>
+
+				{/* Deletar */}
+				<Pressable
+					style={[ styles.menuItem, styles.menuItemDelete ]}
+					onPress={() => setIsConfirmDeleteVisible(true)}
+				>
+					<FeatherIcon name='x' size={menuIconSize} color={colors.red} />
+					<Text style={[styles.menuItemContent, { color: colors.red }]}>Deletar</Text>
+				</Pressable>
+			</Modal>
 
 			{/* Sobre */}
 			<Modal
@@ -223,6 +215,21 @@ const SongHeader: React.FC<SongHeaderProps> = ({ route, navigation }) =>
 					: <Text>Não há informações</Text>}
 				</View>
 			</Modal>
+
+			{/* Confirmar delete */}
+			<ConfirmModal
+				visible={isConfirmDeleteVisible}
+				setVisible={setIsConfirmDeleteVisible}
+				text='Deseja mesmo excluir esta música?'
+				buttons={[
+					{
+						text: 'Excluir',
+						color: colors.red,
+						onClick: handleDelete
+					},
+					{ text: 'Cancelar' }
+				]}
+			/>
 		</>
 	);
 }
@@ -271,7 +278,7 @@ const AppContent: React.FC = () =>
 				<Stack.Screen
 					name="Home"
 					component={HomeScreen}
-					options={({ route }) => ({
+					options={() => ({
 						title: 'Ciphersonal',
 						headerRight: () => <HomeHeader />
 					})}
@@ -319,15 +326,22 @@ export default App;
 // ---------- STYLES ----------
 
 const styles = StyleSheet.create({
+	menuBtn: {
+		padding: 10,
+	},
 	menuContainer: {
 		minWidth: 170,
-		paddingVertical: 6,
+		padding: 9,
 	},
 	menuItem: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		paddingHorizontal: 12,
-		paddingVertical: 6,
+		padding: 9,
+	},
+	menuItemDelete: {
+		marginTop: 9,
+		borderTopWidth: 1,
+		borderTopColor: colors.inputBorder,
 	},
 	menuItemContent: {
 		marginLeft: 12,

@@ -281,48 +281,47 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
             />
 
             <Modal
+                style={{ padding: 10 }}
                 visible={isRenameVisible}
                 setVisible={setIsRenameVisible}
             >
-                <View style={{ padding: 10 }}>
-                    <TextInput
-                        style={styles.modalInput}
-                        value={newSheetTitle}
-                        placeholder="Nome da página"
-                        onChangeText={text => setNewSheetTitle(text)}
-                        //autoFocus
-                        selectTextOnFocus
-                    />
+                <TextInput
+                    style={styles.modalInput}
+                    value={newSheetTitle}
+                    placeholder="Nome da página"
+                    onChangeText={text => setNewSheetTitle(text)}
+                    //autoFocus
+                    selectTextOnFocus
+                />
+
+                <View style={styles.modalBtns}>
+                    <View>
+                        <Pressable
+                            style={[styles.modalBtn, { alignSelf: 'flex-start' }]}
+                            onPress={() =>
+                            {
+                                setIsRenameVisible(false);
+                                setIsDeleteSheetVisible(true);
+                            }}
+                        >
+                            <Text style={{ color: colors.red }}>Excluir</Text>
+                        </Pressable>
+                    </View>
 
                     <View style={styles.modalBtns}>
-                        <View>
-                            <Pressable
-                                style={[styles.modalBtn, { alignSelf: 'flex-start' }]}
-                                onPress={() =>
-                                {
-                                    setIsRenameVisible(false);
-                                    setIsDeleteSheetVisible(true);
-                                }}
-                            >
-                                <Text style={{ color: colors.red }}>Excluir</Text>
-                            </Pressable>
-                        </View>
+                        <Pressable
+                            style={styles.modalBtn}
+                            onPress={() => setIsRenameVisible(false)}
+                        >
+                            <Text>Cancelar</Text>
+                        </Pressable>
 
-                        <View style={styles.modalBtns}>
-                            <Pressable
-                                style={styles.modalBtn}
-                                onPress={() => setIsRenameVisible(false)}
-                            >
-                                <Text>Cancelar</Text>
-                            </Pressable>
-
-                            <Pressable
-                                style={styles.modalBtn}
-                                onPress={saveRenamedSheet}
-                            >
-                                <Text style={styles.modalBtnContent}>Salvar</Text>
-                            </Pressable>
-                        </View>
+                        <Pressable
+                            style={styles.modalBtn}
+                            onPress={saveRenamedSheet}
+                        >
+                            <Text style={styles.modalBtnContent}>Salvar</Text>
+                        </Pressable>
                     </View>
                 </View>
             </Modal>
@@ -336,13 +335,21 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                         </View>
 
                         <View>
-                            <View style={{
-                                alignItems: 'center',
-                                backgroundColor: `rgba(${colors.primaryRGB}, 0.24)`,
-                                paddingHorizontal: 4,
-                                paddingVertical: 6,
-                                borderRadius: 8,
-                            }}>
+                            <Pressable
+                                style={{
+                                    alignItems: 'center',
+                                    backgroundColor: `rgba(${colors.primaryRGB}, 0.24)`,
+                                    paddingHorizontal: 4,
+                                    paddingVertical: 6,
+                                    borderRadius: 8,
+                                }}
+                                onPress={() =>
+                                {
+                                    const v = !enableEdition;
+                                    setEnableEdition(v);
+                                    SecureStore.setItemAsync('enable-edition', v ? 'true' : 'false');
+                                }}
+                            >
                                 <MaterialCommunityIcon
                                     name={enableEdition ? 'pencil' : 'pencil-off'}
                                     size={20}
@@ -355,14 +362,14 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                         false: 'rgba(0, 0, 0, 0.14)'
                                     }}
                                     thumbColor={colors.primary}
-                                    onValueChange={v =>
+                                    /*onValueChange={v =>
                                     {
                                         setEnableEdition(v);
                                         SecureStore.setItemAsync('enable-edition', v ? 'true' : 'false');
-                                    }}
+                                    }}*/
                                     value={enableEdition}
                                 />
-                            </View>
+                            </Pressable>
                         </View>
                     </View>
 

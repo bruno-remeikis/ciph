@@ -1,14 +1,15 @@
 import React, { Dispatch, SetStateAction, useState } from 'react';
-import { StyleSheet, View, Modal } from 'react-native';
+import { StyleSheet, View, Modal, StyleProp, ViewStyle } from 'react-native';
 
 import { colors } from '../utils/consts';
 
 interface ModalProps {
     visible: boolean;
     setVisible: Dispatch<SetStateAction<boolean>>;
+    style?: StyleProp<ViewStyle>;
 }
 
-const ModalComponent: React.FC<ModalProps> = ({ children, visible, setVisible }) =>
+const ModalComponent: React.FC<ModalProps> = ({ children, visible, setVisible, style }) =>
 {
     // Guarda se a View interna (conteúdo) do Modal foi tocada
     const [touchIn, setTouchIn] = useState<boolean>(false);
@@ -31,7 +32,7 @@ const ModalComponent: React.FC<ModalProps> = ({ children, visible, setVisible })
                 }}
             >
                 <View
-                    style={styles.modalBox}
+                    style={[ styles.modalBox, style ]}
                     onTouchStart={() => setTouchIn(true)}
                 >
                     { children }
