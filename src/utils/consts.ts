@@ -1,3 +1,5 @@
+export const dateFormat = 'dd/MM/yyyy H:mm';
+
 export const colors = {
     //background: '#F3E0EC',
     background: '#FAFAFA',

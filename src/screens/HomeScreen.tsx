@@ -11,7 +11,7 @@ import SongService from '../services/SongService';
 import { Song } from '../models/Song';
 
 // Utils
-import { colors } from '../utils/colors';
+import { colors } from '../utils/consts';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';

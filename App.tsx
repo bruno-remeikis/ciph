@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, Text } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useKeepAwake } from 'expo-keep-awake';
+import { format } from 'date-fns';
 
 import EntypoIcon from 'react-native-vector-icons/Entypo';
+import FeatherIcon from 'react-native-vector-icons/Feather';
 
 // Contexts
 import { UpdatedProvider, useUpdated } from './src/contexts/Updated';
@@ -20,7 +22,7 @@ import Database from './src/database/Database';
 import { Song } from './src/models/Song';
 
 // Utils
-import { colors } from './src/utils/colors';
+import { colors, dateFormat } from './src/utils/consts';
 
 // Screens
 import HomeScreen from './src/screens/HomeScreen';
@@ -48,8 +50,12 @@ const AppContent: React.FC = () =>
 
 	// ---------- STATES ----------
 
-	const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
-	const [isConfirmModalVisible, setIsConfirmModalVisible] = useState<boolean>(false);
+	// HomeScreen
+	const [isMenuVisible, setIsMenuVisible] = useState<boolean>(false);
+	const [isConfirmResetVisible, setIsConfirmResetVisible] = useState<boolean>(false);
+	// SongScreen
+	const [isInfoVisible, setIsInfoVisible] = useState<boolean>(false);
+	const [songInfo, setSongInfo] = useState<Song | null>(null);
 	
 
 
@@ -63,26 +69,25 @@ const AppContent: React.FC = () =>
 
 	return (
 		<>
-			{/* MENÚ */}
+			{/* HomeScreen */}
 			<Modal
-				visible={isModalVisible}
-				setVisible={setIsModalVisible}
+				visible={isMenuVisible}
+				setVisible={setIsMenuVisible}
 			>
 				<Pressable
 					style={{ padding: 12 }}
 					onPress={() =>
 					{
-						setIsModalVisible(false);
-						setIsConfirmModalVisible(true);
+						setIsMenuVisible(false);
+						setIsConfirmResetVisible(true);
 					}}
 				>
 					<Text>Resetar dados</Text>
 				</Pressable>
 			</Modal>
-
 			<ConfirmModal
-                visible={isConfirmModalVisible}
-                setVisible={setIsConfirmModalVisible}
+                visible={isConfirmResetVisible}
+                setVisible={setIsConfirmResetVisible}
                 text='Deseja mesmo resetar todos os dados?'
                 buttons={[
                     {
@@ -93,13 +98,50 @@ const AppContent: React.FC = () =>
 							Database.recreate()
 								.then(() => setUpdated(true)) // <- Atualiza HomeScreen
 								.catch(err => alert(err))
-								.finally(() => setIsConfirmModalVisible(false));
+								.finally(() => setIsConfirmResetVisible(false));
 						}
                     },
                     { text: 'Cancelar' }
                 ]}
             />
 
+
+
+			{/* SongScreen */}
+			<Modal
+				visible={isInfoVisible}
+				setVisible={setIsInfoVisible}
+			>
+				<View style={{ padding: 12 }}>
+					{songInfo !== null && (
+						songInfo.insertDate !== undefined ||
+						songInfo.updateDate !== undefined
+					) ? <>
+						{songInfo.insertDate !== undefined
+						? <>
+							<Text style={{ fontWeight: 'bold' }}>Criado</Text>
+							<Text>
+								{format(songInfo.insertDate, dateFormat)}
+							</Text>
+						</> : null}
+
+						{songInfo.updateDate !== undefined
+						? <>
+							<Text style={{ fontWeight: 'bold' }}>Editado</Text>
+							<Text>{
+								songInfo.updateDate !== null
+									? format(songInfo.updateDate, dateFormat)
+									: 'Nunca'
+							}</Text>
+						</> : null}
+					</>
+					: <Text>Não há informações</Text>}
+				</View>
+			</Modal>
+
+
+
+			{/* Navigation */}
 			<NavigationContainer>
 				<Stack.Navigator
 					screenOptions={{
@@ -119,8 +161,8 @@ const AppContent: React.FC = () =>
 						options={() => ({
 							title: 'Ciphersonal',
 							headerRight: () =>
-								<Pressable onPress={() => setIsModalVisible(true)}>
-									<EntypoIcon name='dots-three-vertical' size={20} color='#ffffff' />
+								<Pressable onPress={() => setIsMenuVisible(true)}>
+									<EntypoIcon name='dots-three-vertical' size={18} color='#ffffff' />
 								</Pressable>
 						})}
 						initialParams={{ update: true }}
@@ -130,7 +172,17 @@ const AppContent: React.FC = () =>
 					<Stack.Screen
 						name="Song"
 						component={SongScreen}
-						options={({ route }) => ({ title: route.params.song.name })}
+						options={({ route }) => ({
+							title: route.params.song.name,
+							headerRight: () =>
+								<Pressable onPress={() =>
+								{
+									setSongInfo(route.params.song);
+									setIsInfoVisible(true);
+								}}>
+									<FeatherIcon name='info' size={24} color='#ffffff' />
+								</Pressable>
+						})}
 					/>
 
 					{/* NEW SONG */}

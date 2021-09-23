@@ -13,7 +13,7 @@ import { Sheet } from '../models/Sheet';
 import SheetService from '../services/SheetService';
 
 // Utils
-import { colors, opacities } from '../utils/colors';
+import { colors, opacities } from '../utils/consts';
 
 // Components
 import Modal from '../components/Modal';
@@ -341,6 +341,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                 <View style={{ flex: 1, padding: 12 }}>
                     <View style={styles.header}>
                         <Pressable
+                            style={{ flex: 1, marginRight: 8 }}
                             onPress={() =>
                             {
                                 if(enableEdition)
@@ -354,32 +355,34 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                             <Text style={{ fontSize: 16 }}>{ artistsInfo }</Text>
                         </Pressable>
 
-                        <View style={{
-                            alignItems: 'center',
-                            backgroundColor: `rgba(${colors.primaryRGB}, 0.24)`,
-                            paddingHorizontal: 4,
-                            paddingVertical: 6,
-                            borderRadius: 8,
-                        }}>
-                            <MaterialCommunityIcon
-                                name={enableEdition ? 'pencil' : 'pencil-off'}
-                                size={20}
-                                color='#000000'
-                            />
-                            
-                            <Switch
-                                trackColor={{
-                                    true: 'rgb(111, 184, 0)',
-                                    false: 'rgba(0, 0, 0, 0.14)'
-                                }}
-                                thumbColor={colors.primary}
-                                onValueChange={v =>
-                                {
-                                    setEnableEdition(v);
-                                    SecureStore.setItemAsync('enable-edition', v ? 'true' : 'false');
-                                }}
-                                value={enableEdition}
-                            />
+                        <View>
+                            <View style={{
+                                alignItems: 'center',
+                                backgroundColor: `rgba(${colors.primaryRGB}, 0.24)`,
+                                paddingHorizontal: 4,
+                                paddingVertical: 6,
+                                borderRadius: 8,
+                            }}>
+                                <MaterialCommunityIcon
+                                    name={enableEdition ? 'pencil' : 'pencil-off'}
+                                    size={20}
+                                    color='#000000'
+                                />
+                                
+                                <Switch
+                                    trackColor={{
+                                        true: 'rgb(111, 184, 0)',
+                                        false: 'rgba(0, 0, 0, 0.14)'
+                                    }}
+                                    thumbColor={colors.primary}
+                                    onValueChange={v =>
+                                    {
+                                        setEnableEdition(v);
+                                        SecureStore.setItemAsync('enable-edition', v ? 'true' : 'false');
+                                    }}
+                                    value={enableEdition}
+                                />
+                            </View>
                         </View>
                     </View>
 

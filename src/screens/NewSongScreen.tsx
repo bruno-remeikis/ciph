@@ -17,7 +17,7 @@ import { Artist } from '../models/Artist';
 import { Song } from '../models/Song';
 
 // Utils
-import { colors, opacities } from '../utils/colors';
+import { colors, opacities } from '../utils/consts';
 import { groupConcat } from '../utils/functions';
 
 // Contexts
@@ -94,10 +94,14 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
         // Música para atualização da tela 'SongScreen'
         const song: Song = {
-            id: id ? id : undefined,
+            ...route.params?.song,
+
+            //id: id ? id : undefined,
             name,
             artists: groupConcat(validArtists.map(art => art.obj.name)),
         };
+
+        console.log(song);
 
         // UPDATE
         if(updateScreen)

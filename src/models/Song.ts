@@ -1,7 +1,34 @@
-import { Artist } from "./Artist";
+// Database
+import { Table, cols } from '../database/types';
 
-export type Song = {
+// Models
+import { Artist } from './Artist';
+
+// ---------- BEAN ----------
+
+export type Song =
+{
     id?: number;
     name: string;
     artists?: Artist[] | string;
+
+    insertDate?: Date;
+    updateDate?: Date | null;
+}
+
+
+
+// ---------- DAO ----------
+
+export const alias = 'sng';
+export const song: Table =
+{
+    table: 'tb_song',
+
+    id:             `${alias}_id_pk`,
+    name:           `${alias}_name`,
+    unaccentedName: `${alias}_unaccented_name`,
+
+    insertDate: alias + cols.insert,
+    updateDate: alias + cols.update,
 }

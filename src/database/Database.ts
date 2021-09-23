@@ -1,9 +1,31 @@
 import { db } from './connection';
+import { Table } from './types';
 
-import { song } from '../services/SongService';
-import { artist } from '../services/ArtistService';
-import { song_artist } from '../services/SongArtistService';
-import { sheet } from '../services/SheetService';
+// Models
+import { song } from '../models/Song';
+import { artist } from '../models/Artist';
+import { song_artist } from '../models/SongArtist';
+import { sheet } from '../models/Sheet';
+
+// ---------- TYPES ----------
+
+// Tabelas que necessitam de triggers de update
+type UpdTgType = { name: string, tb: Table };
+
+
+
+// ---------- CONSTS ----------
+
+const updTriggers: UpdTgType[] = [
+    {name: 'song',        tb: song},
+    {name: 'artist',      tb: artist},
+    {name: 'song_artist', tb: song_artist},
+    //{name: 'sheet',       tb: sheet},
+];
+
+
+
+// ---------- CLASS ----------
 
 export default class Database
 {
@@ -20,7 +42,10 @@ export default class Database
             `create table if not exists ${song.table} (
                 ${song.id} integer primary key autoincrement,
                 ${song.name} text not null,
-                ${song.unaccentedName} text not null
+                ${song.unaccentedName} text not null,
+                ${song.insertDate} datetime not null
+                    default current_timestamp,
+                ${song.updateDate} datetime
             );`,
 
             `create table if not exists ${artist.table} (
@@ -30,6 +55,7 @@ export default class Database
             );`,
 
             `create table if not exists ${song_artist.table} (
+                ${song_artist.id} integer primary key autoincrement,
                 ${song_artist.songId} integer not null,
                 ${song_artist.artistId} integer not null,
 
@@ -51,6 +77,16 @@ export default class Database
             );`,
         ];
 
+        const triggerSql = (upd: UpdTgType) =>
+           `create trigger if not exists tg_update_${upd.name}
+                after update on ${upd.tb.table}
+                for each row
+                begin
+                    update ${upd.tb.table}
+                    set ${upd.tb.updateDate} = current_timestamp
+                    where ${upd.tb.id} = old.${upd.tb.id};
+                end;`;
+
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
             db.transaction(tx =>
@@ -58,6 +94,13 @@ export default class Database
                 sqls.forEach(sql =>
                     tx.executeSql(sql)
                 );
+
+                // Criar triggers de update para ..._update_dt
+                updTriggers.forEach(upd =>
+                {
+                    if(upd.tb.id)
+                        tx.executeSql(triggerSql(upd))
+                });
             },
             // Error
             (err) => reject(err),

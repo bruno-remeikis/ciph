@@ -1,18 +1,14 @@
 import { SQLResultSetRowList, SQLTransaction } from 'expo-sqlite';
-import { db } from '../database/connection';
-
 import { remove } from 'remove-accents';
 
+// Database
+import { db } from '../database/connection';
+
+// Services
 import SongArtistService, { song_artist } from './SongArtistService';
 
-import { Artist } from '../models/Artist';
-
-export const artist = {
-    table: 'tb_artist',
-    id: 'art_id_pk',
-    name: 'art_name',
-    unaccentedName: 'art_unaccented_name',
-}
+// Models
+import { Artist, artist } from '../models/Artist';
 
 export default class ArtistService
 {

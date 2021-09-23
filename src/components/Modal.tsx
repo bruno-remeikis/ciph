@@ -1,7 +1,7 @@
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import { StyleSheet, View, Modal } from 'react-native';
 
-import { colors } from '../utils/colors';
+import { colors } from '../utils/consts';
 
 interface ModalProps {
     visible: boolean;

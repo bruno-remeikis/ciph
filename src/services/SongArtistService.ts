@@ -1,11 +1,10 @@
-import { SQLResultSetRowList, SQLTransaction } from 'expo-sqlite';
+import { SQLTransaction } from 'expo-sqlite';
+
+// Database
 import { db } from '../database/connection';
 
-export const song_artist = {
-    table: `tb_song_tb_artist`,
-    songId: 'sngart_sng_id_pk_fk',
-    artistId: 'sngart_art_id_pk_fk',
-}
+// Models
+import { song_artist } from '../models/SongArtist';
 
 export default class SongArtistService
 {

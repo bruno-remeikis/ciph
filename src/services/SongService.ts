@@ -1,24 +1,21 @@
 import { SQLResultSetRowList } from 'expo-sqlite';
-import { db } from '../database/connection';
-
-import SheetService from './SheetService';
-import ArtistService, { artist } from './ArtistService';
-import SongArtistService, { song_artist } from './SongArtistService';
-
-import { Song } from '../models/Song';
-import { Artist } from '../models/Artist';
 import { remove } from 'remove-accents';
 
-export const song = {
-    table: 'tb_song',
-    id: 'sng_id_pk',
-    name: 'sng_name',
-    unaccentedName: 'sng_unaccented_name',
-}
+// Database
+import { db } from '../database/connection';
+
+// Services
+import SheetService from './SheetService';
+import ArtistService from './ArtistService';
+import SongArtistService from './SongArtistService';
+
+// Models
+import { Song, song } from '../models/Song';
+import { Artist, artist } from '../models/Artist';
+import { song_artist } from '../models/SongArtist';
 
 export default class SongService
 {
-
     /**
      * Insere uma nova entidade no banco
      * 
@@ -91,6 +88,8 @@ export default class SongService
                 `select
                     id,
                     name,
+                    insertDate,
+                    updateDate,
                     (
                         select
                             group_concat(${artist.name}, ', ')
@@ -106,7 +105,9 @@ export default class SongService
                 from (
                     select
                         ${song.id} as id,
-                        ${song.name} as name
+                        ${song.name} as name,
+                        ${song.insertDate} as insertDate,
+                        ${song.updateDate} as updateDate
                     from
                         ${song.table}
                     left join
@@ -138,6 +139,8 @@ export default class SongService
                 `select
                     id,
                     name,
+                    insertDate,
+                    updateDate,
                     (
                         select
                             group_concat(${artist.name}, ', ')
@@ -153,7 +156,9 @@ export default class SongService
                 from (
                     select
                         ${song.id} as id,
-                        ${song.name} as name
+                        ${song.name} as name,
+                        ${song.insertDate} as insertDate,
+                        ${song.updateDate} as updateDate
                     from
                         ${song.table}
                     where

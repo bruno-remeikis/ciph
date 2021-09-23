@@ -1,19 +1,13 @@
 import { SQLResultSetRowList, SQLTransaction } from 'expo-sqlite';
-import { db } from '../database/connection';
-import { Sheet } from '../models/Sheet';
 
-export const sheet = {
-    table: 'tb_sheet',
-    id: 'sht_id_pk',
-    songId: 'sht_sng_id_pk_fk',
-    title: 'sht_title',
-    content: 'sht_content',
-}
+// Database
+import { db } from '../database/connection';
+
+// Models
+import { Sheet, sheet } from '../models/Sheet';
 
 export default class SheetService
 {
-    
-
     /**
      * Insere uma nova entidade no banco
      * 
