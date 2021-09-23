@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+
 import { useKeepAwake } from 'expo-keep-awake';
 import { format } from 'date-fns';
 
+// React Navigation
+import { NavigationContainer } from '@react-navigation/native';
+import { RouteProp } from '@react-navigation/core';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+// Icons
 import EntypoIcon from 'react-native-vector-icons/Entypo';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 
@@ -28,48 +33,28 @@ import { colors, dateFormat } from './src/utils/consts';
 import HomeScreen from './src/screens/HomeScreen';
 import SongScreen from './src/screens/SongScreen';
 import NewSongScreen from './src/screens/NewSongScreen';
+import SongService from './src/services/SongService';
 
-type RootStackParamList = {
-	Home: { update?: boolean } | undefined;
-	Song: { song: Song };
-	NewSong: { song: Song } | undefined;
-};
+const menuIconSize = 24;
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
 
-const AppContent: React.FC = () =>
+
+// ---------- HOME SCREEN HEADER ----------
+
+const HomeHeader: React.FC = () =>
 {
-	// Impedir que tela descanse
-	useKeepAwake();
-
-	// ---------- CONTEXTS ----------
-
 	const { setUpdated } = useUpdated();
 
-
-
-	// ---------- STATES ----------
-
-	// HomeScreen
 	const [isMenuVisible, setIsMenuVisible] = useState<boolean>(false);
 	const [isConfirmResetVisible, setIsConfirmResetVisible] = useState<boolean>(false);
-	// SongScreen
-	const [isInfoVisible, setIsInfoVisible] = useState<boolean>(false);
-	const [songInfo, setSongInfo] = useState<Song | null>(null);
-	
-
-
-	// ---------- EFFECTS ----------
-
-	useEffect(() => { Database.init() }, []);
-
-
-
-	// ---------- RETURN ----------
 
 	return (
 		<>
-			{/* HomeScreen */}
+			<Pressable onPress={() => setIsMenuVisible(true)}>
+				<EntypoIcon name='dots-three-vertical' size={18} color='#ffffff' />
+			</Pressable>
+
+			{/* Menú */}
 			<Modal
 				visible={isMenuVisible}
 				setVisible={setIsMenuVisible}
@@ -85,6 +70,8 @@ const AppContent: React.FC = () =>
 					<Text>Resetar dados</Text>
 				</Pressable>
 			</Modal>
+
+			{/* Confirmar reset */}
 			<ConfirmModal
                 visible={isConfirmResetVisible}
                 setVisible={setIsConfirmResetVisible}
@@ -104,33 +91,131 @@ const AppContent: React.FC = () =>
                     { text: 'Cancelar' }
                 ]}
             />
+		</>
+	);
+}
 
 
 
-			{/* SongScreen */}
+// ---------- SONG SCREEN HEADER ----------
+
+interface SongHeaderProps {
+	route: RouteProp<RootStackParamList, "Song">;
+	navigation: any;
+}
+
+const SongHeader: React.FC<SongHeaderProps> = ({ route, navigation }) =>
+{
+	const song = route.params.song;
+
+	const { setUpdated } = useUpdated();
+
+	const [isMenuVisible, setIsMenuVisible] = useState<boolean>(false);
+	const [isConfirmDeleteVisible, setIsConfirmDeleteVisible] = useState<boolean>(false);
+	const [isInfoVisible, setIsInfoVisible] = useState<boolean>(false);
+
+	function handleDelete()
+    {
+		setIsConfirmDeleteVisible(false);
+		
+        if(song.id !== undefined)
+            SongService.delete(song.id)
+            .then(() =>
+            {
+                setUpdated(true);
+                navigation.pop(2); // <- Volta 2 telas
+            })
+            .catch(err => alert(err));
+    }
+
+	return (
+		<>
+			<Pressable onPress={() => setIsMenuVisible(true) }>
+				<EntypoIcon name='dots-three-vertical' size={18} color='#ffffff' />
+			</Pressable>
+
+			{/* Menú */}
+			<Modal
+				visible={isMenuVisible}
+				setVisible={setIsMenuVisible}
+			>
+				<View style={styles.menuContainer}>
+					{/* Editar */}
+					<Pressable
+						style={styles.menuItem}
+						onPress={() =>
+						{
+							setIsMenuVisible(false);
+							navigation.navigate('NewSong', { song });
+						}}
+					>
+						<FeatherIcon name='edit-2' size={menuIconSize} color={colors.text} />
+						<Text style={styles.menuItemContent}>Editar</Text>
+					</Pressable>
+
+					{/* Deletar */}
+					<Pressable
+						style={styles.menuItem}
+						onPress={() => setIsConfirmDeleteVisible(true)}
+					>
+						<FeatherIcon name='x' size={menuIconSize} color={colors.text} />
+						<Text style={styles.menuItemContent}>Deletar</Text>
+					</Pressable>
+
+					{/* Sobre */}
+					<Pressable
+						style={styles.menuItem}
+						onPress={() =>
+						{
+							setIsMenuVisible(false);
+							setIsInfoVisible(true);
+						}}
+					>
+						<FeatherIcon name='info' size={menuIconSize} color={colors.text} />
+						<Text style={styles.menuItemContent}>Sobre</Text>
+					</Pressable>
+				</View>
+			</Modal>
+
+			{/* Confirmar delete */}
+			<ConfirmModal
+				visible={isConfirmDeleteVisible}
+				setVisible={setIsConfirmDeleteVisible}
+				text='Deseja mesmo excluir esta música?'
+				buttons={[
+					{
+						text: 'Excluir',
+						color: colors.red,
+						onClick: handleDelete
+					},
+					{ text: 'Cancelar' }
+				]}
+			/>
+
+			{/* Sobre */}
 			<Modal
 				visible={isInfoVisible}
 				setVisible={setIsInfoVisible}
 			>
 				<View style={{ padding: 12 }}>
-					{songInfo !== null && (
-						songInfo.insertDate !== undefined ||
-						songInfo.updateDate !== undefined
+					{song !== null && (
+						song.insertDate !== undefined ||
+						song.updateDate !== undefined
 					) ? <>
-						{songInfo.insertDate !== undefined
+						{song.insertDate !== undefined
 						? <>
 							<Text style={{ fontWeight: 'bold' }}>Criado</Text>
 							<Text>
-								{format(new Date(songInfo.insertDate), dateFormat)}
+								{format(new Date(song.insertDate), dateFormat)}
 							</Text>
 						</> : null}
 
-						{songInfo.updateDate !== undefined
+						{song.updateDate !== undefined
 						? <>
 							<Text style={{ fontWeight: 'bold' }}>Editado</Text>
 							<Text>{
-								songInfo.updateDate !== null
-									? format(new Date(songInfo.updateDate), dateFormat)
+								song.updateDate !== null
+									? format(new Date(song.updateDate), dateFormat)
 									: 'Nunca'
 							}</Text>
 						</> : null}
@@ -138,64 +223,89 @@ const AppContent: React.FC = () =>
 					: <Text>Não há informações</Text>}
 				</View>
 			</Modal>
-
-
-
-			{/* Navigation */}
-			<NavigationContainer>
-				<Stack.Navigator
-					screenOptions={{
-						headerStyle: {
-							backgroundColor: colors.primary,
-						},
-						headerTintColor: '#fff',
-						headerTitleStyle: {
-							fontWeight: 'bold',
-						},
-					}}
-				>
-					{/* HOME */}
-					<Stack.Screen
-						name="Home"
-						component={HomeScreen}
-						options={() => ({
-							title: 'Ciphersonal',
-							headerRight: () =>
-								<Pressable onPress={() => setIsMenuVisible(true)}>
-									<EntypoIcon name='dots-three-vertical' size={18} color='#ffffff' />
-								</Pressable>
-						})}
-						initialParams={{ update: true }}
-					/>
-
-					{/* SONG */}
-					<Stack.Screen
-						name="Song"
-						component={SongScreen}
-						options={({ route }) => ({
-							title: route.params.song.name,
-							headerRight: () =>
-								<Pressable onPress={() =>
-								{
-									setSongInfo(route.params.song);
-									setIsInfoVisible(true);
-								}}>
-									<FeatherIcon name='info' size={24} color='#ffffff' />
-								</Pressable>
-						})}
-					/>
-
-					{/* NEW SONG */}
-					<Stack.Screen
-						name="NewSong"
-						component={NewSongScreen}
-						options={{ title: 'Nova música' }}
-					/>
-				</Stack.Navigator>
-			</NavigationContainer>
 		</>
+	);
+}
+
+
+
+// ---------- APP NAVIGATION ----------
+
+type RootStackParamList = {
+	Home: { update?: boolean } | undefined;
+	Song: { song: Song };
+	NewSong: { song: Song } | undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const AppContent: React.FC = () =>
+{
+	// Impedir que tela descanse
+	useKeepAwake();
+	
+
+
+	// ---------- EFFECTS ----------
+
+	useEffect(() => { Database.init() }, []);
+
+
+
+	// ---------- RETURN ----------
+
+	return (
+		<NavigationContainer>
+			<Stack.Navigator
+				screenOptions={{
+					headerStyle: {
+						backgroundColor: colors.primary,
+					},
+					headerTintColor: '#fff',
+					headerTitleStyle: {
+						fontWeight: 'bold',
+					},
+				}}
+			>
+				{/* HOME */}
+				<Stack.Screen
+					name="Home"
+					component={HomeScreen}
+					options={({ route }) => ({
+						title: 'Ciphersonal',
+						headerRight: () => <HomeHeader />
+					})}
+					initialParams={{ update: true }}
+				/>
+
+				{/* SONG */}
+				<Stack.Screen
+					name="Song"
+					component={SongScreen}
+					options={({ route, navigation }) => ({
+						title: route.params.song.name,
+						headerRight: () =>
+							<SongHeader
+								route={route}
+								navigation={navigation}
+							/>
+					})}
+				/>
+
+				{/* NEW SONG */}
+				<Stack.Screen
+					name="NewSong"
+					component={NewSongScreen}
+					options={{ title: 'Nova música' }}
+				/>
+			</Stack.Navigator>
+		</NavigationContainer>
   	);
 }
+
+
+
+// ---------- APP ----------
 
 const App: React.FC = () =>
 	<UpdatedProvider>
@@ -203,3 +313,24 @@ const App: React.FC = () =>
 	</UpdatedProvider>
 
 export default App;
+
+
+
+// ---------- STYLES ----------
+
+const styles = StyleSheet.create({
+	menuContainer: {
+		minWidth: 170,
+		paddingVertical: 6,
+	},
+	menuItem: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		paddingHorizontal: 12,
+		paddingVertical: 6,
+	},
+	menuItemContent: {
+		marginLeft: 12,
+		fontSize: 20,
+	},
+});

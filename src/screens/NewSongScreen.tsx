@@ -4,9 +4,6 @@ import { StyleSheet, Text, View, Pressable, TextInput, ScrollView } from 'react-
 // Icons
 import FeatherIcon from 'react-native-vector-icons/Feather';
 
-// Components
-import ConfirmModal from '../components/ConfirmModal';
-
 // Services
 import SongService from '../services/SongService';
 import ArtistService from '../services/ArtistService';
@@ -73,8 +70,6 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     //const [unfilledArtists, setUnfilledArtists] = useState(false);
 
     const [disabledSubmit, setDisabledSubmit] = useState<boolean>(true);
-
-    const [isDeleteModalVisible, setIsDeleteModalVisible] = useState<boolean>(false);
 
 
 
@@ -195,21 +190,6 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
         ArtistService.findByNameSearch(text.trim(), restrictedIds)
             .then((res: any) => setResearchArtists(res._array))
-            .catch(err => alert(err));
-    }
-
-    function handleDelete()
-    {
-        if(id !== null)
-            SongService.delete(id)
-            .then(() =>
-            {
-                /*SecureStore.setItemAsync('update-songs', 'true')
-                    .then(() => navigation.pop(2)); // <- Volta 2 telas*/
-
-                setUpdated(true);
-                navigation.pop(2); // <- Volta 2 telas
-            })
             .catch(err => alert(err));
     }
 
@@ -349,88 +329,123 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     // ---------- RETURN ----------
 
     return (
-        <>
-            <ConfirmModal
-                visible={isDeleteModalVisible}
-                setVisible={setIsDeleteModalVisible}
-                text='Deseja mesmo excluir esta música?'
-                buttons={[
-                    {
-                        text: 'Excluir',
-                        color: colors.red,
-                        onClick: handleDelete
-                    },
-                    { text: 'Cancelar' }
-                ]}
-            />
+        <ScrollView keyboardShouldPersistTaps='handled'>
+            <View style={styles.container}>
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Nome</Text>
+                    <TextInput
+                        style={[ styles.input, styles.textInput ]}
+                        value={name}
+                        onChangeText={text =>
+                        {
+                            setName(text);
+                            validadeSubmit(text, artists);
+                        }}
+                    />
+                </View>
 
-            <ScrollView keyboardShouldPersistTaps='handled'>
-                <View style={styles.container}>
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Nome</Text>
-                        <TextInput
-                            style={[ styles.input, styles.textInput ]}
-                            value={name}
-                            onChangeText={text =>
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Artistas / bandas</Text>
+                    <View style={{ flexDirection: 'row' }}>
+                        <View style={{ flex: 1, flexGrow: 1 }}>
+                            {artists.map((artist, i) =>
                             {
-                                setName(text);
-                                validadeSubmit(text, artists);
-                            }}
-                        />
-                    </View>
+                                const deletable = artists.length > 1 || artists[0].obj.id;
+                                const showStatus =
+                                    //currentFocusIndex !== i &&
+                                    artist.obj.id === undefined &&
+                                    artist.obj.name.trim().length !== 0;
 
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Artistas / bandas</Text>
-                        <View style={{ flexDirection: 'row' }}>
-                            <View style={{ flex: 1, flexGrow: 1 }}>
-                                {artists.map((artist, i) =>
-                                {
-                                    const deletable = artists.length > 1 || artists[0].obj.id;
-                                    const showStatus =
-                                        //currentFocusIndex !== i &&
-                                        artist.obj.id === undefined &&
-                                        artist.obj.name.trim().length !== 0;
+                                let statusStyle = {};
+                                if(artist.existing || artist.equals !== undefined)
+                                    statusStyle = {
+                                        backgroundColor: `rgba(${colors.redLightRGB}, 0.08)`,
+                                        borderColor: colors.redLight,
+                                    };
+                                else if(artist.obj.id !== undefined)
+                                    statusStyle = {
+                                        backgroundColor: `rgba(${colors.primaryRGB}, 0.2)`,
+                                        borderColor: colors.primary,
+                                    };
 
-                                    let statusStyle = {};
-                                    if(artist.existing || artist.equals !== undefined)
-                                        statusStyle = {
-                                            backgroundColor: `rgba(${colors.redLightRGB}, 0.08)`,
-                                            borderColor: colors.redLight,
-                                        };
-                                    else if(artist.obj.id !== undefined)
-                                        statusStyle = {
-                                            backgroundColor: `rgba(${colors.primaryRGB}, 0.2)`,
-                                            borderColor: colors.primary,
-                                        };
-
-                                    return (
-                                        <View key={i}>
-                                            <View
-                                                style={[
-                                                    styles.input,
-                                                    statusStyle,
+                                return (
+                                    <View key={i}>
+                                        <View
+                                            style={[
+                                                styles.input,
+                                                statusStyle,
+                                                {
+                                                    marginTop: i !== 0 ? 6 : 0,
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'stretch',
+                                                }
+                                            ]}
+                                        >
+                                            <TextInput
+                                                style={styles.textInput}
+                                                value={artist.obj.name}
+                                                onChangeText={text =>
+                                                {
+                                                    handleSearch(text);
+                                                    validateArtists(artist, i, text);
+                                                    //validadeSubmit();
+                                                }}
+                                                onFocus={() =>
+                                                {
+                                                    // Remove marcação de 'já existente' (id !== undefined).
+                                                    // Para isso, seta id como undefined
+                                                    /*if(artist.obj.id !== undefined)
                                                     {
-                                                        marginTop: i !== 0 ? 6 : 0,
-                                                        flexDirection: 'row',
-                                                        justifyContent: 'space-between',
-                                                        alignItems: 'stretch',
-                                                    }
-                                                ]}
-                                            >
-                                                <TextInput
-                                                    style={styles.textInput}
-                                                    value={artist.obj.name}
-                                                    onChangeText={text =>
-                                                    {
-                                                        handleSearch(text);
-                                                        validateArtists(artist, i, text);
-                                                        //validadeSubmit();
+                                                        // Remove-o da lista de artistas restritos
+                                                        // para que volte a aparecer nas pesquisar durante
+                                                        // o preenchimento dos TextInput de artistas
+                                                        setRestrictedIds(restrictedIds.filter(restId =>
+                                                            restId !== artist.obj.id
+                                                        ));
+
+                                                        artist.obj.id = undefined;
+                                                    }*/
+
+                                                    handleSearch(artist.obj.name);
+                                                    setCurrentFocusIndex(i);
+                                                }}
+                                                onBlur={() =>
+                                                {
+                                                    overwriteArtist(artist, i);
+                                                    setCurrentFocusIndex(null);
+                                                }}
+                                                editable={!artist.obj.id}
+                                            />
+
+                                            {showStatus ?
+                                                <Text style={{
+                                                    alignSelf: 'center',
+                                                    color: artist.existing || artist.equals !== undefined
+                                                        ? colors.red
+                                                        : colors.primary,
+                                                    fontSize: 12,
+                                                    marginRight: deletable ? 0 : 12,
+                                                }}>{artist.existing ? 'já inserido' : artist.equals !== undefined ? 'iguais' : 'novo'}</Text>
+                                            : null}
+
+                                            {deletable ?
+                                                <Pressable
+                                                    style={{
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-around',
+                                                        width: 30,
                                                     }}
-                                                    onFocus={() =>
+                                                    onPress={() =>
                                                     {
-                                                        // Remove marcação de 'já existente' (id !== undefined).
-                                                        // Para isso, seta id como undefined
-                                                        /*if(artist.obj.id !== undefined)
+                                                        const array = [...artists];
+
+                                                        // Se for o último E possuir ID
+                                                        if(array.length === 1 && array[0].obj.id)
+                                                            array.push({ obj: { name: '' } });
+
+                                                        // Se for um artista já cadastrado:
+                                                        if(artist.obj.id)
                                                         {
                                                             // Remove-o da lista de artistas restritos
                                                             // para que volte a aparecer nas pesquisar durante
@@ -439,193 +454,126 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                                                 restId !== artist.obj.id
                                                             ));
 
-                                                            artist.obj.id = undefined;
-                                                        }*/
+                                                            // Adiciona artista à lista de deletados
+                                                            // para que, posteriormente, possa ser deletado do BD
+                                                            if(artist.initial)
+                                                                setDeletedArtistIds([ ...deletedArtistIds, artist.obj.id ]);
+                                                        }
 
-                                                        handleSearch(artist.obj.name);
-                                                        setCurrentFocusIndex(i);
+                                                        array.splice(i, 1);
+                                                        setArtists(array);
                                                     }}
-                                                    onBlur={() =>
-                                                    {
-                                                        overwriteArtist(artist, i);
-                                                        setCurrentFocusIndex(null);
-                                                    }}
-                                                    editable={!artist.obj.id}
-                                                />
-
-                                                {showStatus ?
-                                                    <Text style={{
-                                                        alignSelf: 'center',
-                                                        color: artist.existing || artist.equals !== undefined
-                                                            ? colors.red
-                                                            : colors.primary,
-                                                        fontSize: 12,
-                                                        marginRight: deletable ? 0 : 12,
-                                                    }}>{artist.existing ? 'já inserido' : artist.equals !== undefined ? 'iguais' : 'novo'}</Text>
-                                                : null}
-
-                                                {deletable ?
-                                                    <Pressable
-                                                        style={{
-                                                            alignItems: 'center',
-                                                            justifyContent: 'space-around',
-                                                            width: 30,
-                                                        }}
-                                                        onPress={() =>
-                                                        {
-                                                            const array = [...artists];
-
-                                                            // Se for o último E possuir ID
-                                                            if(array.length === 1 && array[0].obj.id)
-                                                                array.push({ obj: { name: '' } });
-
-                                                            // Se for um artista já cadastrado:
-                                                            if(artist.obj.id)
-                                                            {
-                                                                // Remove-o da lista de artistas restritos
-                                                                // para que volte a aparecer nas pesquisar durante
-                                                                // o preenchimento dos TextInput de artistas
-                                                                setRestrictedIds(restrictedIds.filter(restId =>
-                                                                    restId !== artist.obj.id
-                                                                ));
-
-                                                                // Adiciona artista à lista de deletados
-                                                                // para que, posteriormente, possa ser deletado do BD
-                                                                if(artist.initial)
-                                                                    setDeletedArtistIds([ ...deletedArtistIds, artist.obj.id ]);
-                                                            }
-
-                                                            array.splice(i, 1);
-                                                            setArtists(array);
-                                                        }}
-                                                    >
-                                                        <Text style={{ fontSize: 10, textAlignVertical: 'center' }}>X</Text>
-                                                    </Pressable>
-                                                : null}
-                                            </View>
-
-                                            {currentFocusIndex !== null &&
-                                                currentFocusIndex === i &&
-                                                researchArtists.length !== 0 ?
-                                                <View style={{ position: 'relative' }}>
-                                                    <View style={{
-                                                        position: 'absolute',
-                                                        zIndex: 1,
-                                                        left: 0,
-                                                        right: 0,
-                                                        backgroundColor: 'white',
-                                                        borderWidth: 1,
-                                                        borderTopWidth: 0,
-                                                        borderColor: colors.inputBorder,
-                                                    }}>
-                                                        {researchArtists.map((researchArtist, j) =>
-                                                            <Pressable
-                                                                key={j}
-                                                                style={{
-                                                                    backgroundColor: j % 2 === 0 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-                                                                    paddingHorizontal: 12,
-                                                                    paddingVertical: 6,
-                                                                }}
-                                                                onPress={() =>
-                                                                {
-                                                                    const array = [...artists];
-                                                                    array[i] = { obj: researchArtist };
-                                                                    //setCurrentFocusIndes(null);
-
-                                                                    if(researchArtist.id !== undefined)
-                                                                    {
-                                                                        // Adiciona à lista de artistas já adicionados
-                                                                        // para que não volte a aparecer nas pesquisas
-                                                                        setRestrictedIds([ ...restrictedIds, researchArtist.id ]);
-                                                                    
-                                                                        if(updateScreen)
-                                                                            // Remove artista da lista dos que devem ser deletados.
-                                                                            // Isso ocorrerá caso o ítem seja inicial. Por isso,
-                                                                            // deve ser reconfigurado como initial = true
-                                                                            setDeletedArtistIds(deletedArtistIds.filter(artistId =>
-                                                                            {
-                                                                                if(artistId === researchArtist.id)
-                                                                                {
-                                                                                    array[i].initial = true;
-                                                                                    return false;
-                                                                                }
-            
-                                                                                return true;
-                                                                            }));
-                                                                    }
-
-                                                                    setArtists(array);
-                                                                }}
-                                                            >
-                                                                <Text>{ researchArtist.name }</Text>
-                                                            </Pressable>
-                                                        )}
-                                                    </View>
-                                                </View>
+                                                >
+                                                    <Text style={{ fontSize: 10, textAlignVertical: 'center' }}>X</Text>
+                                                </Pressable>
                                             : null}
                                         </View>
-                                    );
-                                })}
-                            </View>
 
-                            <View style={{ marginLeft: 8 }}>
-                                <View style={styles.line} />
+                                        {currentFocusIndex !== null &&
+                                            currentFocusIndex === i &&
+                                            researchArtists.length !== 0 ?
+                                            <View style={{ position: 'relative' }}>
+                                                <View style={{
+                                                    position: 'absolute',
+                                                    zIndex: 1,
+                                                    left: 0,
+                                                    right: 0,
+                                                    backgroundColor: 'white',
+                                                    borderWidth: 1,
+                                                    borderTopWidth: 0,
+                                                    borderColor: colors.inputBorder,
+                                                }}>
+                                                    {researchArtists.map((researchArtist, j) =>
+                                                        <Pressable
+                                                            key={j}
+                                                            style={{
+                                                                backgroundColor: j % 2 === 0 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+                                                                paddingHorizontal: 12,
+                                                                paddingVertical: 6,
+                                                            }}
+                                                            onPress={() =>
+                                                            {
+                                                                const array = [...artists];
+                                                                array[i] = { obj: researchArtist };
+                                                                //setCurrentFocusIndes(null);
 
-                                <Pressable 
-                                    style={styles.btnAddArtist}
-                                    onPress={() => setArtists([ ...artists, { obj: { name: '' } } ])}
-                                >
-                                    <FeatherIcon name='plus' size={15} color='#000000' />
-                                </Pressable>
-                            </View>
+                                                                if(researchArtist.id !== undefined)
+                                                                {
+                                                                    // Adiciona à lista de artistas já adicionados
+                                                                    // para que não volte a aparecer nas pesquisas
+                                                                    setRestrictedIds([ ...restrictedIds, researchArtist.id ]);
+                                                                
+                                                                    if(updateScreen)
+                                                                        // Remove artista da lista dos que devem ser deletados.
+                                                                        // Isso ocorrerá caso o ítem seja inicial. Por isso,
+                                                                        // deve ser reconfigurado como initial = true
+                                                                        setDeletedArtistIds(deletedArtistIds.filter(artistId =>
+                                                                        {
+                                                                            if(artistId === researchArtist.id)
+                                                                            {
+                                                                                array[i].initial = true;
+                                                                                return false;
+                                                                            }
+        
+                                                                            return true;
+                                                                        }));
+                                                                }
+
+                                                                setArtists(array);
+                                                            }}
+                                                        >
+                                                            <Text>{ researchArtist.name }</Text>
+                                                        </Pressable>
+                                                    )}
+                                                </View>
+                                            </View>
+                                        : null}
+                                    </View>
+                                );
+                            })}
+                        </View>
+
+                        <View style={{ marginLeft: 8 }}>
+                            <View style={styles.line} />
+
+                            <Pressable 
+                                style={styles.btnAddArtist}
+                                onPress={() => setArtists([ ...artists, { obj: { name: '' } } ])}
+                            >
+                                <FeatherIcon name='plus' size={15} color='#000000' />
+                            </Pressable>
                         </View>
                     </View>
-
-                    <View style={[ styles.inputGroup, { flexDirection: 'row-reverse' } ]}>
-                        <Pressable
-                            style={[
-                                styles.submit,
-                                disabledSubmit ? {
-                                    opacity: opacities.disabled
-                                } : null
-                            ]}
-                            onPress={() =>
-                            {
-                                const arts = currentFocusIndex !== null
-                                    ? overwriteArtist(
-                                        artists[currentFocusIndex],
-                                        currentFocusIndex
-                                    )
-                                    : artists;
-
-                                handleSubmit(arts);
-                            }}
-                            disabled={disabledSubmit}
-                        >
-                            <Text style={styles.submitContent}>
-                                {updateScreen ? 'Salvar' : 'Adicionar'}
-                            </Text>
-                        </Pressable>
-
-                        {id ?
-                            <Pressable
-                                style={{
-                                    alignSelf: 'center',
-                                    marginRight: 18,
-                                }}
-                                onPress={() => setIsDeleteModalVisible(true)}
-                            >
-                                <Text style={{
-                                    textAlignVertical: 'center',
-                                    color: colors.red,
-                                    fontSize: 14
-                                }}>Excluir</Text>
-                            </Pressable>
-                        : null}
-                    </View>
                 </View>
-            </ScrollView>
-        </>
+
+                <View style={[ styles.inputGroup, { flexDirection: 'row-reverse' } ]}>
+                    <Pressable
+                        style={[
+                            styles.submit,
+                            disabledSubmit ? {
+                                opacity: opacities.disabled
+                            } : null
+                        ]}
+                        onPress={() =>
+                        {
+                            const arts = currentFocusIndex !== null
+                                ? overwriteArtist(
+                                    artists[currentFocusIndex],
+                                    currentFocusIndex
+                                )
+                                : artists;
+
+                            handleSubmit(arts);
+                        }}
+                        disabled={disabledSubmit}
+                    >
+                        <Text style={styles.submitContent}>
+                            {updateScreen ? 'Salvar' : 'Adicionar'}
+                        </Text>
+                    </Pressable>
+                </View>
+            </View>
+        </ScrollView>
     );
 }
 

@@ -330,20 +330,10 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={{ flex: 1, padding: 12 }}>
                     <View style={styles.header}>
-                        <Pressable
-                            style={{ flex: 1, marginRight: 8 }}
-                            onPress={() =>
-                            {
-                                if(enableEdition)
-                                    navigation.navigate('NewSong', { song: {
-                                        id,
-                                        name: nameInfo
-                                    } });
-                            }}
-                        >
+                        <View style={{ flex: 1, marginRight: 8 }}>
                             <Text style={{ fontSize: 24 }}>{ nameInfo }</Text>
                             <Text style={{ fontSize: 16 }}>{ artistsInfo }</Text>
-                        </Pressable>
+                        </View>
 
                         <View>
                             <View style={{
