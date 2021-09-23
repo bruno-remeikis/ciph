@@ -13,6 +13,7 @@ import SongArtistService from './SongArtistService';
 import { Song, song } from '../models/Song';
 import { Artist, artist } from '../models/Artist';
 import { song_artist } from '../models/SongArtist';
+import { dbDatetimeFormat } from '../utils/functions';
 
 export default class SongService
 {
@@ -106,8 +107,8 @@ export default class SongService
                     select
                         ${song.id} as id,
                         ${song.name} as name,
-                        ${song.insertDate} as insertDate,
-                        ${song.updateDate} as updateDate
+                        ${dbDatetimeFormat(song.insertDate)} as insertDate,
+                        ${dbDatetimeFormat(song.updateDate)} as updateDate
                     from
                         ${song.table}
                     left join
@@ -157,8 +158,8 @@ export default class SongService
                     select
                         ${song.id} as id,
                         ${song.name} as name,
-                        ${song.insertDate} as insertDate,
-                        ${song.updateDate} as updateDate
+                        ${dbDatetimeFormat(song.insertDate)} as insertDate,
+                        ${dbDatetimeFormat(song.updateDate)} as updateDate
                     from
                         ${song.table}
                     where

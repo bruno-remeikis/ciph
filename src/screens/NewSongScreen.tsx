@@ -14,11 +14,9 @@ import SongArtistService from '../services/SongArtistService';
 
 // Models
 import { Artist } from '../models/Artist';
-import { Song } from '../models/Song';
 
 // Utils
 import { colors, opacities } from '../utils/consts';
-import { groupConcat } from '../utils/functions';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
@@ -92,17 +90,6 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
             art.obj.name.trim().length !== 0
         );
 
-        // Música para atualização da tela 'SongScreen'
-        const song: Song = {
-            ...route.params?.song,
-
-            //id: id ? id : undefined,
-            name,
-            artists: groupConcat(validArtists.map(art => art.obj.name)),
-        };
-
-        console.log(song);
-
         // UPDATE
         if(updateScreen)
         {
@@ -166,26 +153,33 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                 //SecureStore.setItemAsync('updated-song', JSON.stringify(song));
                 // Volta para 'SongScreen' e atualiza o título da tela
 
-                setUpdated(song);
-                navigation.navigate('Song', { song });
+                SongService.findById(id)
+                .then((song: any) =>
+                {
+                    setUpdated(song);
+                    navigation.navigate('Song', { song });
+                })
+                .catch(err => alert(err));
             }
         }
         // NEW
         else
         {
             SongService.create({ name }, validArtists.map(({ obj }) => obj))
-            .then(res =>
+            .then(insertId =>
             {
-                song.id = res;
+                SongService.findById(insertId)
+                .then((song: any) =>
+                {
+                    // Diz à 'HomeScreen' que músicas devem ser atualizadas
+                    setUpdated(song);
 
-                // Diz à 'HomeScreen' que músicas devem ser atualizadas
-                setUpdated(true);
-                //SecureStore.setItemAsync('update-songs', 'true');
-
-                // Impede que, ao clicar em voltar, volte para 'NewSongScreen'
-                navigation.pop(1);
-                // Ir para tela da música
-                navigation.navigate('Song', { song });
+                    // Impede que, ao clicar em voltar, volte para 'NewSongScreen'
+                    navigation.pop(1);
+                    // Ir para tela da música
+                    navigation.navigate('Song', { song });
+                })
+                .catch(err => alert(err));
             })
             .catch(err => alert(err));
         }

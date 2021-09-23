@@ -12,8 +12,8 @@ export type Song =
     name: string;
     artists?: Artist[] | string;
 
-    insertDate?: Date;
-    updateDate?: Date | null;
+    insertDate?: string;
+    updateDate?: string | null;
 }
 
 

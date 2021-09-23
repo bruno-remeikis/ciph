@@ -20,7 +20,7 @@ const updTriggers: UpdTgType[] = [
     {name: 'song',        tb: song},
     {name: 'artist',      tb: artist},
     {name: 'song_artist', tb: song_artist},
-    //{name: 'sheet',       tb: sheet},
+    {name: 'sheet',       tb: sheet},
 ];
 
 
@@ -127,6 +127,10 @@ export default class Database
             `DROP TABLE IF EXISTS ${song.table};`,
         ];
 
+        updTriggers.forEach(tg =>
+            sqls.push(`DROP TRIGGER IF EXISTS tg_update_${tg.name}`)
+        );
+
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
             db.transaction(tx =>
@@ -144,7 +148,7 @@ export default class Database
             // Success
             () =>
             {
-                console.log('Tables have been deleted.');
+                console.log('Tables and triggers have been deleted.');
                 Database.init()
                     .then(() => resolve(true))
                     .catch(err => reject(err));

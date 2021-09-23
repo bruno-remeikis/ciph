@@ -121,7 +121,7 @@ const AppContent: React.FC = () =>
 						? <>
 							<Text style={{ fontWeight: 'bold' }}>Criado</Text>
 							<Text>
-								{format(songInfo.insertDate, dateFormat)}
+								{format(new Date(songInfo.insertDate), dateFormat)}
 							</Text>
 						</> : null}
 
@@ -130,7 +130,7 @@ const AppContent: React.FC = () =>
 							<Text style={{ fontWeight: 'bold' }}>Editado</Text>
 							<Text>{
 								songInfo.updateDate !== null
-									? format(songInfo.updateDate, dateFormat)
+									? format(new Date(songInfo.updateDate), dateFormat)
 									: 'Nunca'
 							}</Text>
 						</> : null}

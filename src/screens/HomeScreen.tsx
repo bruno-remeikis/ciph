@@ -63,7 +63,10 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 		if(updated)
 		{
 			searchSongs(search);
-			setUpdated(false);
+
+			// Se não for boolean, será setado como false em SongScreen
+			if(typeof updated === 'boolean')
+				setUpdated(false);
 		}
 	},
 	[updated]);

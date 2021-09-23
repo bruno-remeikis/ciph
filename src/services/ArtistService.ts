@@ -5,10 +5,11 @@ import { remove } from 'remove-accents';
 import { db } from '../database/connection';
 
 // Services
-import SongArtistService, { song_artist } from './SongArtistService';
+import SongArtistService from './SongArtistService';
 
 // Models
 import { Artist, artist } from '../models/Artist';
+import { song_artist } from '../models/SongArtist';
 
 export default class ArtistService
 {

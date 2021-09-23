@@ -21,6 +21,8 @@ import ConfirmModal from '../components/ConfirmModal';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
+import SongService from '../services/SongService';
+import { groupConcat } from '../utils/functions';
 
 
 
@@ -48,7 +50,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
     const [nameInfo, setNameInfo] = useState(name);
     const [artistsInfo, setArtistsInfo] = useState(
-        artists && typeof artists === 'string' ? artists : ''
+        artistsInfoVal(artists)
     );
 
     //const [modalVisible, setModalVisible] = useState(false);
@@ -195,6 +197,13 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
         .finally(() => setIsDeleteSheetVisible(false));
     }
 
+    function artistsInfoVal(artists: any): string
+    {
+        return artists === undefined ? '' :
+            typeof artists === 'string' ? artists :
+            groupConcat(artists);
+    }
+
 
 
     // ---------- EFFECTS ----------
@@ -235,40 +244,21 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
     [navigation]);
 
     /**
-	 * Carrega a música quando esta tela ganha foco e caso seja necessário
-	 */
+     * Atualiza dados da música
+     */
     useEffect(() =>
     {
-        const unsubscribe = navigation.addListener('focus', () =>
+        if(typeof updated === 'object')
         {
-            if(typeof updated === 'object')
-            {
-                setNameInfo(updated.name);
-                setArtistsInfo(
-                    typeof updated.artists === 'string'
-                        ? updated.artists
-                        : ''
-                );
-                setUpdated(false);
-            }
+            setNameInfo(updated.name);
+            setArtistsInfo(
+                artistsInfoVal(updated.artists)
+            );
 
-            /*SecureStore.getItemAsync('updated-song').then(res =>
-            {
-                if(res)
-                {
-                    const song = JSON.parse(res);
-                    setNameInfo(song.name);
-                    setArtistsInfo(song.artists);
-
-                    SecureStore.deleteItemAsync('updated-song');
-                }
-            });*/
-        });
-    
-        // Return the function to unsubscribe from the event so it gets removed on unmount
-        return unsubscribe;
+            setUpdated(false);
+        }
     },
-    [navigation]);
+    [updated]);
 
 
 
