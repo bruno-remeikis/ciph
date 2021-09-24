@@ -15,9 +15,18 @@ import { colors } from '../utils/consts';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
+import { Artist } from '../models/Artist';
 
 const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 {
+	type filterValue = 'all' | 'songs' | 'artists';
+	const filters: { label: string, value: filterValue }[] =
+	[
+		{ label: 'Tudo',    value: 'all' },
+		{ label: 'Músicas',  value: 'songs' },
+		{ label: 'Artistas', value: 'artists' },
+	];
+
 	// ---------- CONTEXTS ----------
 
 	const { updated, setUpdated } = useUpdated();
@@ -28,8 +37,10 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 
 	const [search, setSearch] = useState<string>('');
 	const [searching, setSearching] = useState<boolean>(false);
-	const [songs, setSongs] = useState<Song[]>([]);
+	const [results, setResults] = useState<(Song | Artist)[]>([]);
 	const [statusText, setStatusText] = useState<string>('');
+
+	const [filter, setFilter] = useState<filterValue>('all');
 
 
 
@@ -40,10 +51,11 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 		setSearching(true);
 		setSearch(text);
 
-		SongService.find(text)
-			.then((res: any) => setSongs(res._array))
-			.catch(err => alert(err))
-			.finally(() => setSearching(false));
+		if(filter === 'songs')
+			SongService.find(text)
+				.then((res: any) => setResults(res._array))
+				.catch(err => alert(err))
+				.finally(() => setSearching(false));
 	}
 
 
@@ -79,7 +91,7 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 		if(searching)
 			return 'Pesquisando ...';
 
-		if(songs.length === 0)
+		if(results.length === 0)
 		{
 			if(search.length !== 0)
 				return 'Nenhum resultado.';
@@ -90,7 +102,7 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 			return 'Resultados';
 		return 'Todas';
 	}),
-	[searching, songs]);
+	[searching, results]);
 
 
 
@@ -103,6 +115,32 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 				keyboardShouldPersistTaps='handled'
 			>
 				<View style={styles.mainContent}>
+					<View style={{
+						flexDirection: 'row',
+						alignItems: 'center',
+						marginBottom: 8,
+					}}>
+						{filters.map((item, i) =>
+							<Pressable
+								key={i}
+								style={[{
+									paddingHorizontal: 8,
+									paddingVertical: 3,
+									marginRight: 4,
+									borderWidth: 1,
+									borderColor: colors.inputBorder,
+									borderRadius: 999,
+								}, filter === item.value ? {
+									backgroundColor: colors.background2,
+									borderColor: colors.primary,
+								} : null]}
+								onPress={() => setFilter(item.value)}
+							>
+								<Text>{ item.label }</Text>
+							</Pressable>
+						)}
+					</View>
+
 					<View style={styles.search}>
 						<TextInput
 							style={styles.searchInput}
@@ -127,18 +165,19 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 							<Text>{statusText}</Text>
 						</View>
 
-						{songs.map(song =>
+						{results.map(res =>
+							res.type === 'Song' ?
 							<Pressable
-								key={song.id}
+								key={res.id}
 								style={styles.song}
-								onPress={() => navigation.navigate('Song', { song })}
+								onPress={() => navigation.navigate('Song', { res })}
 							>
-								<Text style={{ fontSize: 20 }}>{song.name}</Text>
-								<Text>{ song.artists && typeof song.artists === 'string'
-									? song.artists
+								<Text style={{ fontSize: 20 }}>{res.name}</Text>
+								<Text>{ res.artists && typeof res.artists === 'string'
+									? res.artists
 									: ''
 								}</Text>
-							</Pressable>
+							</Pressable> : null
 						)}
 					</View>
 				</View>
