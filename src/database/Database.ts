@@ -51,13 +51,19 @@ export default class Database
             `create table if not exists ${artist.table} (
                 ${artist.id} integer primary key autoincrement,
                 ${artist.name} text unique not null,
-                ${artist.unaccentedName} text not null
+                ${artist.unaccentedName} text not null,
+                ${artist.insertDate} datetime not null
+                    default current_timestamp,
+                ${artist.updateDate} datetime
             );`,
 
             `create table if not exists ${song_artist.table} (
                 ${song_artist.id} integer primary key autoincrement,
                 ${song_artist.songId} integer not null,
                 ${song_artist.artistId} integer not null,
+                ${song_artist.insertDate} datetime not null
+                    default current_timestamp,
+                ${song_artist.updateDate} datetime,
 
                 foreign key (${song_artist.songId})
                     references ${song.table} (${song.id}),
@@ -71,6 +77,9 @@ export default class Database
                 ${sheet.songId} integer not null,
                 ${sheet.title} text not null,
                 ${sheet.content} text not null,
+                ${sheet.insertDate} datetime not null
+                    default current_timestamp,
+                ${sheet.updateDate} datetime,
 
                 foreign key (${sheet.songId})
                     references ${song.table} (${song.id})
