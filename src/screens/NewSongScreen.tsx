@@ -44,10 +44,15 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
     type ArtistProps = {
         obj: Artist;
-        initial?: boolean; // <- Foi carregado inicialmente? (apenas para updateScreem)
+        initial?: boolean; // <- Foi carregado inicialmente? (apenas para updateScreen)
         existing?: boolean; // <- Exite outro com mesmo nome no banco?
         equals?: string; // <- Existe outro com mesmo nome na lista? Se sim, qual?
     }
+
+    /*type SubmitProps = {
+        artists: ArtistProps[];
+        deletedArtistIds: number[];
+    }*/
 
 
 
@@ -70,6 +75,9 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     //const [unfilledArtists, setUnfilledArtists] = useState(false);
 
     const [disabledSubmit, setDisabledSubmit] = useState<boolean>(true);
+    // Impede que o onBlur do TextInput do artista seja chamado depois
+    // do onPress do Pressable 'Salvar' ser pressionado
+    const [saving, setSaving] = useState<boolean>(false);
 
 
 
@@ -78,7 +86,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     /**
      * ATENÇÃO: Dados devem ser validados antes por 'validateSubmit()'
      */
-    function handleSubmit(artists: ArtistProps[])
+    function handleSubmit(artists: ArtistProps[], delArtIds: number[])
     {
         // Remover campos em branco
         const validArtists: ArtistProps[] = artists.filter(art =>
@@ -105,8 +113,8 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
             }
 
             // Deletar link entre artistas já existentes e a música
-            if(deletedArtistIds.length !== 0)
-                SongArtistService.delete(id, deletedArtistIds)
+            if(delArtIds.length !== 0)
+                SongArtistService.delete(id, delArtIds)
                 .catch(err =>
                 {
                     back = false;
@@ -115,7 +123,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
             const newArtists: Artist[] = [];
             const oldArtistIds: number[] = [];
-            
+
             validArtists.forEach(art =>
             {
                 if(art.obj.id === undefined)
@@ -124,7 +132,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                     oldArtistIds.push(art.obj.id);
             });
 
-            // Criar novos artistas e linka-los à música
+            // Criar novos artistas e linká-los à música
             ArtistService.create(id, newArtists)
             .catch(err =>
             {
@@ -142,12 +150,6 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
             if(back)
             {
-                // Diz à 'HomeScreen' que músicas devem ser atualizadas
-                //SecureStore.setItemAsync('update-songs', 'true');
-                // Seta a música atualizada (usada para atualizar 'SongScreen')
-                //SecureStore.setItemAsync('updated-song', JSON.stringify(song));
-                // Volta para 'SongScreen' e atualiza o título da tela
-
                 SongService.findById(id)
                 .then((song: any) =>
                 {
@@ -276,14 +278,20 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
         setDisabledSubmit(unfilledArtists);
     }
 
-    function overwriteArtist(artist: ArtistProps, i: number): ArtistProps[]
-    {
+    function overwriteArtist(artist: ArtistProps, i: number): {
+        artists: ArtistProps[];
+        delArtIds: number[];
+    }{
         // Verificar se nome está entre os pesquisados.
         // Se sim, substitui a linha pelo pesquisado encontrado
         if(!artist.existing && artist.equals !== undefined)
-            return artists;
+            return {
+                artists,
+                delArtIds: deletedArtistIds
+            }
 
         const artistsAux: ArtistProps[] = [...artists];
+        const delArtIdsAux: number[] = [...deletedArtistIds];
 
         // Roda todos os artistas pesquisados
         for(const researchArt of researchArtists)
@@ -293,12 +301,32 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                 if(researchArt.id !== undefined)
                     setRestrictedIds([ ...restrictedIds, researchArt.id ]);
 
-                artistsAux[i] = { obj: researchArt };
+                if(updateScreen)
+                {
+                    // Remove artista da lista dos que devem ser deletados.
+                    // Isso ocorrerá caso o ítem seja inicial. Por isso,
+                    // deve ser reconfigurado como initial = true
+                    for(let j = 0; j < delArtIdsAux.length; j++)
+                        if(researchArt.id === delArtIdsAux[j])
+                        {
+                            delArtIdsAux.splice(j, 1);
+                            artistsAux[i] = { obj: researchArt, initial: true };
+                            break;
+                        }
+                }
+                else
+                    artistsAux[i] = { obj: researchArt };
+
                 break;
             }
 
         setArtists(artistsAux);
-        return artistsAux;
+        setDeletedArtistIds(delArtIdsAux);
+
+        return {
+            artists: artistsAux,
+            delArtIds: delArtIdsAux
+        };
     }
 
 
@@ -412,8 +440,11 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                                 }}
                                                 onBlur={() =>
                                                 {
-                                                    overwriteArtist(artist, i);
-                                                    setCurrentFocusIndex(null);
+                                                    if(!saving)
+                                                    {
+                                                        overwriteArtist(artist, i);
+                                                        setCurrentFocusIndex(null);
+                                                    }
                                                 }}
                                                 editable={!artist.obj.id}
                                             />
@@ -441,11 +472,11 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                                         const array = [...artists];
 
                                                         // Se for o último E possuir ID
-                                                        if(array.length === 1 && array[0].obj.id)
+                                                        if(array.length === 1 && array[0].obj.id !== undefined)
                                                             array.push({ obj: { name: '' } });
 
                                                         // Se for um artista já cadastrado:
-                                                        if(artist.obj.id)
+                                                        if(artist.obj.id !== undefined)
                                                         {
                                                             // Remove-o da lista de artistas restritos
                                                             // para que volte a aparecer nas pesquisar durante
@@ -464,7 +495,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                                         setArtists(array);
                                                     }}
                                                 >
-                                                    <Text style={{ fontSize: 10, textAlignVertical: 'center' }}>X</Text>
+                                                    <FeatherIcon name='x' size={14} color={colors.text} />
                                                 </Pressable>
                                             : null}
                                         </View>
@@ -503,7 +534,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                                                     // para que não volte a aparecer nas pesquisas
                                                                     setRestrictedIds([ ...restrictedIds, researchArtist.id ]);
                                                                 
-                                                                    if(updateScreen)
+                                                                    /*if(updateScreen)
                                                                         // Remove artista da lista dos que devem ser deletados.
                                                                         // Isso ocorrerá caso o ítem seja inicial. Por isso,
                                                                         // deve ser reconfigurado como initial = true
@@ -516,7 +547,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                                                             }
         
                                                                             return true;
-                                                                        }));
+                                                                        }));*/
                                                                 }
 
                                                                 setArtists(array);
@@ -556,14 +587,16 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                         ]}
                         onPress={() =>
                         {
-                            const arts = currentFocusIndex !== null
+                            setSaving(true);
+
+                            const res: { artists: ArtistProps[]; delArtIds: number[] } = currentFocusIndex !== null
                                 ? overwriteArtist(
                                     artists[currentFocusIndex],
                                     currentFocusIndex
                                 )
-                                : artists;
+                                : { artists, delArtIds: deletedArtistIds };
 
-                            handleSubmit(arts);
+                            handleSubmit(res.artists, res.delArtIds);
                         }}
                         disabled={disabledSubmit}
                     >
