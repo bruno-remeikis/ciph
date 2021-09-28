@@ -65,7 +65,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
     const [sheets, setSheets] = useState<Sheet[]>([]);
     // Folha (sheet) aberta no momento
     const [currentSheet, _setCurrentSheet] = useState<Sheet | null>();
-    const [enableEdition, setEnableEdition] = useState(false);
+    const [editable, setEditable] = useState(false);
     const [changed, _setChanged] = useState(false);
     //const [content, setContent] = useState('');
 
@@ -204,6 +204,11 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
             groupConcat(artists);
     }
 
+    function switchEditable(v: boolean)
+    {
+
+    }
+
 
 
     // ---------- EFFECTS ----------
@@ -223,9 +228,9 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
         .catch(err => alert(err));
 
         // Setar estado 'enableEdition' de acordo com o storage
-        SecureStore.getItemAsync('enable-edition').then(res =>
+        SecureStore.getItemAsync('editable').then(res =>
         {
-            setEnableEdition(res === 'true' ? true : false);
+            setEditable(res === 'true' ? true : false);
         })
         .catch(err => alert(err));
 
@@ -343,15 +348,10 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                     paddingVertical: 6,
                                     borderRadius: 8,
                                 }}
-                                onPress={() =>
-                                {
-                                    const v = !enableEdition;
-                                    setEnableEdition(v);
-                                    SecureStore.setItemAsync('enable-edition', v ? 'true' : 'false');
-                                }}
+                                onPress={() => switchEditable(!editable)}
                             >
                                 <MaterialCommunityIcon
-                                    name={enableEdition ? 'pencil' : 'pencil-off'}
+                                    name={editable ? 'pencil' : 'pencil-off'}
                                     size={20}
                                     color='#000000'
                                 />
@@ -362,12 +362,8 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                         false: 'rgba(0, 0, 0, 0.14)'
                                     }}
                                     thumbColor={colors.primary}
-                                    /*onValueChange={v =>
-                                    {
-                                        setEnableEdition(v);
-                                        SecureStore.setItemAsync('enable-edition', v ? 'true' : 'false');
-                                    }}*/
-                                    value={enableEdition}
+                                    onValueChange={switchEditable}
+                                    value={editable}
                                 />
                             </Pressable>
                         </View>
@@ -398,7 +394,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                                 saveSheetContent();
                                                 setCurrentSheet(sheet);
                                             }
-                                            else if(enableEdition)
+                                            else if(editable)
                                                 openModal(sheet);
                                         }}
                                     >
@@ -411,13 +407,13 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                 <Pressable
                                     style={[
                                         styles.tab,
-                                        !enableEdition ? {
+                                        !editable ? {
                                             opacity: opacities.disabled
                                         } : null
                                     ]}
                                     onPress={() =>
                                     {
-                                        if(enableEdition)
+                                        if(editable)
                                             createSheet();
                                     }}
                                 >
@@ -449,7 +445,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                         setChanged(true);
                                     }
                                 }}
-                                editable={enableEdition}
+                                editable={editable}
                             />
                             // Caso não hajam paginas ainda:
                             : <View style={[styles.sheet, styles.emptySheet]}>

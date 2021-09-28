@@ -49,10 +49,10 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
         equals?: string; // <- Existe outro com mesmo nome na lista? Se sim, qual?
     }
 
-    /*type SubmitProps = {
-        artists: ArtistProps[];
-        deletedArtistIds: number[];
-    }*/
+    type SubmitProps = {
+        arts: ArtistProps[];
+        delArtIds: number[];
+    }
 
 
 
@@ -86,10 +86,12 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     /**
      * ATENÇÃO: Dados devem ser validados antes por 'validateSubmit()'
      */
-    function handleSubmit(artists: ArtistProps[], delArtIds: number[])
+    function handleSubmit(submitProps: SubmitProps)
     {
+        const { arts, delArtIds } = submitProps;
+
         // Remover campos em branco
-        const validArtists: ArtistProps[] = artists.filter(art =>
+        const validArtists: ArtistProps[] = arts.filter(art =>
             art.obj.name.trim().length !== 0
         );
 
@@ -278,15 +280,13 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
         setDisabledSubmit(unfilledArtists);
     }
 
-    function overwriteArtist(artist: ArtistProps, i: number): {
-        artists: ArtistProps[];
-        delArtIds: number[];
-    }{
+    function overwriteArtist(artist: ArtistProps, i: number): SubmitProps
+    {
         // Verificar se nome está entre os pesquisados.
         // Se sim, substitui a linha pelo pesquisado encontrado
         if(!artist.existing && artist.equals !== undefined)
             return {
-                artists,
+                arts: artists,
                 delArtIds: deletedArtistIds
             }
 
@@ -322,7 +322,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
         setDeletedArtistIds(delArtIdsAux);
 
         return {
-            artists: artistsAux,
+            arts: artistsAux,
             delArtIds: delArtIdsAux
         };
     }
@@ -595,14 +595,14 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                         {
                             setSaving(true);
 
-                            const res: { artists: ArtistProps[]; delArtIds: number[] } = currentFocusIndex !== null
+                            const res: SubmitProps = currentFocusIndex !== null
                                 ? overwriteArtist(
                                     artists[currentFocusIndex],
                                     currentFocusIndex
                                 )
-                                : { artists, delArtIds: deletedArtistIds };
+                                : { arts: artists, delArtIds: deletedArtistIds };
 
-                            handleSubmit(res.artists, res.delArtIds);
+                            handleSubmit(res);
                         }}
                         disabled={disabledSubmit}
                     >
