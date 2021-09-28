@@ -10,9 +10,9 @@ import ArtistService from './ArtistService';
 import SongArtistService from './SongArtistService';
 
 // Models
-import { Song, song } from '../models/Song';
-import { Artist, artist } from '../models/Artist';
-import { song_artist } from '../models/SongArtist';
+import { Song, song } from '../models/entities/Song';
+import { Artist, artist } from '../models/entities/Artist';
+import { song_artist } from '../models/entities/SongArtist';
 import { dbDatetimeFormat } from '../utils/functions';
 
 export default class SongService

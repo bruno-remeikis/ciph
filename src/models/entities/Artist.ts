@@ -1,12 +1,10 @@
 // Database
-import { Table, cols } from '../database/types';
+import { Table, cols } from '../../database/types';
 
 // ---------- BEAN ----------
 
 export type Artist =
 {
-    readonly type: 'Artist';
-
     id?: number;
     name: string;
 

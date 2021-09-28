@@ -4,7 +4,7 @@ import { SQLTransaction } from 'expo-sqlite';
 import { db } from '../database/connection';
 
 // Models
-import { song_artist } from '../models/SongArtist';
+import { song_artist } from '../models/entities/SongArtist';
 
 export default class SongArtistService
 {

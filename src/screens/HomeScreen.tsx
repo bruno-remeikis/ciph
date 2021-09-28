@@ -3,23 +3,24 @@ import { StyleSheet, Text, View, ScrollView, Pressable, TextInput } from 'react-
 
 // Icons
 import FeatherIcon from 'react-native-vector-icons/Feather';
+import IonIcon from 'react-native-vector-icons/Ionicons';
 
 // Services
 import SongService from '../services/SongService';
 
 // Models
-import { Song } from '../models/Song';
+import { Search } from '../models/bo/Search';
 
 // Utils
 import { colors } from '../utils/consts';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
-import { Artist } from '../models/Artist';
+import SearchService, { filterValue } from '../services/SearchService';
+import { Song } from '../models/entities/Song';
 
 const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 {
-	type filterValue = 'all' | 'songs' | 'artists';
 	const filters: { label: string, value: filterValue }[] =
 	[
 		{ label: 'Tudo',    value: 'all' },
@@ -37,7 +38,7 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 
 	const [search, setSearch] = useState<string>('');
 	const [searching, setSearching] = useState<boolean>(false);
-	const [results, setResults] = useState<(Song | Artist)[]>([]);
+	const [results, setResults] = useState<Search[]>([]);
 	const [statusText, setStatusText] = useState<string>('');
 
 	const [filter, setFilter] = useState<filterValue>('all');
@@ -46,7 +47,18 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 
 	// ---------- FUNCTIONS ----------
 
-	function searchSongs(text: string)
+	function handleSearch(text: string, filter: filterValue)
+	{
+		setSearching(true);
+		setSearch(text);
+
+		SearchService.find(text, filter)
+			.then((res: any) => setResults(res._array))
+			.catch(err => alert(err))
+			.finally(() => setSearching(false));
+	}
+
+	/*function searchSongs(text: string)
 	{
 		setSearching(true);
 		setSearch(text);
@@ -56,7 +68,7 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 				.then((res: any) => setResults(res._array))
 				.catch(err => alert(err))
 				.finally(() => setSearching(false));
-	}
+	}*/
 
 
 
@@ -65,7 +77,7 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 	/**
 	 * Carrega músicas ao abrir app
 	 */
-	useEffect(() => searchSongs(""), []);
+	useEffect(() => handleSearch('', filter), []);
 
 	/**
 	 * Atualiza músicas
@@ -74,7 +86,8 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 	{
 		if(updated)
 		{
-			searchSongs(search);
+			//searchSongs(search);
+			handleSearch(search, filter);
 
 			// Se não for boolean, será setado como false em SongScreen
 			if(typeof updated === 'boolean')
@@ -115,28 +128,28 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 				keyboardShouldPersistTaps='handled'
 			>
 				<View style={styles.mainContent}>
-					<View style={{
-						flexDirection: 'row',
-						alignItems: 'center',
-						marginBottom: 8,
-					}}>
+					<View style={styles.filter}>
 						{filters.map((item, i) =>
 							<Pressable
 								key={i}
-								style={[{
-									paddingHorizontal: 8,
-									paddingVertical: 3,
-									marginRight: 4,
-									borderWidth: 1,
-									borderColor: colors.inputBorder,
-									borderRadius: 999,
-								}, filter === item.value ? {
-									backgroundColor: colors.background2,
-									borderColor: colors.primary,
-								} : null]}
-								onPress={() => setFilter(item.value)}
+								style={[
+									styles.filterItem,
+									filter === item.value
+										? styles.selectedFilterItem
+										: null
+								]}
+								onPress={() =>
+								{
+									handleSearch(search, item.value);
+									setFilter(item.value);
+								}}
 							>
-								<Text>{ item.label }</Text>
+								<Text
+									style={filter === item.value
+										? styles.selectedFilterItemText
+										: styles.filterItemText
+									}
+								>{ item.label }</Text>
 							</Pressable>
 						)}
 					</View>
@@ -146,14 +159,15 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 							style={styles.searchInput}
 							placeholder="Pesquisar"
 							value={search}
-							onChangeText={text => searchSongs(text)}
+							onChangeText={text => handleSearch(text, filter)}
 						/>
 						<Pressable
 							style={styles.searchClearBtn}
 							onPress={() =>
 							{
 								setSearch('');
-								searchSongs('');
+								//searchSongs('');
+								handleSearch('', filter);
 							}}
 						>
 							<FeatherIcon name='x' size={16} color='#000000' />
@@ -165,19 +179,41 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 							<Text>{statusText}</Text>
 						</View>
 
-						{results.map(res =>
-							res.type === 'Song' ?
+						{results.map((res: Search) =>
 							<Pressable
-								key={res.id}
-								style={styles.song}
-								onPress={() => navigation.navigate('Song', { res })}
+								key={`${res.type}-${res.id}`}
+								style={styles.resultItem}
+								onPress={() =>
+								{
+									if(res.type === 'song')
+									{
+										const song: Song = {
+											id: res.id,
+											name: res.name,
+											artists: res.artists,
+											insertDate: res.insertDate,
+											updateDate: res.updateDate,
+										};
+										navigation.navigate('Song', { song });
+									}
+								}}
 							>
-								<Text style={{ fontSize: 20 }}>{res.name}</Text>
-								<Text>{ res.artists && typeof res.artists === 'string'
-									? res.artists
-									: ''
-								}</Text>
-							</Pressable> : null
+								<View style={styles.resultItemContent}>
+									<IonIcon
+										style={styles.resultItemIcon}
+										name={res.type === 'song' ? 'musical-notes' : 'person'}
+										size={30}
+										color={colors.primary}
+									/>
+
+									<View>
+										<Text style={styles.resultItemName}>{res.name}</Text>
+
+										{res.type === 'song' && res.artists && typeof res.artists === 'string'
+										? <Text style={styles.resultItemArtists}>{res.artists}</Text> : null}
+									</View>
+								</View>
+							</Pressable>
 						)}
 					</View>
 				</View>
@@ -215,6 +251,31 @@ const styles = StyleSheet.create({
 		padding: 18,
 	},
 
+	// FILTER
+	filter: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 8,
+	},
+	filterItem: {
+		paddingHorizontal: 8,
+		paddingVertical: 3,
+		marginRight: 4,
+		borderWidth: 1,
+		borderColor: colors.inputBorder,
+		borderRadius: 999,
+	},
+	selectedFilterItem: {
+		backgroundColor: colors.primary, //colors.background2,
+		borderColor: colors.primary,
+	},
+	filterItemText: {
+		color: colors.text,
+	},
+	selectedFilterItemText: {
+		color: 'white',
+	},
+
 	// SEARCH
 	search: {
 		flexDirection: 'row',
@@ -243,19 +304,37 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-around'
 	},
 
-	// Song
-	song: {
+	// Result item
+	resultItem: {
+		flexDirection: 'row',
+		alignItems: 'center',
+
 		backgroundColor: colors.background2,
 
 		width: '100%',
-		paddingHorizontal: 10,
-		paddingVertical: 4,
+		height: 52,
+		//paddingHorizontal: 6,
+		//paddingVertical: 4,
 		marginBottom: 8,
 
 		borderLeftWidth: 4,
 		borderLeftColor: colors.primary,
 		borderRadius: 4,
 		//elevation: 0.8,
+	},
+	resultItemContent: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	resultItemIcon: {
+		marginLeft: 10,
+		marginRight: 12,
+	},
+	resultItemName: {
+		fontSize: 20
+	},
+	resultItemArtists: {
+		color: 'rgba(0, 0, 0, 0.7)',
 	},
 
 	// NEW BUTTON

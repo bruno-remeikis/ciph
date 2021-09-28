@@ -10,7 +10,7 @@ import ArtistService from '../services/ArtistService';
 import SongArtistService from '../services/SongArtistService';
 
 // Models
-import { Artist } from '../models/Artist';
+import { Artist } from '../models/entities/Artist';
 
 // Utils
 import { colors, opacities } from '../utils/consts';

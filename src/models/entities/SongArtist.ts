@@ -1,5 +1,5 @@
 // Database
-import { Table, cols } from '../database/types';
+import { Table, cols } from '../../database/types';
 
 // Models
 import { alias as songAlias, song } from './Song';

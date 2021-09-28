@@ -1,5 +1,5 @@
 // Database
-import { Table, cols } from '../database/types';
+import { Table, cols } from '../../database/types';
 
 // Models
 import { alias as songAlias } from './Song';
@@ -8,8 +8,6 @@ import { alias as songAlias } from './Song';
 
 export type Sheet =
 {
-    readonly type: 'Sheet';
-
     id?: number;
     songId: number;
     title: string;

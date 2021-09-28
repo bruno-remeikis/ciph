@@ -7,7 +7,7 @@ import FeatherIcon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Models
-import { Sheet } from '../models/Sheet';
+import { Sheet } from '../models/entities/Sheet';
 
 // Services
 import SheetService from '../services/SheetService';
@@ -206,7 +206,8 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
     function switchEditable(v: boolean)
     {
-
+        setEditable(v);
+        SecureStore.setItemAsync('editable', v ? 'true' : 'false');
     }
 
 

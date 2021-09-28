@@ -4,7 +4,7 @@ import { SQLResultSetRowList, SQLTransaction } from 'expo-sqlite';
 import { db } from '../database/connection';
 
 // Models
-import { Sheet, sheet } from '../models/Sheet';
+import { Sheet, sheet } from '../models/entities/Sheet';
 
 export default class SheetService
 {

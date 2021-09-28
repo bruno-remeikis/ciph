@@ -8,8 +8,8 @@ import { db } from '../database/connection';
 import SongArtistService from './SongArtistService';
 
 // Models
-import { Artist, artist } from '../models/Artist';
-import { song_artist } from '../models/SongArtist';
+import { Artist, artist } from '../models/entities/Artist';
+import { song_artist } from '../models/entities/SongArtist';
 
 export default class ArtistService
 {

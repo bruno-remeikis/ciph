@@ -1,5 +1,5 @@
 // Database
-import { Table, cols } from '../database/types';
+import { Table, cols } from '../../database/types';
 
 // Models
 import { Artist } from './Artist';
@@ -8,8 +8,6 @@ import { Artist } from './Artist';
 
 export type Song =
 {
-    readonly type: 'Song';
-
     id?: number;
     name: string;
     artists?: Artist[] | string;

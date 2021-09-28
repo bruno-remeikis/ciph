@@ -2,10 +2,10 @@ import { db } from './connection';
 import { Table } from './types';
 
 // Models
-import { song } from '../models/Song';
-import { artist } from '../models/Artist';
-import { song_artist } from '../models/SongArtist';
-import { sheet } from '../models/Sheet';
+import { song } from '../models/entities/Song';
+import { artist } from '../models/entities/Artist';
+import { song_artist } from '../models/entities/SongArtist';
+import { sheet } from '../models/entities/Sheet';
 
 // ---------- TYPES ----------
 
