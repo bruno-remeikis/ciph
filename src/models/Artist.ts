@@ -5,6 +5,8 @@ import { Table, cols } from '../database/types';
 
 export type Artist =
 {
+    readonly type: 'Artist';
+
     id?: number;
     name: string;
 
