@@ -6,9 +6,11 @@ import FeatherIcon from 'react-native-vector-icons/Feather';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 
 // Services
-import SongService from '../services/SongService';
+import SearchService, { filterValue } from '../services/SearchService';
 
 // Models
+import { Song } from '../models/entities/Song';
+import { Artist } from '../models/entities/Artist';
 import { Search } from '../models/bo/Search';
 
 // Utils
@@ -16,8 +18,7 @@ import { colors } from '../utils/consts';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
-import SearchService, { filterValue } from '../services/SearchService';
-import { Song } from '../models/entities/Song';
+import SearchItem from '../components/SearchItem';
 
 const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 {
@@ -179,41 +180,12 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 							<Text>{statusText}</Text>
 						</View>
 
-						{results.map((res: Search) =>
-							<Pressable
-								key={`${res.type}-${res.id}`}
-								style={styles.resultItem}
-								onPress={() =>
-								{
-									if(res.type === 'song')
-									{
-										const song: Song = {
-											id: res.id,
-											name: res.name,
-											artists: res.artists,
-											insertDate: res.insertDate,
-											updateDate: res.updateDate,
-										};
-										navigation.navigate('Song', { song });
-									}
-								}}
-							>
-								<View style={styles.resultItemContent}>
-									<IonIcon
-										style={styles.resultItemIcon}
-										name={res.type === 'song' ? 'musical-notes' : 'person'}
-										size={30}
-										color={colors.primary}
-									/>
-
-									<View>
-										<Text style={styles.resultItemName}>{res.name}</Text>
-
-										{res.type === 'song' && res.artists && typeof res.artists === 'string'
-										? <Text style={styles.resultItemArtists}>{res.artists}</Text> : null}
-									</View>
-								</View>
-							</Pressable>
+						{results.map((item: Search) =>
+							<SearchItem
+								key={`${item.type}-${item.id}`}
+								navigation={navigation}
+								searchItem={item}
+							/>
 						)}
 					</View>
 				</View>
@@ -302,39 +274,6 @@ const styles = StyleSheet.create({
 		height: 30,
 		alignItems: 'center',
 		justifyContent: 'space-around'
-	},
-
-	// Result item
-	resultItem: {
-		flexDirection: 'row',
-		alignItems: 'center',
-
-		backgroundColor: colors.background2,
-
-		width: '100%',
-		height: 52,
-		//paddingHorizontal: 6,
-		//paddingVertical: 4,
-		marginBottom: 8,
-
-		borderLeftWidth: 4,
-		borderLeftColor: colors.primary,
-		borderRadius: 4,
-		//elevation: 0.8,
-	},
-	resultItemContent: {
-		flexDirection: 'row',
-		alignItems: 'center',
-	},
-	resultItemIcon: {
-		marginLeft: 10,
-		marginRight: 12,
-	},
-	resultItemName: {
-		fontSize: 20
-	},
-	resultItemArtists: {
-		color: 'rgba(0, 0, 0, 0.7)',
 	},
 
 	// NEW BUTTON

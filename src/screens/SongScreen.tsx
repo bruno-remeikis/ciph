@@ -5,6 +5,7 @@ import * as SecureStore from 'expo-secure-store';
 // Icons
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
+import IonIcon from 'react-native-vector-icons/Ionicons';
 
 // Models
 import { Sheet } from '../models/entities/Sheet';
@@ -335,9 +336,18 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={{ flex: 1, padding: 12 }}>
                     <View style={styles.header}>
-                        <View style={{ flex: 1, marginRight: 8 }}>
-                            <Text style={{ fontSize: 24 }}>{ nameInfo }</Text>
-                            <Text style={{ fontSize: 16 }}>{ artistsInfo }</Text>
+                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                            <IonIcon
+                                style={{ marginRight: 12 }}
+                                name={'musical-notes'}
+                                size={34}
+                                color={colors.primary}
+                            />
+
+                            <View style={{ flex: 1, marginRight: 8 }}>
+                                <Text style={{ fontSize: 24 }}>{ nameInfo }</Text>
+                                <Text style={{ fontSize: 16 }}>{ artistsInfo }</Text>
+                            </View>
                         </View>
 
                         <View>

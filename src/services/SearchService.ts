@@ -29,12 +29,17 @@ export default class SearchService
      */
     static find(search: string, filter: filterValue): Promise<SQLResultSetRowList>
     {
+        search = search.trim();
+
+        // Quebra a pesquisa por palavras
+        let words: string[] = [];
+        
         let songWhere = '';
         let artistWhere = '';
-        if(search.trim().length > 0)
+
+        if(search.length > 0)
         {
-            // Quebra a pesquisa por palavras
-            const words = search.split(" ");
+            words = search.split(" ");
 
             // Pesquisa separadamente por cada palavra
             words.forEach(word =>
@@ -72,8 +77,8 @@ export default class SearchService
                     select
                         ${song.id} as id,
                         ${song.name} as name,
-                        ${dbDatetimeFormat(song.insertDate)} as insertDate,
-                        ${dbDatetimeFormat(song.updateDate)} as updateDate
+                        ${song.insertDate} as insertDate,
+                        ${song.updateDate} as updateDate
                     from
                         ${song.table}
                     left join
@@ -87,27 +92,40 @@ export default class SearchService
                     group by
                         ${song.id},
                         ${song_artist.songId}
+                    ${words.length !== 0 ? `order by ${song.insertDate} desc` : ''}
                 )`;
 
             const artistsSql =
-                `select
-                    'artist' as type,
-                    ${artist.id} as id,
-                    ${artist.name} as name,
-                    ${artist.insertDate} as insertDate,
-                    ${artist.updateDate} as updateDate,
-                    null as artists
-                from
-                    ${artist.table}
-                ${artistWhere}`;
-
-            const sql =
                 `select * from
                 (
-                    ${filter === 'all' || filter === 'songs' ? songsSql : ''}
-                    ${filter === 'all' ? 'union all' : ''}
-                    ${filter === 'all' || filter === 'artists' ? artistsSql : ''}
+                    select
+                        'artist' as type,
+                        ${artist.id} as id,
+                        ${artist.name} as name,
+                        ${artist.insertDate} as insertDate,
+                        ${artist.updateDate} as updateDate,
+                        null as artists
+                    from
+                        ${artist.table}
+                    ${artistWhere}
+                    ${words.length !== 0 ? `order by ${artist.insertDate} desc` : ''}
                 )`;
+
+            const sql =
+                `select
+                    type,
+                    id,
+                    name,
+                    ${dbDatetimeFormat('insertDate')} as insertDate,
+                    ${dbDatetimeFormat('updateDate')} as updateDate,
+                    artists
+                from
+                (
+                    ${filter === 'all' || filter === 'artists' ? artistsSql : ''}
+                    ${filter === 'all' ? 'union all' : ''}
+                    ${filter === 'all' || filter === 'songs' ? songsSql : ''}
+                )
+                ${words.length === 0 ? 'order by insertDate desc' : ''}`;
 
             tx.executeSql(sql, [], (_, { rows }) => resolve(rows));
         },

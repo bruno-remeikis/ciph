@@ -24,16 +24,20 @@ import ConfirmModal from './src/components/ConfirmModal';
 import Database from './src/database/Database';
 
 // Models
-import { Song } from './src/models/Song';
+import { Song } from './src/models/entities/Song';
+import { Artist } from './src/models/entities/Artist';
+
+// Services
+import SongService from './src/services/SongService';
 
 // Utils
 import { colors, dateFormat } from './src/utils/consts';
 
 // Screens
 import HomeScreen from './src/screens/HomeScreen';
-import SongScreen from './src/screens/SongScreen';
 import NewSongScreen from './src/screens/NewSongScreen';
-import SongService from './src/services/SongService';
+import SongScreen from './src/screens/SongScreen';
+import ArtistScreen from './src/screens/ArtistScreen';
 
 const menuIconSize = 24;
 
@@ -240,8 +244,9 @@ const SongHeader: React.FC<SongHeaderProps> = ({ route, navigation }) =>
 
 type RootStackParamList = {
 	Home: { update?: boolean } | undefined;
-	Song: { song: Song };
 	NewSong: { song: Song } | undefined;
+	Song: { song: Song };
+	Artist: { artist: Artist };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -285,6 +290,13 @@ const AppContent: React.FC = () =>
 					initialParams={{ update: true }}
 				/>
 
+				{/* NEW SONG */}
+				<Stack.Screen
+					name="NewSong"
+					component={NewSongScreen}
+					options={{ title: 'Nova música' }}
+				/>
+
 				{/* SONG */}
 				<Stack.Screen
 					name="Song"
@@ -299,11 +311,13 @@ const AppContent: React.FC = () =>
 					})}
 				/>
 
-				{/* NEW SONG */}
+				{/* SONG */}
 				<Stack.Screen
-					name="NewSong"
-					component={NewSongScreen}
-					options={{ title: 'Nova música' }}
+					name="Artist"
+					component={ArtistScreen}
+					options={({ route, navigation }) => ({
+						title: route.params.artist.name,
+					})}
 				/>
 			</Stack.Navigator>
 		</NavigationContainer>

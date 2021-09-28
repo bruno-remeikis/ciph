@@ -132,7 +132,7 @@ export default class SongService
         }));
     }
 
-    static findById(id: number)//: Promise<SQLResultSetRowList>
+    static findById(id: number): Promise<SQLResultSetRowList>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
@@ -172,6 +172,58 @@ export default class SongService
                     resolve(rows.item(0));
                 else
                     reject();
+            });
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        }));
+    }
+
+    static findByArtistId(artistId: number): Promise<SQLResultSetRowList>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            const sql =
+                `select
+                    id,
+                    name,
+                    insertDate,
+                    updateDate,
+                    (
+                        select
+                            group_concat(${artist.name}, ', ')
+                        from
+                            ${song_artist.table}
+                        left join
+                            ${artist.table} on
+                                ${song_artist.artistId} = ${artist.id}
+                        where
+                            ${song_artist.songId} = id and
+                            ${song_artist.songId} = ${song_artist.songId}
+                    ) as artists
+                from (
+                    select
+                        ${song.id} as id,
+                        ${song.name} as name,
+                        ${dbDatetimeFormat(song.insertDate)} as insertDate,
+                        ${dbDatetimeFormat(song.updateDate)} as updateDate
+                    from
+                        ${song.table}
+                    left join
+                        ${song_artist.table} on
+                            ${song.id} = ${song_artist.songId}
+                    where
+                        ${song_artist.artistId} = ?
+                    group by
+                        ${song.id},
+                        ${song_artist.songId}
+                )`;
+
+            tx.executeSql(sql, [artistId], (_, { rows }) =>
+            {
+                resolve(rows);
             });
         },
         err =>
