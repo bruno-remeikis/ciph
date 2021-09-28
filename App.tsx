@@ -189,28 +189,28 @@ const SongHeader: React.FC<SongHeaderProps> = ({ route, navigation }) =>
 				visible={isInfoVisible}
 				setVisible={setIsInfoVisible}
 			>
-				<View style={{ padding: 12 }}>
+				<View style={styles.aboutModal}>
 					{song !== null && (
 						song.insertDate !== undefined ||
 						song.updateDate !== undefined
 					) ? <>
 						{song.insertDate !== undefined
-						? <>
-							<Text style={{ fontWeight: 'bold' }}>Criado</Text>
-							<Text>
+						? <View>
+							<Text style={styles.aboutTitle}>Criado</Text>
+							<Text style={styles.aboutText}>
 								{format(new Date(song.insertDate), dateFormat)}
 							</Text>
-						</> : null}
+						</View> : null}
 
 						{song.updateDate !== undefined
-						? <>
-							<Text style={{ fontWeight: 'bold' }}>Editado</Text>
-							<Text>{
+						? <View style={{ marginTop: 6 }}>
+							<Text style={styles.aboutTitle}>Editado</Text>
+							<Text style={styles.aboutText}>{
 								song.updateDate !== null
 									? format(new Date(song.updateDate), dateFormat)
 									: 'Nunca'
 							}</Text>
-						</> : null}
+						</View> : null}
 					</>
 					: <Text>Não há informações</Text>}
 				</View>
@@ -347,4 +347,15 @@ const styles = StyleSheet.create({
 		marginLeft: 12,
 		fontSize: 20,
 	},
+
+	aboutModal: {
+		paddingHorizontal: 16,
+		paddingVertical: 12,
+	},
+	aboutTitle: {
+		fontSize: 20,
+	},
+	aboutText: {
+		fontSize: 16,
+	}
 });

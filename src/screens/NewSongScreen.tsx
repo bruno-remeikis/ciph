@@ -261,7 +261,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
         }
 
         // Validar artistas
-        for(const artist of artists)
+        for(const artist of arts)
         {
             if(artist.obj.name.trim().length !== 0)
             {
@@ -301,8 +301,8 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                 if(researchArt.id !== undefined)
                     setRestrictedIds([ ...restrictedIds, researchArt.id ]);
 
+                let initial: boolean = false;
                 if(updateScreen)
-                {
                     // Remove artista da lista dos que devem ser deletados.
                     // Isso ocorrerá caso o ítem seja inicial. Por isso,
                     // deve ser reconfigurado como initial = true
@@ -310,13 +310,11 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                         if(researchArt.id === delArtIdsAux[j])
                         {
                             delArtIdsAux.splice(j, 1);
-                            artistsAux[i] = { obj: researchArt, initial: true };
+                            initial = true;
                             break;
                         }
-                }
-                else
-                    artistsAux[i] = { obj: researchArt };
 
+                artistsAux[i] = { obj: researchArt, initial };
                 break;
             }
 
@@ -469,11 +467,19 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                                     }}
                                                     onPress={() =>
                                                     {
-                                                        const array = [...artists];
+                                                        const array: ArtistProps[] = [...artists];
 
-                                                        // Se for o último E possuir ID
-                                                        if(array.length === 1 && array[0].obj.id !== undefined)
-                                                            array.push({ obj: { name: '' } });
+                                                        // Se for o último:
+                                                        if(array.length === 1)
+                                                        {
+                                                            setDisabledSubmit(true);
+
+                                                            // Se possuir ID:
+                                                            if(array[0].obj.id !== undefined)
+                                                                array.push({ obj: { name: '' } });
+                                                        }
+                                                        else
+                                                            setDisabledSubmit(false);
 
                                                         // Se for um artista já cadastrado:
                                                         if(artist.obj.id !== undefined)
