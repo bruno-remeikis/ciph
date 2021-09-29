@@ -357,7 +357,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     return (
         <ScrollView
             keyboardShouldPersistTaps='handled'
-            contentContainerStyle={{ flex:1 }}
+            contentContainerStyle={{ flexGrow: 1 }}
         >
             <View style={styles.container}>
                 <View style={styles.inputGroup}>
