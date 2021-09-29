@@ -355,12 +355,16 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     // ---------- RETURN ----------
 
     return (
-        <ScrollView keyboardShouldPersistTaps='handled'>
+        <ScrollView
+            keyboardShouldPersistTaps='handled'
+            contentContainerStyle={{ flex:1 }}
+        >
             <View style={styles.container}>
                 <View style={styles.inputGroup}>
                     <Text style={styles.label}>Nome</Text>
                     <TextInput
                         style={[ styles.input, styles.textInput ]}
+                        autoCapitalize='words'
                         value={name}
                         onChangeText={text =>
                         {
@@ -410,6 +414,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                         >
                                             <TextInput
                                                 style={styles.textInput}
+                                                autoCapitalize='words'
                                                 value={artist.obj.name}
                                                 onChangeText={text =>
                                                 {
