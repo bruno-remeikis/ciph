@@ -255,8 +255,6 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
      */
     useEffect(() =>
     {
-        console.log(updated);
-
         if(typeof updated === 'object'
         && updated.song)
         {

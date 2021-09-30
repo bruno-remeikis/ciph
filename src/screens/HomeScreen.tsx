@@ -18,12 +18,15 @@ import { colors } from '../utils/consts';
 import { useUpdated } from '../contexts/Updated';
 import SearchItem from '../components/SearchItem';
 
-interface FadeProps {
-	style?: StyleProp<ViewStyle>;
+
+
+// ---------- ANIMATION COMPONENTS ----------
+
+interface FadeAnimProps extends ViewProps {
 	visible: boolean;
 }
 
-const Fade: React.FC<FadeProps> = ({ children, style, visible }) =>
+const Fade: React.FC<FadeAnimProps> = ({ children, style, visible }) =>
 {
 	// Initial value for opacity: 0
 	const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -32,7 +35,7 @@ const Fade: React.FC<FadeProps> = ({ children, style, visible }) =>
 	{
 		Animated.timing(fadeAnim, {
 			toValue: visible ? 1 : 0,
-			duration: 200,
+			duration: visible ? 180 : 120,
 			useNativeDriver: false,
 		}) .start();
 	}
@@ -51,8 +54,43 @@ const Fade: React.FC<FadeProps> = ({ children, style, visible }) =>
 	);
 }
 
+const ShadowFade: React.FC<FadeAnimProps> = ({ children, style, visible, onLayout }) =>
+{
+	// Initial value for opacity: 0
+	const fadeAnim = useRef(new Animated.Value(0)).current;
+
+	function fade()
+	{
+		Animated.timing(fadeAnim, {
+			toValue: visible ? 2 : 0,
+			duration: visible ? 180 : 120,
+			useNativeDriver: false,
+		}) .start();
+	}
+
+	useEffect(() => fade(), [visible]);
+
+	return (
+		<Animated.View // Special animatable View
+			style={[
+				style,
+				{ elevation: fadeAnim } // Bind opacity to animated value
+			]}
+			onLayout={onLayout}
+		>
+			{children}
+		</Animated.View>
+	);
+}
+
+
+
+// ---------- MAIN COMPONENT ----------
+
 const HomeScreen: React.FC<any> = ({ navigation }) =>
 {
+	// ---------- CONSTS ----------
+
 	const filters: { label: string, value: filterValue }[] =
 	[
 		{ label: 'Tudo',    value: 'all' },
@@ -79,10 +117,11 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 	const [search, setSearch] = useState<string>('');
 	const [results, setResults] = useState<Search[]>([]);
 	const [loading, setLoading] = useState<boolean>(false);
+	const [showLoading, setShowLoading] = useState<boolean>(false);
 
 	const [filter, setFilter] = useState<filterValue>('all');
 
-	const [showNavBtn, setShowNavBtn] = useState<boolean>(false);
+	const [resultsAtTheTop, setResultsAtTheTop] = useState<boolean>(true);
 
 
 
@@ -90,13 +129,24 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 
 	function handleSearch(text: string, filter: filterValue)
 	{
+		if(!loading)
+			setTimeout(() =>
+			{
+				if(loading)
+					setShowLoading(true);
+			}, 800);
+
 		setLoading(true);
 		setSearch(text);
 
 		SearchService.find(text, filter)
 			.then((res: any) => setResults(res._array))
 			.catch(err => alert(err))
-			.finally(() => setLoading(false));
+			.finally(() =>
+			{
+				setLoading(false);
+				setShowLoading(false);
+			});
 	}
 
 
@@ -131,17 +181,37 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 
 	return (
 		<View style={styles.container}>
-			<View style={styles.loadContainer}>
+			<View style={styles.infoContainer}>
 				<ActivityIndicator
 					style={styles.loadIcon}
-					animating={loading}
+					animating={showLoading}
 					color={colors.primary}
 					size={50}
 				/>
+
+				{!loading && results.length === 0 ?
+					<Text>{
+						search.trim().length === 0
+							? 'Você ainda possui músicas'
+							: 'Nenhum resultado'
+					}</Text>
+				: null}
 			</View>
 
-			<View
-				style={styles.header}
+			<ShadowFade
+				visible={!resultsAtTheTop}
+				style={[
+					styles.header,
+					{
+						shadowColor: "#000",
+						shadowOffset: {
+							width: 0,
+							height: 1,
+						},
+						shadowRadius: 1.41,
+						shadowOpacity: 0.2,
+					}
+				]}
 				onLayout={(event) => setHeaderHeight(
 					event.nativeEvent.layout.height
 				)}
@@ -190,7 +260,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 						</Pressable>
 					)}
 				</View>
-			</View>
+			</ShadowFade>
 
 			<FlatList
 				ref={resultsRef}
@@ -199,7 +269,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 					styles.content,
 					{
 						marginTop: headerHeight,
-						opacity: !loading ? 1 : 0,
+						opacity: !showLoading ? 1 : 0,
 					}
 				]}
 				data={results}
@@ -212,8 +282,8 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 						searchItem={item}
 					/>
 				)}
-				onScroll={event => setShowNavBtn(
-					event.nativeEvent.contentOffset.y !== 0
+				onScroll={event => setResultsAtTheTop(
+					event.nativeEvent.contentOffset.y === 0
 				)}
 				// Tempo (ms) de atualização do evento de scroll:
 				scrollEventThrottle={16}
@@ -223,7 +293,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 			/>
 
 			<View style={styles.btns}>
-				<Fade visible={showNavBtn}>
+				<Fade visible={!resultsAtTheTop}>
 					<Pressable
 						style={styles.goTopBtn}
 						onPress={() =>
@@ -271,6 +341,15 @@ const styles = StyleSheet.create({
 		paddingTop: 0,
 	},
 
+	// INFO
+	infoContainer: {
+		position: 'absolute',
+		zIndex: 1,
+	},
+	loadIcon: {
+		alignSelf: 'center',
+	},
+
 	// HEADER
 	header: {
 		position: 'absolute',
@@ -279,7 +358,7 @@ const styles = StyleSheet.create({
 		backgroundColor: colors.background,
 		width: '100%',
 		padding: paddingArround,
-		paddingBottom: 8,
+		paddingBottom: 12,
 	},
 
 	// SEARCH
@@ -327,15 +406,6 @@ const styles = StyleSheet.create({
 	},
 	selectedFilterItemText: {
 		color: 'white',
-	},
-
-	// LOAD ICON
-	loadContainer: {
-		position: 'absolute',
-		zIndex: 1,
-	},
-	loadIcon: {
-		alignSelf: 'center',
 	},
 
 	// RESULTS
