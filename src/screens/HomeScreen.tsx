@@ -212,33 +212,15 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 						searchItem={item}
 					/>
 				)}
-				scrollEventThrottle={1}
 				onScroll={event => setShowNavBtn(
 					event.nativeEvent.contentOffset.y !== 0
 				)}
-			/>
-
-			{/*<ScrollView
-				ref={scrollRef}
-				style={styles.scrollView}
+				// Tempo (ms) de atualização do evento de scroll:
+				scrollEventThrottle={16}
+				// Permitir que usuário interaja com os ítens
+				// mesmo que o teclado esteja aberto:
 				keyboardShouldPersistTaps='handled'
-				onScroll={event => setShowNavBtn(
-					event.nativeEvent.contentOffset.y !== 0
-				)}
-			>
-				<View style={[
-					styles.content,
-					{ marginTop: headerHeight }
-				]}>
-					{!loading ? results.map((item: Search) =>
-						<SearchItem
-							key={`${item.type}-${item.id}`}
-							navigation={navigation}
-							searchItem={item}
-						/>
-					) : null}
-				</View>
-			</ScrollView>*/}
+			/>
 
 			<View style={styles.btns}>
 				<Fade visible={showNavBtn}>
@@ -372,7 +354,7 @@ const styles = StyleSheet.create({
 		justifyContent: 'space-around',
 		alignItems: 'center',
 
-		backgroundColor: '#CCCCCC',
+		backgroundColor: '#DEDEDE',
 
 		width: 40,
 		height: 40,

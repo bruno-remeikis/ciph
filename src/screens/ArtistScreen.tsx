@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, Pressable } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Pressable, FlatList } from 'react-native';
 
 // Icons
 import IonIcon from 'react-native-vector-icons/Ionicons';
@@ -70,22 +70,28 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
                 <Text style={{ fontSize: 24 }}>{nameInfo}</Text>
             </View>
 
-            <View style={styles.songs}>
-                {songs.map(song =>
-                    <SearchItem
-                        key={song.id}
-                        navigation={navigation}
-                        searchItem={{
+            <FlatList
+				style={styles.songs}
+				data={songs}
+				keyExtractor={item => `${item.id}`}
+				renderItem={({ item }) =>
+				(
+					<SearchItem
+						navigation={navigation}
+						searchItem={{
                             type: 'song',
-                            id: song.id ? song.id : 0,
-                            name: song.name,
-                            artists: song.artists,
-                            insertDate: song.insertDate,
-                            updateDate: song.updateDate,
+                            id: item.id ? item.id : 0,
+                            name: item.name,
+                            artists: item.artists,
+                            insertDate: item.insertDate,
+                            updateDate: item.updateDate,
                         }}
-                    />
-                )}
-            </View>
+					/>
+				)}
+				// Permitir que usuário interaja com os ítens
+				// mesmo que o teclado esteja aberto:
+				keyboardShouldPersistTaps='handled'
+			/>
         </View>
     );
 }
