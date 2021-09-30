@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { RouteProp } from '@react-navigation/core';
 
 import { format } from 'date-fns';
@@ -8,11 +8,9 @@ import { format } from 'date-fns';
 import RootStackParamList from '../../../../AppRootStackParamList';
 
 // Icons
-import EntypoIcon from 'react-native-vector-icons/Entypo';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 
 // Styles
-import modalStyles from '../../../styles/modals';
 import styles from './styles';
 
 // Contexts
@@ -26,7 +24,8 @@ import ConfirmModal from '../../../components/ConfirmModal';
 import SongService from '../../../services/SongService';
 
 // Utils
-import { colors, dateFormat, sizes } from '../../../utils/consts';
+import { colors, dateFormat } from '../../../utils/consts';
+import GenericAppHeader from '../GenericAppHeader';
 
 interface SongHeaderProps {
 	route: RouteProp<RootStackParamList, "Song">;
@@ -39,7 +38,6 @@ const SongHeader: React.FC<SongHeaderProps> = ({ route, navigation }) =>
 
 	const { setUpdated } = useUpdated();
 
-	const [isMenuVisible, setIsMenuVisible] = useState<boolean>(false);
 	const [isConfirmDeleteVisible, setIsConfirmDeleteVisible] = useState<boolean>(false);
 	const [isInfoVisible, setIsInfoVisible] = useState<boolean>(false);
 
@@ -59,54 +57,35 @@ const SongHeader: React.FC<SongHeaderProps> = ({ route, navigation }) =>
 
 	return (
 		<>
-			<Pressable
-				style={modalStyles.menuBtn}
-				onPress={() => setIsMenuVisible(true)}
-			>
-				<EntypoIcon name='dots-three-vertical' size={18} color='#ffffff' />
-			</Pressable>
-
-			{/* Menú */}
-			<Modal
-				style={modalStyles.menuContainer}
-				visible={isMenuVisible}
-				setVisible={setIsMenuVisible}
-			>
-				{/* Editar */}
-				<Pressable
-					style={modalStyles.menuItem}
-					onPress={() =>
-					{
-						setIsMenuVisible(false);
-						navigation.navigate('NewSong', { song });
-					}}
-				>
-					<FeatherIcon name='edit-2' size={sizes.headerIcon} color={colors.text} />
-					<Text style={modalStyles.menuItemContent}>Editar</Text>
-				</Pressable>
-
-				{/* Sobre */}
-				<Pressable
-					style={modalStyles.menuItem}
-					onPress={() =>
-					{
-						setIsMenuVisible(false);
-						setIsInfoVisible(true);
-					}}
-				>
-					<FeatherIcon name='info' size={sizes.headerIcon} color={colors.text} />
-					<Text style={modalStyles.menuItemContent}>Sobre</Text>
-				</Pressable>
-
-				{/* Deletar */}
-				<Pressable
-					style={[ modalStyles.menuItem, modalStyles.menuItemDelete ]}
-					onPress={() => setIsConfirmDeleteVisible(true)}
-				>
-					<FeatherIcon name='x' size={sizes.headerIcon} color={colors.red} />
-					<Text style={[modalStyles.menuItemContent, { color: colors.red }]}>Deletar</Text>
-				</Pressable>
-			</Modal>
+			<GenericAppHeader
+				menuItems={
+				[{
+					icon: {
+						component: FeatherIcon,
+						name: 'edit-2',
+					},
+					text: 'Editar',
+					onClick: () => navigation.navigate('NewSong', { song })
+				},
+				{
+					icon: {
+						component: FeatherIcon,
+						name: 'info'
+					},
+					text: 'Sobre',
+					onClick: () => setIsInfoVisible(true)
+				},
+				{
+					icon: {
+						component: FeatherIcon,
+						name: 'x'
+					},
+					text: 'Deletar',
+					color: colors.red,
+					division: true,
+					onClick: () => setIsConfirmDeleteVisible(true)
+				}]}
+			/>
 
 			{/* Sobre */}
 			<Modal

@@ -20,7 +20,3 @@ export const colors = {
 export const opacities = {
     disabled: 0.50,
 }
-
-export const sizes = {
-    headerIcon: 24,
-}

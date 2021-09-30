@@ -31,6 +31,7 @@ import ArtistScreen from './src/screens/ArtistScreen';
 // Headers
 import HomeHeader from './src/components/app/HomeHeader';
 import SongHeader from './src/components/app/SongHeader';
+import ArtistHeader from './src/components/app/ArtistHeader';
 
 
 
@@ -104,6 +105,8 @@ const AppContent: React.FC = () =>
 					component={ArtistScreen}
 					options={({ route }) => ({
 						title: route.params.artist.name,
+						headerRight: () =>
+							<ArtistHeader />
 					})}
 				/>
 			</Stack.Navigator>
