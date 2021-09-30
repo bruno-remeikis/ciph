@@ -163,13 +163,13 @@ export default class ArtistService
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
             const sql =
-            `select
-                ${artist.id} as id,
-                ${artist.name} as name
-            from
-                ${artist.table}
-            where
-                ${artist.name} like ?`;
+                `select
+                    ${artist.id} as id,
+                    ${artist.name} as name
+                from
+                    ${artist.table}
+                where
+                    ${artist.name} like ?`;
 
             tx.executeSql(sql, [name], (_, { rows }) =>
             {
@@ -178,6 +178,26 @@ export default class ArtistService
                 else
                     resolve(null);
             });
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        }));
+    }
+
+    static updateName(id: number, name: string)
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            const sql =
+                `update ${artist.table}
+                set ${artist.name} = ?
+                where ${artist.id} = ?`;
+
+            tx.executeSql(sql, [name, id], (_, { rowsAffected }) =>
+                resolve(rowsAffected)
+            );
         },
         err =>
         {

@@ -103,10 +103,13 @@ const AppContent: React.FC = () =>
 				<Stack.Screen
 					name="Artist"
 					component={ArtistScreen}
-					options={({ route }) => ({
+					options={({ route, navigation }) => ({
 						title: route.params.artist.name,
 						headerRight: () =>
-							<ArtistHeader />
+							<ArtistHeader
+								route={route}
+								navigation={navigation}
+							/>
 					})}
 				/>
 			</Stack.Navigator>

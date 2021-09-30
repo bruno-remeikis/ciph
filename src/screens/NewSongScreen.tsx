@@ -155,7 +155,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                 SongService.findById(id)
                 .then((song: any) =>
                 {
-                    setUpdated(song);
+                    setUpdated({ song });
                     navigation.navigate('Song', { song });
                 })
                 .catch(err => alert(err));
@@ -171,7 +171,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                 .then((song: any) =>
                 {
                     // Diz à 'HomeScreen' que músicas devem ser atualizadas
-                    setUpdated(song);
+                    setUpdated({ song });
 
                     // Impede que, ao clicar em voltar, volte para 'NewSongScreen'
                     navigation.pop(1);

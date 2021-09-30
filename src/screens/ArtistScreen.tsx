@@ -14,17 +14,17 @@ import SongService from '../services/SongService';
 // Utils
 import { colors } from '../utils/consts';
 
+// Contexts
+import { useUpdated } from '../contexts/Updated';
+
 const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 {
-    // ---------- CONSTS ----------
-
     const { id, name } = route.params.artist;
 
-
-
-    // ---------- STATES ----------
+    const { updated, setUpdated } = useUpdated();
 
     const [songs, setSongs] = useState<Song[]>([]);
+    const [nameInfo, setNameInfo] = useState(name);
 
 
 
@@ -37,6 +37,22 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
             .catch(err => alert(err));
     },
     []);
+
+    /**
+     * Atualiza dados do artista
+     */
+    useEffect(() =>
+    {
+        if(typeof updated === 'object'
+        && updated.artist)
+        {
+            setNameInfo(updated.artist.name);
+
+            if(!updated.song)
+                setUpdated(false);
+        }
+    },
+    [updated]);
 
 
 
@@ -51,7 +67,7 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
                     size={34}
                     color={colors.primary}
                 />
-                <Text style={{ fontSize: 24 }}>{name}</Text>
+                <Text style={{ fontSize: 24 }}>{nameInfo}</Text>
             </View>
 
             <View style={styles.songs}>

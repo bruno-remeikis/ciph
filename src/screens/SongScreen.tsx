@@ -255,14 +255,18 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
      */
     useEffect(() =>
     {
-        if(typeof updated === 'object')
+        console.log(updated);
+
+        if(typeof updated === 'object'
+        && updated.song)
         {
-            setNameInfo(updated.name);
+            setNameInfo(updated.song.name);
             setArtistsInfo(
-                artistsInfoVal(updated.artists)
+                artistsInfoVal(updated.song.artists)
             );
 
-            setUpdated(false);
+            if(!updated.artist)
+                setUpdated(false);
         }
     },
     [updated]);

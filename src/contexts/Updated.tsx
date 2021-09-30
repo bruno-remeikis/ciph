@@ -1,7 +1,13 @@
 import React, { createContext, useContext, useState } from 'react';
-import { Song } from '../models/Song';
 
-type updated = boolean | Song;
+// Models
+import { Artist } from '../models/entities/Artist';
+import { Song } from '../models/entities/Song';
+
+type updated = boolean | {
+    song?: Song;
+    artist?: Artist;
+};
 
 interface UpdateProps {
     updated: updated;
