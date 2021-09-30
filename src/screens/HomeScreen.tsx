@@ -1,16 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView, Pressable, TextInput } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, Text, View, Pressable, TextInput, ActivityIndicator, Animated, Easing, ViewProps, StyleProp, ViewStyle, FlatList } from 'react-native';
 
 // Icons
 import FeatherIcon from 'react-native-vector-icons/Feather';
-import IonIcon from 'react-native-vector-icons/Ionicons';
+import EntypoIcon from 'react-native-vector-icons/Entypo';
 
 // Services
 import SearchService, { filterValue } from '../services/SearchService';
 
 // Models
-import { Song } from '../models/entities/Song';
-import { Artist } from '../models/entities/Artist';
 import { Search } from '../models/bo/Search';
 
 // Utils
@@ -20,7 +18,40 @@ import { colors } from '../utils/consts';
 import { useUpdated } from '../contexts/Updated';
 import SearchItem from '../components/SearchItem';
 
-const HomeScreen: React.FC<any> = ({ navigation, route }) =>
+interface FadeProps {
+	style?: StyleProp<ViewStyle>;
+	visible: boolean;
+}
+
+const Fade: React.FC<FadeProps> = ({ children, style, visible }) =>
+{
+	// Initial value for opacity: 0
+	const fadeAnim = useRef(new Animated.Value(0)).current;
+
+	function fade()
+	{
+		Animated.timing(fadeAnim, {
+			toValue: visible ? 1 : 0,
+			duration: 200,
+			useNativeDriver: false,
+		}) .start();
+	}
+
+	useEffect(() => fade(), [visible]);
+
+	return (
+		<Animated.View // Special animatable View
+			style={[
+				style,
+				{ opacity: fadeAnim } // Bind opacity to animated value
+			]}
+		>
+			{children}
+		</Animated.View>
+	);
+}
+
+const HomeScreen: React.FC<any> = ({ navigation }) =>
 {
 	const filters: { label: string, value: filterValue }[] =
 	[
@@ -33,16 +64,25 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 
 	const { updated, setUpdated } = useUpdated();
 
+
+
+	// ---------- REFS ----------
+
+	const resultsRef = useRef<FlatList | null>(null);
+
 	
 
 	// ---------- STATES ----------
 
+	const [headerHeight, setHeaderHeight] = useState(0);
+
 	const [search, setSearch] = useState<string>('');
-	const [searching, setSearching] = useState<boolean>(false);
 	const [results, setResults] = useState<Search[]>([]);
-	const [statusText, setStatusText] = useState<string>('');
+	const [loading, setLoading] = useState<boolean>(false);
 
 	const [filter, setFilter] = useState<filterValue>('all');
+
+	const [showNavBtn, setShowNavBtn] = useState<boolean>(false);
 
 
 
@@ -50,26 +90,14 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 
 	function handleSearch(text: string, filter: filterValue)
 	{
-		setSearching(true);
+		setLoading(true);
 		setSearch(text);
 
 		SearchService.find(text, filter)
 			.then((res: any) => setResults(res._array))
 			.catch(err => alert(err))
-			.finally(() => setSearching(false));
+			.finally(() => setLoading(false));
 	}
-
-	/*function searchSongs(text: string)
-	{
-		setSearching(true);
-		setSearch(text);
-
-		if(filter === 'songs')
-			SongService.find(text)
-				.then((res: any) => setResults(res._array))
-				.catch(err => alert(err))
-				.finally(() => setSearching(false));
-	}*/
 
 
 
@@ -97,106 +125,145 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 	},
 	[updated]);
 
-	/**
-	 * Atualiza mensagem de status
-	 */
-	useEffect(() => setStatusText((): string =>
-	{
-		if(searching)
-			return 'Pesquisando ...';
-
-		if(results.length === 0)
-		{
-			if(search.length !== 0)
-				return 'Nenhum resultado.';
-			return 'Você ainda não tem nenhuma música.';
-		}
-
-		if(search.length !== 0)
-			return 'Resultados';
-		return 'Todas';
-	}),
-	[searching, results]);
-
 
 
 	// ---------- RETURN ----------
 
 	return (
 		<View style={styles.container}>
-			<ScrollView
-				style={styles.scrollView}
-				keyboardShouldPersistTaps='handled'
-			>
-				<View style={styles.mainContent}>
-					<View style={styles.filter}>
-						{filters.map((item, i) =>
-							<Pressable
-								key={i}
-								style={[
-									styles.filterItem,
-									filter === item.value
-										? styles.selectedFilterItem
-										: null
-								]}
-								onPress={() =>
-								{
-									handleSearch(search, item.value);
-									setFilter(item.value);
-								}}
-							>
-								<Text
-									style={filter === item.value
-										? styles.selectedFilterItemText
-										: styles.filterItemText
-									}
-								>{ item.label }</Text>
-							</Pressable>
-						)}
-					</View>
+			<View style={styles.loadContainer}>
+				<ActivityIndicator
+					style={styles.loadIcon}
+					animating={loading}
+					color={colors.primary}
+					size={50}
+				/>
+			</View>
 
-					<View style={styles.search}>
-						<TextInput
-							style={styles.searchInput}
-							placeholder="Pesquisar"
-							value={search}
-							onChangeText={text => handleSearch(text, filter)}
-						/>
+			<View
+				style={styles.header}
+				onLayout={(event) => setHeaderHeight(
+					event.nativeEvent.layout.height
+				)}
+			>
+				<View style={styles.search}>
+					<TextInput
+						style={styles.searchInput}
+						placeholder="Pesquisar"
+						value={search}
+						onChangeText={text => handleSearch(text, filter)}
+					/>
+					<Pressable
+						style={styles.searchClearBtn}
+						onPress={() =>
+						{
+							setSearch('');
+							handleSearch('', filter);
+						}}
+					>
+						<FeatherIcon name='x' size={16} color='#000000' />
+					</Pressable>
+				</View>
+
+				<View style={styles.filter}>
+					{filters.map((item, i) =>
 						<Pressable
-							style={styles.searchClearBtn}
+							key={i}
+							style={[
+								styles.filterItem,
+								filter === item.value
+									? styles.selectedFilterItem
+									: null
+							]}
 							onPress={() =>
 							{
-								setSearch('');
-								//searchSongs('');
-								handleSearch('', filter);
+								handleSearch(search, item.value);
+								setFilter(item.value);
 							}}
 						>
-							<FeatherIcon name='x' size={16} color='#000000' />
+							<Text
+								style={filter === item.value
+									? styles.selectedFilterItemText
+									: styles.filterItemText
+								}
+							>{ item.label }</Text>
 						</Pressable>
-					</View>
-
-					<View>
-						<View style={styles.searchStatus}>
-							<Text>{statusText}</Text>
-						</View>
-
-						{results.map((item: Search) =>
-							<SearchItem
-								key={`${item.type}-${item.id}`}
-								navigation={navigation}
-								searchItem={item}
-							/>
-						)}
-					</View>
+					)}
 				</View>
-			</ScrollView>
+			</View>
 
-			<Pressable
-				style={styles.newBtn}
-				onPress={() => navigation.navigate('NewSong')}
+			<FlatList
+				ref={resultsRef}
+				style={[
+					styles.results,
+					styles.content,
+					{
+						marginTop: headerHeight,
+						opacity: !loading ? 1 : 0,
+					}
+				]}
+				data={results}
+				keyExtractor={item => `${item.type}-${item.id}`}
+				renderItem={({ item }) =>
+				(
+					<SearchItem
+						key={`${item.type}-${item.id}`}
+						navigation={navigation}
+						searchItem={item}
+					/>
+				)}
+				scrollEventThrottle={1}
+				onScroll={event => setShowNavBtn(
+					event.nativeEvent.contentOffset.y !== 0
+				)}
+			/>
+
+			{/*<ScrollView
+				ref={scrollRef}
+				style={styles.scrollView}
+				keyboardShouldPersistTaps='handled'
+				onScroll={event => setShowNavBtn(
+					event.nativeEvent.contentOffset.y !== 0
+				)}
 			>
-				<FeatherIcon name='plus' size={30} color='#ffff' />
-			</Pressable>
+				<View style={[
+					styles.content,
+					{ marginTop: headerHeight }
+				]}>
+					{!loading ? results.map((item: Search) =>
+						<SearchItem
+							key={`${item.type}-${item.id}`}
+							navigation={navigation}
+							searchItem={item}
+						/>
+					) : null}
+				</View>
+			</ScrollView>*/}
+
+			<View style={styles.btns}>
+				<Fade visible={showNavBtn}>
+					<Pressable
+						style={styles.goTopBtn}
+						onPress={() =>
+						{
+							if(resultsRef.current)
+								resultsRef.current.scrollToIndex({
+									index: 0,
+									animated: true,
+								});
+						}}
+					>
+						<EntypoIcon name='chevron-thin-up' size={16} color={colors.text} />
+					</Pressable>
+				</Fade>
+
+				<Pressable
+					style={styles.newBtn}
+					onPress={() => navigation.navigate('NewSong')}
+				>
+					<FeatherIcon name='plus' size={30} color='#ffff' />
+				</Pressable>
+			</View>
 		</View>
   	);
 }
@@ -207,6 +274,8 @@ export default HomeScreen;
 
 // ---------- STYLES ----------
 
+const paddingArround = 18;
+
 const styles = StyleSheet.create({
 	// CONTAINER
 	container: {
@@ -215,37 +284,20 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'center',
 	},
+	content: {
+		padding: paddingArround,
+		paddingTop: 0,
+	},
 
-	scrollView: {
+	// HEADER
+	header: {
+		position: 'absolute',
+		top: 0,
+		zIndex: 1,
+		backgroundColor: colors.background,
 		width: '100%',
-	},
-	mainContent: {
-		padding: 18,
-	},
-
-	// FILTER
-	filter: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		marginBottom: 8,
-	},
-	filterItem: {
-		paddingHorizontal: 8,
-		paddingVertical: 3,
-		marginRight: 4,
-		borderWidth: 1,
-		borderColor: colors.inputBorder,
-		borderRadius: 999,
-	},
-	selectedFilterItem: {
-		backgroundColor: colors.primary, //colors.background2,
-		borderColor: colors.primary,
-	},
-	filterItemText: {
-		color: colors.text,
-	},
-	selectedFilterItemText: {
-		color: 'white',
+		padding: paddingArround,
+		paddingBottom: 8,
 	},
 
 	// SEARCH
@@ -269,19 +321,65 @@ const styles = StyleSheet.create({
 		marginRight: 12,
 		fontSize: 6,
 	},
-	searchStatus: {
-		width: '100%',
-		height: 30,
+
+	// FILTER
+	filter: {
+		flexDirection: 'row',
 		alignItems: 'center',
-		justifyContent: 'space-around'
+		marginTop: 8,
+	},
+	filterItem: {
+		paddingHorizontal: 8,
+		paddingVertical: 3,
+		marginRight: 4,
+		borderWidth: 1,
+		borderColor: colors.inputBorder,
+		borderRadius: 999,
+	},
+	selectedFilterItem: {
+		backgroundColor: colors.primary,
+		borderColor: colors.primary,
+	},
+	filterItemText: {
+		color: colors.text,
+	},
+	selectedFilterItemText: {
+		color: 'white',
 	},
 
-	// NEW BUTTON
-	newBtn: {
+	// LOAD ICON
+	loadContainer: {
+		position: 'absolute',
+		zIndex: 1,
+	},
+	loadIcon: {
+		alignSelf: 'center',
+	},
+
+	// RESULTS
+	results: {
+		width: '100%',
+	},
+
+	// BUTTONS
+	btns: {
 		position: 'absolute',
 		bottom: 18,
 		right: 18,
+		alignItems: 'center',
+	},
+	goTopBtn: {
+		justifyContent: 'space-around',
+		alignItems: 'center',
 
+		backgroundColor: '#CCCCCC',
+
+		width: 40,
+		height: 40,
+		marginBottom: 8,
+		borderRadius: 999,
+	},
+	newBtn: {
 		justifyContent: 'space-around',
 		alignItems: 'center',
 
@@ -289,6 +387,6 @@ const styles = StyleSheet.create({
 
 		width: 60,
 		height: 60,
-		borderRadius: 999
+		borderRadius: 999,
 	},
 });
