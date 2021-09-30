@@ -111,18 +111,43 @@ export default class ArtistService
             if(where.length > 0)
             {
                 where = where.slice(0, -2); // <- Remover ultimo ", "
-                where = ` and ${artist.id} not in (${where})`;
+                where = `${artist.id} not in (${where}) and`;
             }
 
-            const sql =
+            /**
+             * @param filter Permite que query seja ordenada, mantendo
+             * os registros que começam com 'name' (...%) primeiro e os
+             * que possuem 'name' em qualquer posição (%...%) por último
+             * @param afterName Diz se nome dos artistas poderão possuir
+             * valor antes do encontrado (%...)
+             * @returns Query formatada
+             */
+            const baseSql = (filter: number, afterName: '%' | ''): string =>
                 `select
                     ${artist.id} as id,
-                    ${artist.name} as name
+                    ${artist.name} as name,
+                    ${artist.insertDate} as insertDate,
+                    ${filter} as filter
                 from
                     ${artist.table}
                 where
-                    ${artist.unaccentedName} like '%${name}%'
-                    ${where}`;
+                    ${where}
+                    ${artist.unaccentedName} like '${afterName}${name}%'`;
+
+            const sql =
+                `select distinct
+                    id,
+                    name
+                from
+                (
+                    ${baseSql(1, '')}
+                    union
+                    ${baseSql(2, '%')}
+                )
+                order by
+                    filter asc,
+                    insertDate desc
+                limit 6`;
 
             tx.executeSql(sql, [], (_, { rows }) => resolve(rows));
         },
