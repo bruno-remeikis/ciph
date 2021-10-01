@@ -7,14 +7,15 @@ import Database from '../../../database/Database';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 
 // Components
-import ConfirmModal from '../../ConfirmModal';
+import GenericAppHeader from '../GenericAppHeader';
+import DialogModal from '../../DialogModal';
 
 // Contexts
 import { useUpdated } from '../../../contexts/Updated';
 
 // Utils
 import { colors } from '../../../utils/consts';
-import GenericAppHeader from '../GenericAppHeader';
+
 
 const HomeHeader: React.FC = () =>
 {
@@ -38,13 +39,14 @@ const HomeHeader: React.FC = () =>
 			/>
 
 			{/* Confirmar reset */}
-			<ConfirmModal
-                visible={isConfirmResetVisible}
-                setVisible={setIsConfirmResetVisible}
-                text='Deseja mesmo resetar todos os dados?'
-                buttons={[
+			<DialogModal
+				visible={isConfirmResetVisible}
+				setVisible={setIsConfirmResetVisible}
+				title='Tem certeza?'
+				text='Todos os dados serão deletados permanentemente'
+				buttons={[
                     {
-                        text: 'Excluir',
+                        text: 'Sim, resetar!',
                         color: colors.red,
                         onClick: () =>
 						{
@@ -56,7 +58,7 @@ const HomeHeader: React.FC = () =>
                     },
                     { text: 'Cancelar' }
                 ]}
-            />
+			/>
 		</>
 	);
 }

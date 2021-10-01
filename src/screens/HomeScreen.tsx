@@ -16,7 +16,10 @@ import { colors } from '../utils/consts';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
+
+// Components
 import SearchItem from '../components/SearchItem';
+import DialogModal from '../components/DialogModal';
 
 
 

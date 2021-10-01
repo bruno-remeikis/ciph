@@ -69,6 +69,7 @@ const styles = StyleSheet.create({
 	},
 	menuContainer: {
 		minWidth: 170,
+        maxWidth: 300,
 		padding: 9,
 	},
 	menuItem: {

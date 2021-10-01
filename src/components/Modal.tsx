@@ -1,6 +1,10 @@
 import React, { Dispatch, SetStateAction, useState } from 'react';
-import { StyleSheet, View, Modal, StyleProp, ViewStyle } from 'react-native';
+import { StyleSheet, View, Modal, StyleProp, ViewStyle, Pressable } from 'react-native';
 
+// Icons
+import FeatherIcon from 'react-native-vector-icons/Feather';
+
+// Utils
 import { colors } from '../utils/consts';
 
 interface ModalProps {
@@ -35,6 +39,13 @@ const ModalComponent: React.FC<ModalProps> = ({ children, visible, setVisible, s
                     style={[ styles.modalBox, style ]}
                     onTouchStart={() => setTouchIn(true)}
                 >
+                    <Pressable
+                        style={styles.closeBtn}
+                        onPress={() => setVisible(false)}
+                    >
+                        <FeatherIcon name='x' size={16} color={colors.text} />
+                    </Pressable>
+
                     { children }
                 </View>
             </View>
@@ -43,6 +54,12 @@ const ModalComponent: React.FC<ModalProps> = ({ children, visible, setVisible, s
 }
 
 export default ModalComponent;
+
+
+
+// ---------- STYLES ----------
+
+const closeBtnSize = 30;
 
 const styles = StyleSheet.create({
     // MODAL
@@ -56,5 +73,31 @@ const styles = StyleSheet.create({
     modalBox: {
         backgroundColor: colors.background,
         borderRadius: 8,
+    },
+
+    closeBtn: {
+        position: 'absolute',
+        top: - closeBtnSize / 2.5,
+        right: - closeBtnSize / 2.5,
+
+        alignItems: 'center',
+        justifyContent: 'space-around',
+
+        backgroundColor: colors.background,
+
+        width: closeBtnSize,
+        height: closeBtnSize,
+
+        borderRadius: 999,
+
+        // Shadow
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.22,
+        shadowRadius: 2.22,
+        elevation: 3,
     },
 });

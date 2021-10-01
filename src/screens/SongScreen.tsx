@@ -18,11 +18,10 @@ import { colors, opacities } from '../utils/consts';
 
 // Components
 import Modal from '../components/Modal';
-import ConfirmModal from '../components/ConfirmModal';
+import DialogModal from '../components/DialogModal';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
-import SongService from '../services/SongService';
 import { groupConcat } from '../utils/functions';
 
 
@@ -275,19 +274,21 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
     return (
         <>
-            <ConfirmModal
-                visible={isDeleteSheetVisible}
-                setVisible={setIsDeleteSheetVisible}
-                text='Deseja mesmo excluir esta página?'
-                buttons={[
+            {/* Deletar página */}
+			<DialogModal
+				visible={isDeleteSheetVisible}
+				setVisible={setIsDeleteSheetVisible}
+				title='Tem certeza?'
+				text='Esta página será deletada permanentemente'
+				buttons={[
                     {
-                        text: 'Excluir',
+                        text: 'Sim, deletar!',
                         color: colors.red,
                         onClick: handleDeleteSheet
                     },
                     { text: 'Cancelar' }
                 ]}
-            />
+			/>
 
             <Modal
                 style={{ padding: 10 }}

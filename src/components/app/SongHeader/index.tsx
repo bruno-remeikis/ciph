@@ -26,6 +26,7 @@ import SongService from '../../../services/SongService';
 // Utils
 import { colors, dateFormat } from '../../../utils/consts';
 import GenericAppHeader from '../GenericAppHeader';
+import DialogModal from '../../DialogModal';
 
 interface SongHeaderProps {
 	route: RouteProp<RootStackParamList, "Song">;
@@ -120,13 +121,14 @@ const SongHeader: React.FC<SongHeaderProps> = ({ route, navigation }) =>
 			</Modal>
 
 			{/* Confirmar delete */}
-			<ConfirmModal
+			<DialogModal
 				visible={isConfirmDeleteVisible}
 				setVisible={setIsConfirmDeleteVisible}
-				text='Deseja mesmo excluir esta música?'
+				title='Tem certeza?'
+				text='Esta música será deletada permanentemente'
 				buttons={[
 					{
-						text: 'Excluir',
+						text: 'Sim, deletar!',
 						color: colors.red,
 						onClick: handleDelete
 					},
