@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, Pressable, TextInput, ActivityIndicator, Animated, Easing, ViewProps, StyleProp, ViewStyle, FlatList } from 'react-native';
+import { StyleSheet, Text, View, Pressable, TextInput, ActivityIndicator, FlatList } from 'react-native';
 
 // Icons
 import FeatherIcon from 'react-native-vector-icons/Feather';
@@ -12,83 +12,14 @@ import SearchService, { filterValue } from '../services/SearchService';
 import { Search } from '../models/bo/Search';
 
 // Utils
-import { colors } from '../utils/consts';
+import { colors, shadow, sizes } from '../utils/consts';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
 
 // Components
+import Fade from '../components/animations/Fade';
 import SearchItem from '../components/SearchItem';
-import DialogModal from '../components/DialogModal';
-
-
-
-// ---------- ANIMATION COMPONENTS ----------
-
-interface FadeAnimProps extends ViewProps {
-	visible: boolean;
-}
-
-const Fade: React.FC<FadeAnimProps> = ({ children, style, visible }) =>
-{
-	// Initial value for opacity: 0
-	const fadeAnim = useRef(new Animated.Value(0)).current;
-
-	function fade()
-	{
-		Animated.timing(fadeAnim, {
-			toValue: visible ? 1 : 0,
-			duration: visible ? 180 : 120,
-			useNativeDriver: false,
-		}) .start();
-	}
-
-	useEffect(() => fade(), [visible]);
-
-	return (
-		<Animated.View // Special animatable View
-			style={[
-				style,
-				{ opacity: fadeAnim } // Bind opacity to animated value
-			]}
-		>
-			{children}
-		</Animated.View>
-	);
-}
-
-const ShadowFade: React.FC<FadeAnimProps> = ({ children, style, visible, onLayout }) =>
-{
-	// Initial value for opacity: 0
-	const fadeAnim = useRef(new Animated.Value(0)).current;
-
-	function fade()
-	{
-		Animated.timing(fadeAnim, {
-			toValue: visible ? 2 : 0,
-			duration: visible ? 180 : 120,
-			useNativeDriver: false,
-		}) .start();
-	}
-
-	useEffect(() => fade(), [visible]);
-
-	return (
-		<Animated.View // Special animatable View
-			style={[
-				style,
-				{ elevation: fadeAnim } // Bind opacity to animated value
-			]}
-			onLayout={onLayout}
-		>
-			{children}
-		</Animated.View>
-	);
-}
-
-
-
-// ---------- MAIN COMPONENT ----------
 
 const HomeScreen: React.FC<any> = ({ navigation }) =>
 {
@@ -124,7 +55,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 
 	const [filter, setFilter] = useState<filterValue>('all');
 
-	const [resultsAtTheTop, setResultsAtTheTop] = useState<boolean>(true);
+	const [scrollOnTop, setScrollOnTop] = useState<boolean>(true);
 
 
 
@@ -201,20 +132,12 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 				: null}
 			</View>
 
-			<ShadowFade
-				visible={!resultsAtTheTop}
-				style={[
-					styles.header,
-					{
-						shadowColor: "#000",
-						shadowOffset: {
-							width: 0,
-							height: 1,
-						},
-						shadowRadius: 1.41,
-						shadowOpacity: 0.2,
-					}
-				]}
+			<Fade
+				visible={!scrollOnTop}
+				property='elevation'
+				initial={{ value: 0, time: 120 }}
+				final={{ value: 1, time: 180 }}
+				style={styles.header}
 				onLayout={(event) => setHeaderHeight(
 					event.nativeEvent.layout.height
 				)}
@@ -263,18 +186,16 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 						</Pressable>
 					)}
 				</View>
-			</ShadowFade>
+			</Fade>
 
 			<FlatList
 				ref={resultsRef}
-				style={[
-					styles.results,
-					styles.content,
-					{
-						marginTop: headerHeight,
-						opacity: !showLoading ? 1 : 0,
-					}
-				]}
+				style={{
+					width: '100%',
+					marginTop: headerHeight,
+					opacity: !showLoading ? 1 : 0,
+				}}
+				contentContainerStyle={styles.results}
 				data={results}
 				keyExtractor={item => `${item.type}-${item.id}`}
 				renderItem={({ item }) =>
@@ -285,7 +206,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 						searchItem={item}
 					/>
 				)}
-				onScroll={event => setResultsAtTheTop(
+				onScroll={event => setScrollOnTop(
 					event.nativeEvent.contentOffset.y === 0
 				)}
 				// Tempo (ms) de atualização do evento de scroll:
@@ -296,7 +217,12 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 			/>
 
 			<View style={styles.btns}>
-				<Fade visible={!resultsAtTheTop}>
+				<Fade
+					visible={!scrollOnTop}
+					property='opacity'
+					initial={{ value: 0, time: 120 }}
+					final={{ value: 2, time: 180 }}
+				>
 					<Pressable
 						style={styles.goTopBtn}
 						onPress={() =>
@@ -329,8 +255,6 @@ export default HomeScreen;
 
 // ---------- STYLES ----------
 
-const paddingArround = 18;
-
 const styles = StyleSheet.create({
 	// CONTAINER
 	container: {
@@ -338,10 +262,6 @@ const styles = StyleSheet.create({
 		backgroundColor: colors.background,
 		alignItems: 'center',
 		justifyContent: 'center',
-	},
-	content: {
-		padding: paddingArround,
-		paddingTop: 0,
 	},
 
 	// INFO
@@ -360,8 +280,9 @@ const styles = StyleSheet.create({
 		zIndex: 1,
 		backgroundColor: colors.background,
 		width: '100%',
-		padding: paddingArround,
+		padding: sizes.screenPadding,
 		paddingBottom: 12,
+		...shadow,
 	},
 
 	// SEARCH
@@ -413,7 +334,8 @@ const styles = StyleSheet.create({
 
 	// RESULTS
 	results: {
-		width: '100%',
+		paddingHorizontal: sizes.screenPadding,
+		paddingBottom: sizes.screenPadding - 8,
 	},
 
 	// BUTTONS

@@ -20,3 +20,24 @@ export const colors = {
 export const opacities = {
     disabled: 0.50,
 }
+
+export const sizes = {
+    screenPadding: 18,
+}
+
+/**
+ * Colocar "elevation: 2" manualmente ou
+ * utilizar o componente Fade passando
+ * "property: 'elevation'" e passando 2
+ * para "value" ("initial" ou "final")
+ */
+export const shadow = {
+    shadowColor: "#000",
+    shadowOffset: {
+        width: 0,
+        height: 1,
+    },
+    shadowRadius: 1.41,
+    shadowOpacity: 0.2,
+    // elevation: 2,
+}

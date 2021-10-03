@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Pressable, TextInput, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, Pressable, TextInput, ScrollView, ViewStyle } from 'react-native';
 
 // Icons
 import FeatherIcon from 'react-native-vector-icons/Feather';
@@ -13,7 +13,7 @@ import SongArtistService from '../services/SongArtistService';
 import { Artist } from '../models/entities/Artist';
 
 // Utils
-import { colors, opacities } from '../utils/consts';
+import { colors, opacities, sizes } from '../utils/consts';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
@@ -60,8 +60,6 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
     const [name, setName] = useState(initialName ? initialName : '');
     const [artists, setArtists] = useState<ArtistProps[]>([{ obj: { name: '' } }]);
-    // IDs dos artistas iniciais (usado na tela de update)
-    //const [initialArtistIds, setInitialArtistIds] = useState<number[]>([]);
     // IDs dos artistas deletados (usado na tela de update)
     const [deletedArtistIds, setDeletedArtistIds] = useState<number[]>([]);
     // Artistas da pesquisa (exibidos com )
@@ -70,9 +68,6 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     const [currentFocusIndex, setCurrentFocusIndex] = useState<number | null>(null);
     // IDs de artistas já utilizados (para que não sejam exibidos na pesquisa)
     const [restrictedIds, setRestrictedIds] = useState<number[]>([]);
-
-    //const [invalidName, setInvalidName] = useState(false);
-    //const [unfilledArtists, setUnfilledArtists] = useState(false);
 
     const [disabledSubmit, setDisabledSubmit] = useState<boolean>(true);
     // Impede que o onBlur do TextInput do artista seja chamado depois
@@ -382,11 +377,10 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                             {
                                 const deletable = artists.length > 1 || artists[0].obj.id;
                                 const showStatus =
-                                    //currentFocusIndex !== i &&
                                     artist.obj.id === undefined &&
                                     artist.obj.name.trim().length !== 0;
 
-                                let statusStyle = {};
+                                let statusStyle: ViewStyle = {};
                                 if(artist.existing || artist.equals !== undefined)
                                     statusStyle = {
                                         backgroundColor: `rgba(${colors.redLightRGB}, 0.08)`,
@@ -420,7 +414,6 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                                 {
                                                     handleSearch(text);
                                                     validateArtists(artist, i, text);
-                                                    //validadeSubmit();
                                                 }}
                                                 onFocus={() =>
                                                 {
@@ -465,11 +458,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
                                             {deletable ?
                                                 <Pressable
-                                                    style={{
-                                                        alignItems: 'center',
-                                                        justifyContent: 'space-around',
-                                                        width: 30,
-                                                    }}
+                                                    style={styles.deleteArtistBtn}
                                                     onPress={() =>
                                                     {
                                                         const array: ArtistProps[] = [...artists];
@@ -511,65 +500,41 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                                             : null}
                                         </View>
 
-                                        {currentFocusIndex !== null &&
-                                            currentFocusIndex === i &&
-                                            researchArtists.length !== 0 ?
-                                            <View style={{ position: 'relative' }}>
-                                                <View style={{
-                                                    position: 'absolute',
-                                                    zIndex: 1,
-                                                    left: 0,
-                                                    right: 0,
-                                                    backgroundColor: 'white',
-                                                    borderWidth: 1,
-                                                    borderTopWidth: 0,
-                                                    borderColor: colors.inputBorder,
-                                                }}>
-                                                    {researchArtists.map((researchArtist, j) =>
-                                                        <Pressable
-                                                            key={j}
-                                                            style={{
-                                                                backgroundColor: j % 2 === 0 ? 'rgba(0, 0, 0, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-                                                                paddingHorizontal: 12,
-                                                                paddingVertical: 6,
-                                                            }}
-                                                            onPress={() =>
+                                        {/* SUGESTÕES DE ARTISTAS */}
+                                        {  currentFocusIndex !== null
+                                        && currentFocusIndex === i
+                                        && researchArtists.length !== 0 ?
+                                        <View style={{ position: 'relative' }}>
+                                            <View style={styles.researchArtists}>
+                                                {researchArtists.map((researchArtist, j) =>
+                                                    <Pressable
+                                                        key={j}
+                                                        style={[
+                                                            styles.researchArtist,
                                                             {
-                                                                const array = [...artists];
-                                                                array[i] = { obj: researchArtist };
-                                                                //setCurrentFocusIndes(null);
+                                                                backgroundColor: j % 2 === 0
+                                                                    ? 'rgba(0, 0, 0, 0.08)'
+                                                                    : 'rgba(0, 0, 0, 0.04)'
+                                                            }
+                                                        ]}
+                                                        onPress={() =>
+                                                        {
+                                                            const array = [...artists];
+                                                            array[i] = { obj: researchArtist };
 
-                                                                if(researchArtist.id !== undefined)
-                                                                {
-                                                                    // Adiciona à lista de artistas já adicionados
-                                                                    // para que não volte a aparecer nas pesquisas
-                                                                    setRestrictedIds([ ...restrictedIds, researchArtist.id ]);
-                                                                
-                                                                    /*if(updateScreen)
-                                                                        // Remove artista da lista dos que devem ser deletados.
-                                                                        // Isso ocorrerá caso o ítem seja inicial. Por isso,
-                                                                        // deve ser reconfigurado como initial = true
-                                                                        setDeletedArtistIds(deletedArtistIds.filter(artistId =>
-                                                                        {
-                                                                            if(artistId === researchArtist.id)
-                                                                            {
-                                                                                array[i].initial = true;
-                                                                                return false;
-                                                                            }
-        
-                                                                            return true;
-                                                                        }));*/
-                                                                }
+                                                            // Adiciona à lista de artistas já adicionados
+                                                            // para que não volte a aparecer nas pesquisas
+                                                            if(researchArtist.id !== undefined)
+                                                                setRestrictedIds([ ...restrictedIds, researchArtist.id ]);
 
-                                                                setArtists(array);
-                                                            }}
-                                                        >
-                                                            <Text>{ researchArtist.name }</Text>
-                                                        </Pressable>
-                                                    )}
-                                                </View>
+                                                            setArtists(array);
+                                                        }}
+                                                    >
+                                                        <Text>{ researchArtist.name }</Text>
+                                                    </Pressable>
+                                                )}
                                             </View>
-                                        : null}
+                                        </View> : null}
                                     </View>
                                 );
                             })}
@@ -624,10 +589,13 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 export default NewSongScreen;
 
 const styles = StyleSheet.create({
+    // CONTAINER
     container: {
-        padding: 18,
+        width: '100%',
+        padding: sizes.screenPadding,
     },
 
+    // GENERAL INPUTS
     inputGroup: {
         marginBottom: 14,
     },
@@ -647,6 +615,18 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
         paddingVertical: 4,
     },
+
+    // ARTISTS
+    artistInput: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'stretch',
+    },
+    deleteArtistBtn: {
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        width: 30,
+    },
     line: {
         alignSelf: 'center',
         flex: 1,
@@ -659,13 +639,29 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         alignItems: 'center',
         justifyContent: 'space-around',
-        backgroundColor: 'rgba(0, 0, 0, 0.06)', //'green',
+        backgroundColor: 'rgba(0, 0, 0, 0.06)',
         width: 30,
         height: 30,
         marginBottom: 2,
         borderWidth: 1,
         borderColor: colors.inputBorder,
         borderRadius: 999,
+    },
+
+    // RESEARCH ARTISTS
+    researchArtists: {
+        position: 'absolute',
+        zIndex: 1,
+        left: 0,
+        right: 0,
+        backgroundColor: 'white',
+        borderWidth: 1,
+        borderTopWidth: 0,
+        borderColor: colors.inputBorder,
+    },
+    researchArtist: {
+        paddingHorizontal: 12,
+        paddingVertical: 9,
     },
 
     submit: {

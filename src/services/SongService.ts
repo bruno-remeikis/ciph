@@ -181,7 +181,11 @@ export default class SongService
         }));
     }
 
-    static findByArtistId(artistId: number): Promise<SQLResultSetRowList>
+    /**
+     * @param artistId ID do artista
+     * @param restrictArtist 'true' se deve trazer nome do artista junto com os demais
+     */
+    static findByArtistId(artistId: number, restrictArtist?: boolean): Promise<SQLResultSetRowList>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
@@ -199,6 +203,10 @@ export default class SongService
                         left join
                             ${artist.table} on
                                 ${song_artist.artistId} = ${artist.id}
+                                ${restrictArtist
+                                    ? `and ${artist.id} != ${artistId}`
+                                    : ''
+                                }
                         where
                             ${song_artist.songId} = id and
                             ${song_artist.songId} = ${song_artist.songId}

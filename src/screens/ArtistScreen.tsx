@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View, ScrollView, Pressable, FlatList } from 'react-native';
 
 // Icons
@@ -12,19 +12,36 @@ import { Song } from '../models/entities/Song';
 import SongService from '../services/SongService';
 
 // Utils
-import { colors } from '../utils/consts';
+import { colors, shadow, sizes } from '../utils/consts';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
 
+// Components
+import Fade from '../components/animations/Fade';
+
 const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 {
+    // ---------- CONSTS ----------
+
     const { id, name } = route.params.artist;
+
+
+
+    // ---------- REFS ----------
+
+    const resultsRef = useRef<FlatList | null>(null);
+
+
+
+    // ---------- STATES ----------
 
     const { updated, setUpdated } = useUpdated();
 
     const [songs, setSongs] = useState<Song[]>([]);
     const [nameInfo, setNameInfo] = useState(name);
+
+    const [scrollOnTop, setScrollOnTop] = useState<boolean>(true);
 
 
 
@@ -32,8 +49,15 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 
     useEffect(() =>
     {
-        SongService.findByArtistId(id)
-            .then((res: any) => setSongs(res._array))
+        SongService.findByArtistId(id, true)
+            .then((res: any) => setSongs(
+                res._array.map((song: Song) => ({
+                    ...song,
+                    artists: typeof song.artists === 'string' && song.artists.length > 0
+                        ? `+ ${song.artists}`
+                        : song.artists,
+                }))
+            ))
             .catch(err => alert(err));
     },
     []);
@@ -59,8 +83,14 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
     // ---------- RETURN ----------
 
     return (
-        <View style={{ padding: 12 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={styles.container}>
+            <Fade
+                style={styles.header}
+                visible={!scrollOnTop}
+                property='elevation'
+                initial={{ value: 0, time: 120 }}
+                final={{ value: 2, time: 180 }}
+            >
                 <IonIcon
                     style={{ marginRight: 12 }}
                     name={'person'}
@@ -68,10 +98,11 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
                     color={colors.primary}
                 />
                 <Text style={{ fontSize: 24 }}>{nameInfo}</Text>
-            </View>
+            </Fade>
 
             <FlatList
-				style={styles.songs}
+                ref={resultsRef}
+                contentContainerStyle={styles.songs}
 				data={songs}
 				keyExtractor={item => `${item.id}`}
 				renderItem={({ item }) =>
@@ -79,19 +110,21 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 					<SearchItem
 						navigation={navigation}
 						searchItem={{
+                            ...item,
                             type: 'song',
                             id: item.id ? item.id : 0,
-                            name: item.name,
-                            artists: item.artists,
-                            insertDate: item.insertDate,
-                            updateDate: item.updateDate,
                         }}
 					/>
 				)}
+                onScroll={event => setScrollOnTop(
+					event.nativeEvent.contentOffset.y === 0
+				)}
+				// Tempo (ms) de atualização do evento de scroll:
+				scrollEventThrottle={16}
 				// Permitir que usuário interaja com os ítens
 				// mesmo que o teclado esteja aberto:
 				keyboardShouldPersistTaps='handled'
-			/>
+            />
         </View>
     );
 }
@@ -103,7 +136,25 @@ export default HomeScreen;
 // ---------- STYLES ----------
 
 const styles = StyleSheet.create({
+    // CONTAINER
+    container: {
+        flex: 1,
+        backgroundColor: colors.background,
+    },
+
+    // HEADER
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: colors.background,
+        padding: sizes.screenPadding,
+        paddingBottom: 12,
+        ...shadow,
+    },
+
+    // SONGS
     songs: {
-        marginTop: 8,
+        paddingHorizontal: sizes.screenPadding,
+        paddingBottom: sizes.screenPadding - 8,
     },
 });

@@ -14,7 +14,7 @@ import { Sheet } from '../models/entities/Sheet';
 import SheetService from '../services/SheetService';
 
 // Utils
-import { colors, opacities } from '../utils/consts';
+import { colors, opacities, sizes } from '../utils/consts';
 
 // Components
 import Modal from '../components/Modal';
@@ -53,7 +53,6 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
         artistsInfoVal(artists)
     );
 
-    //const [modalVisible, setModalVisible] = useState(false);
     const [isRenameVisible, setIsRenameVisible] = useState<boolean>(false);
     const [isDeleteSheetVisible, setIsDeleteSheetVisible] = useState<boolean>(false);
 
@@ -67,7 +66,6 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
     const [currentSheet, _setCurrentSheet] = useState<Sheet | null>();
     const [editable, setEditable] = useState(false);
     const [changed, _setChanged] = useState(false);
-    //const [content, setContent] = useState('');
 
 
 
@@ -337,9 +335,9 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
             </Modal>
 
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-                <View style={{ flex: 1, padding: 12 }}>
+                <View style={styles.container}>
                     <View style={styles.header}>
-                        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={styles.headerContent}>
                             <IonIcon
                                 style={{ marginRight: 12 }}
                                 name={'musical-notes'}
@@ -347,7 +345,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                 color={colors.primary}
                             />
 
-                            <View style={{ flex: 1, marginRight: 8 }}>
+                            <View style={styles.headerInfo}>
                                 <Text style={{ fontSize: 24 }}>{ nameInfo }</Text>
                                 <Text style={{ fontSize: 16 }}>{ artistsInfo }</Text>
                             </View>
@@ -355,13 +353,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
                         <View>
                             <Pressable
-                                style={{
-                                    alignItems: 'center',
-                                    backgroundColor: `rgba(${colors.primaryRGB}, 0.24)`,
-                                    paddingHorizontal: 4,
-                                    paddingVertical: 6,
-                                    borderRadius: 8,
-                                }}
+                                style={styles.switchBox}
                                 onPress={() => switchEditable(!editable)}
                             >
                                 <MaterialCommunityIcon
@@ -395,12 +387,14 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                     style={{ flexDirection: 'column-reverse' }}
                                 >
                                     <Pressable
-                                        style={[styles.tab,
-                                        {
-                                            paddingBottom: currentSheet?.id === sheet.id
-                                                ? tabVerticalPadding + 6
-                                                : tabVerticalPadding
-                                        }]}
+                                        style={[
+                                            styles.tab,
+                                            {
+                                                paddingBottom: currentSheet?.id === sheet.id
+                                                    ? tabVerticalPadding + 6
+                                                    : tabVerticalPadding
+                                            }
+                                        ]}
                                         onPress={() =>
                                         {
                                             if(currentSheet?.id !== sheet.id)
@@ -437,7 +431,6 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                         size={14}
                                         color='#000000'
                                     />
-                                    {/*<Text style={styles.tabContent}>+</Text>*/}
                                 </Pressable>
                             </View>
                         </ScrollView>
@@ -449,10 +442,9 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                             ? <TextInput
                                 style={styles.sheet}
                                 multiline={true}
-                                value={/*content*/ currentSheet?.content}
+                                value={currentSheet?.content}
                                 onChangeText={content =>
                                 {
-                                    /*setContent(text)*/
                                     if(currentSheet)
                                     {
                                         setCurrentSheet({ ...currentSheet, content });
@@ -470,7 +462,6 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                         onPress={createSheet}
                                     >
                                         <FeatherIcon name='plus' size={18} color='#000000' />
-                                        {/*<Text style={{ fontSize: 22 }}>+</Text>*/}
                                     </Pressable>
                                 </View>
                             </View>
@@ -508,11 +499,33 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
 
+    // CONTAINER
+    container: {
+        flex: 1,
+        padding: sizes.screenPadding,
+    },
+
     // HEADER
     header: {
         flexDirection: 'row',
         //alignItems: 'center',
         justifyContent: 'space-between',
+    },
+    headerContent: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    headerInfo: {
+        flex: 1,
+        marginRight: 8,
+    },
+    switchBox: {
+        alignItems: 'center',
+        backgroundColor: `rgba(${colors.primaryRGB}, 0.24)`,
+        paddingHorizontal: 4,
+        paddingVertical: 6,
+        borderRadius: 8,
     },
 
     // SHEET
