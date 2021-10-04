@@ -8,9 +8,11 @@ import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIc
 import IonIcon from 'react-native-vector-icons/Ionicons';
 
 // Models
+import { Artist } from '../models/entities/Artist';
 import { Sheet } from '../models/entities/Sheet';
 
 // Services
+import ArtistService from '../services/ArtistService';
 import SheetService from '../services/SheetService';
 
 // Utils
@@ -19,10 +21,12 @@ import { colors, opacities, sizes } from '../utils/consts';
 // Components
 import Modal from '../components/Modal';
 import DialogModal from '../components/DialogModal';
+import Button from '../components/Button';
+
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
-import { groupConcat } from '../utils/functions';
+import MenuModal from '../components/MenuModal';
 
 
 
@@ -42,18 +46,17 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
     // ---------- CONSTS ----------
 
-    const { id, name, artists } = route.params.song;
+    const { id, name } = route.params.song;
 
 
 
     // ---------- STATES ----------
 
     const [nameInfo, setNameInfo] = useState(name);
-    const [artistsInfo, setArtistsInfo] = useState(
-        artistsInfoVal(artists)
-    );
+    const [artists, setArtists] = useState<Artist[]>([]);
 
-    const [isRenameVisible, setIsRenameVisible] = useState<boolean>(false);
+    const [isSheetMenuVisible, setIsSheetMenuVisible] = useState<boolean>(false);
+    const [isRenameSheetVisible, setIsRenameSheetVisible] = useState<boolean>(false);
     const [isDeleteSheetVisible, setIsDeleteSheetVisible] = useState<boolean>(false);
 
     // ID da folha (sheet) a ser renomeada
@@ -106,22 +109,16 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
             setCurrentSheet(newSheet);
 
             // Atualizar nome da folha:
-            openModal(newSheet);
+            setRenamedSheet(newSheet);
+            setNewSheetTitle(newSheet.title);
+            setIsRenameSheetVisible(true);
         })
         .catch(err => alert(err));
     }
 
-    function openModal(sheet: Sheet)
-    {
-        setRenamedSheet(sheet);
-        setNewSheetTitle(sheet.title);
-
-        setIsRenameVisible(true);
-    }
-
     function saveRenamedSheet()
     {
-        setIsRenameVisible(false);
+        setIsRenameSheetVisible(false);
 
         if(renamedSheet && renamedSheet.id)
         {
@@ -195,11 +192,13 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
         .finally(() => setIsDeleteSheetVisible(false));
     }
 
-    function artistsInfoVal(artists: any): string
+    function loadArtists()
     {
-        return artists === undefined ? '' :
-            typeof artists === 'string' ? artists :
-            groupConcat(artists);
+        ArtistService.findBySongId(id).then((res: any) =>
+        {
+            setArtists(res._array);
+        })
+        .catch(err => alert(err));
     }
 
     function switchEditable(v: boolean)
@@ -214,6 +213,9 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
     useEffect(() =>
     {
+        // Busca artistas
+        loadArtists();
+
         // Busca páginas ao carregar tela
         SheetService.findBySongId(id).then((res: any) =>
         {
@@ -256,9 +258,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
         && updated.song)
         {
             setNameInfo(updated.song.name);
-            setArtistsInfo(
-                artistsInfoVal(updated.song.artists)
-            );
+            loadArtists();
 
             if(!updated.artist)
                 setUpdated(false);
@@ -272,7 +272,69 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
     return (
         <>
-            {/* Deletar página */}
+            {/* SHEET MENÚ */}
+            <MenuModal
+                visible={isSheetMenuVisible}
+                setVisible={setIsSheetMenuVisible}
+                items={
+                [{
+                    icon: {
+                        component: FeatherIcon,
+                        name: 'edit-2'
+                    },
+                    text: 'Alterar nome',
+                    onClick: () => setIsRenameSheetVisible(true)
+                },
+                /*{
+                    icon: {
+                        component: FeatherIcon,
+                        name: 'copy'
+                    },
+                    text: 'Clonar',
+                    onClick: () => {}
+                },*/
+                {
+                    icon: {
+                        component: FeatherIcon,
+                        name: 'x'
+                    },
+                    text: 'Excluir',
+                    color: colors.red,
+                    division: true,
+                    onClick: () => setIsDeleteSheetVisible(true)
+                }]}
+            />
+
+            {/* RENAME SHEET */}
+            <Modal
+                style={{ padding: 10 }}
+                visible={isRenameSheetVisible}
+                setVisible={setIsRenameSheetVisible}
+            >
+                <TextInput
+                    style={styles.modalInput}
+                    value={newSheetTitle}
+                    placeholder="Nome da página"
+                    onChangeText={text => setNewSheetTitle(text)}
+                    //autoFocus
+                    selectTextOnFocus
+                />
+
+                <View style={styles.modalBtns}>
+                    <Button
+                        style={{ marginLeft: 6 }}
+                        text='Salvar'
+                        backgroundColor={colors.primary}
+                        onClick={saveRenamedSheet}
+                    />
+                    <Button
+                        text='Cancelar'
+                        onClick={() => setIsRenameSheetVisible(false)}
+                    />
+                </View>
+            </Modal>
+
+            {/* DELETE SHEET DIALOG */}
 			<DialogModal
 				visible={isDeleteSheetVisible}
 				setVisible={setIsDeleteSheetVisible}
@@ -288,52 +350,6 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                 ]}
 			/>
 
-            <Modal
-                style={{ padding: 10 }}
-                visible={isRenameVisible}
-                setVisible={setIsRenameVisible}
-            >
-                <TextInput
-                    style={styles.modalInput}
-                    value={newSheetTitle}
-                    placeholder="Nome da página"
-                    onChangeText={text => setNewSheetTitle(text)}
-                    //autoFocus
-                    selectTextOnFocus
-                />
-
-                <View style={styles.modalBtns}>
-                    <View>
-                        <Pressable
-                            style={[styles.modalBtn, { alignSelf: 'flex-start' }]}
-                            onPress={() =>
-                            {
-                                setIsRenameVisible(false);
-                                setIsDeleteSheetVisible(true);
-                            }}
-                        >
-                            <Text style={{ color: colors.red }}>Excluir</Text>
-                        </Pressable>
-                    </View>
-
-                    <View style={styles.modalBtns}>
-                        <Pressable
-                            style={styles.modalBtn}
-                            onPress={() => setIsRenameVisible(false)}
-                        >
-                            <Text>Cancelar</Text>
-                        </Pressable>
-
-                        <Pressable
-                            style={styles.modalBtn}
-                            onPress={saveRenamedSheet}
-                        >
-                            <Text style={styles.modalBtnContent}>Salvar</Text>
-                        </Pressable>
-                    </View>
-                </View>
-            </Modal>
-
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={styles.container}>
                     <View style={styles.header}>
@@ -347,7 +363,20 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
                             <View style={styles.headerInfo}>
                                 <Text style={{ fontSize: 24 }}>{ nameInfo }</Text>
-                                <Text style={{ fontSize: 16 }}>{ artistsInfo }</Text>
+
+                                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                                    {artists.map((artist, i) =>
+                                        <Pressable
+                                            key={artist.id}
+                                            onPress={() => navigation.navigate('Artist', { artist })}
+                                        >
+                                            <Text style={{ fontSize: 16 }}>
+                                                {`${artist.name}${i !== artists.length - 1 ? ', ' : ''}`}
+                                            </Text>
+                                        </Pressable>
+                                    )}
+                                </View>
+                                
                             </View>
                         </View>
 
@@ -375,12 +404,12 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                         </View>
                     </View>
 
+                    {/* Abas */}
                     <View>
                         <ScrollView
                             style={styles.tabs}
                             horizontal
                         >
-                            {/* Abas */}
                             {sheets.map(sheet =>
                                 <View
                                     key={sheet.id}
@@ -403,7 +432,11 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                                 setCurrentSheet(sheet);
                                             }
                                             else if(editable)
-                                                openModal(sheet);
+                                            {
+                                                setRenamedSheet(sheet);
+                                                setNewSheetTitle(sheet.title);
+                                                setIsSheetMenuVisible(true);
+                                            }
                                         }}
                                     >
                                         <Text style={styles.tabContent}>{sheet.title}</Text>
@@ -411,6 +444,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                 </View>
                             )}
 
+                            {/* Nova aba */}
                             <View style={{ flexDirection: 'column-reverse' }}>
                                 <Pressable
                                     style={[
@@ -436,6 +470,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                         </ScrollView>
                     </View>
 
+                    {/* SHEET (Página) */}
                     <View style={styles.sheets}>
                         {sheets.length > 0
                             // Pagina com conteúdo atual:
@@ -477,7 +512,7 @@ export default SongScreen;
 
 const styles = StyleSheet.create({
     modalInput: {
-        width: 240,
+        width: 260,
         marginBottom: 2,
         paddingHorizontal: 14,
         paddingVertical: 6,
@@ -486,17 +521,10 @@ const styles = StyleSheet.create({
         borderRadius: 4,
     },
     modalBtns: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+        flexDirection: 'row-reverse',
         alignItems: 'center',
-    },
-    modalBtn: {
-        padding: 6,
-    },
-    modalBtnContent: {
-        color: colors.primary,
-        //fontWeight: 'bold',
-        fontSize: 16,
+        //justifyContent: 'center',
+        marginTop: 6,
     },
 
     // CONTAINER
@@ -557,6 +585,7 @@ const styles = StyleSheet.create({
         color: 'black',
 
         width: '100%',
+        minHeight: 240,
         paddingHorizontal: 12,
         paddingVertical: 6,
 

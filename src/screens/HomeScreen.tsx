@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, Pressable, TextInput, ActivityIndicator, FlatLi
 
 // Icons
 import FeatherIcon from 'react-native-vector-icons/Feather';
-import EntypoIcon from 'react-native-vector-icons/Entypo';
+import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
 
 // Services
 import SearchService, { filterValue } from '../services/SearchService';
@@ -36,12 +36,6 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 
 	const { updated, setUpdated } = useUpdated();
 
-
-
-	// ---------- REFS ----------
-
-	const resultsRef = useRef<FlatList | null>(null);
-
 	
 
 	// ---------- STATES ----------
@@ -50,7 +44,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 
 	const [search, setSearch] = useState<string>('');
 	const [results, setResults] = useState<Search[]>([]);
-	const [loading, setLoading] = useState<boolean>(false);
+	const [loading, _setLoading] = useState<boolean>(false);
 	const [showLoading, setShowLoading] = useState<boolean>(false);
 
 	const [filter, setFilter] = useState<filterValue>('all');
@@ -59,16 +53,28 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 
 
 
+	// ---------- REFS ----------
+
+	const resultsRef = useRef<FlatList | null>(null);
+
+	const loadingRef = useRef(loading);
+    const setLoading = (newValue: boolean) =>
+    {
+        loadingRef.current = newValue;
+        _setLoading(newValue);
+    }
+
+
+
 	// ---------- FUNCTIONS ----------
 
 	function handleSearch(text: string, filter: filterValue)
 	{
 		if(!loading)
-			setTimeout(() =>
-			{
-				if(loading)
+			setTimeout(() => {
+				if(loadingRef.current)
 					setShowLoading(true);
-			}, 800);
+			}, 400);
 
 		setLoading(true);
 		setSearch(text);
@@ -234,7 +240,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 								});
 						}}
 					>
-						<EntypoIcon name='chevron-thin-up' size={16} color={colors.text} />
+						<FontAwesomeIcon name='angle-double-up' size={18} color='rgba(0, 0, 0, 0.6)' />
 					</Pressable>
 				</Fade>
 
@@ -351,8 +357,8 @@ const styles = StyleSheet.create({
 
 		backgroundColor: '#DEDEDE',
 
-		width: 40,
-		height: 40,
+		width: 36,
+		height: 36,
 		marginBottom: 8,
 		borderRadius: 999,
 	},

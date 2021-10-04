@@ -6,14 +6,9 @@ import FeatherIcon from 'react-native-vector-icons/Feather';
 
 // Components
 import Modal from './Modal';
+import Button, { ButtonProps } from './Button';
 
 
-
-type Button = {
-    text: string;
-    color?: string;
-    onClick?: Function;
-};
 
 interface DialogModalProps {
     visible: boolean;
@@ -21,7 +16,7 @@ interface DialogModalProps {
     //iconType: 'warning',
     title: string;
     text: string;
-    buttons: Button[]
+    buttons: ButtonProps[];
 }
 
 const DialogModal: React.FC<DialogModalProps> = ({ visible, setVisible, /*iconType, */title, text, buttons }) =>
@@ -39,32 +34,19 @@ const DialogModal: React.FC<DialogModalProps> = ({ visible, setVisible, /*iconTy
 
             <View style={styles.buttons}>
                 {buttons.map((btn, i) =>
-                    <Pressable
+                    <Button
                         key={i}
-                        style={[
-                            styles.button, {
-                                backgroundColor: btn.color
-                                    ? btn.color
-                                    : 'rgba(0, 0, 0, 0.22)',
-                                marginRight: i > 0
-                                    ? 6 : 0,
-                            }
-                        ]}
-                        onPress={() =>
+                        style={{ marginRight: i > 0 ? 6 : 0 }}
+                        text={btn.text}
+                        backgroundColor={btn.color ? btn.color : 'rgba(0, 0, 0, 0.22)'}
+                        onClick={() =>
                         {
                             if(btn.onClick)
                                 btn.onClick();
                             else
                                 setVisible(false);
                         }}
-                    >
-                        <Text
-                            style={[
-                                styles.buttonText,
-                                { color: 'white' }
-                            ]}
-                        >{ btn.text }</Text>
-                    </Pressable>
+                    />
                 )}
             </View>
         </Modal>

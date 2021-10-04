@@ -54,7 +54,7 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
                 res._array.map((song: Song) => ({
                     ...song,
                     artists: typeof song.artists === 'string' && song.artists.length > 0
-                        ? `+ ${song.artists}`
+                        ? `${name}, ${song.artists}`
                         : song.artists,
                 }))
             ))

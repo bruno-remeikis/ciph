@@ -18,7 +18,6 @@ import { useUpdated } from '../../../contexts/Updated';
 
 // Components
 import Modal from '../../../components/Modal';
-import ConfirmModal from '../../../components/ConfirmModal';
 
 // Services
 import SongService from '../../../services/SongService';

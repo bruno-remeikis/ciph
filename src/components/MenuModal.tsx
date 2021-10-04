@@ -42,7 +42,11 @@ const MenuModal: React.FC<MenuModalProps> = ({ visible, setVisible, items }) =>
                             ? styles.menuItemDivision
                             : null
                     ]}
-                    onPress={() => item.onClick()}
+                    onPress={() =>
+                    {
+                        setVisible(false);
+                        item.onClick();
+                    }}
                 >
                     {item.icon ? createElement(item.icon.component, {
                         name: item.icon.name,

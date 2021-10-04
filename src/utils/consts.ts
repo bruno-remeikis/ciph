@@ -30,6 +30,8 @@ export const sizes = {
  * utilizar o componente Fade passando
  * "property: 'elevation'" e passando 2
  * para "value" ("initial" ou "final")
+ * 
+ * https://ethercreative.github.io/react-native-shadow-generator/
  */
 export const shadow = {
     shadowColor: "#000",

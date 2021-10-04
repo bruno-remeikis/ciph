@@ -21,7 +21,7 @@ const SearchItem: React.FC<SearchItemProps> = ({ navigation, searchItem }) =>
 {
     return (
         <Pressable
-            style={styles.item}
+            style={styles.container}
             onPress={() =>
             {
                 if(searchItem.type === 'song')
@@ -49,21 +49,21 @@ const SearchItem: React.FC<SearchItemProps> = ({ navigation, searchItem }) =>
                 }
             }}
         >
-            <View style={styles.itemContent}>
+            <View style={styles.content}>
                 <IonIcon
-                    style={styles.itemIcon}
+                    style={styles.icon}
                     name={searchItem.type === 'song' ? 'musical-notes' : 'person'}
                     size={30}
                     color={colors.primary}
                 />
 
-                <View>
-                    <Text style={styles.itemName}>{searchItem.name}</Text>
+                <View style={styles.info}>
+                    <Text style={styles.name}>{searchItem.name}</Text>
 
                     {searchItem.type === 'song' &&
                      searchItem.artists &&
                      typeof searchItem.artists === 'string'
-                    ? <Text style={styles.itemArtists}>{searchItem.artists}</Text>
+                    ? <Text style={styles.artists}>{searchItem.artists}</Text>
                     : null}
                 </View>
             </View>
@@ -76,32 +76,38 @@ export default SearchItem;
 
 
 const styles = StyleSheet.create({
-	item: {
+	container: {
 		flexDirection: 'row',
 		alignItems: 'center',
 
 		backgroundColor: colors.background2,
 
 		width: '100%',
-		height: 52,
+		minHeight: 46,
+        paddingVertical: 3,
+        paddingRight: 6,
 		marginBottom: 8,
 
 		borderLeftWidth: 4,
 		borderLeftColor: colors.primary,
 		borderRadius: 4,
 	},
-	itemContent: {
+	content: {
 		flexDirection: 'row',
 		alignItems: 'center',
 	},
-	itemIcon: {
+	icon: {
 		marginLeft: 10,
 		marginRight: 12,
 	},
-	itemName: {
-		fontSize: 20
+
+    info: {
+        flexShrink: 1,
+    },
+	name: {
+		fontSize: 20,
 	},
-	itemArtists: {
+	artists: {
 		color: 'rgba(0, 0, 0, 0.7)',
 	},
 });
