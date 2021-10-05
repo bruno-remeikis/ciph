@@ -118,22 +118,29 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
     {
         setIsRenameSheetVisible(false);
 
+        const title = newSheetTitle.trim();
+
         if(renamedSheet && renamedSheet.id)
         {
-            if(newSheetTitle.length > 0)
+            if(title.length > 0)
             {
-                SheetService.updateTitle(renamedSheet?.id, newSheetTitle).then(res =>
+                SheetService.updateTitle(renamedSheet?.id, title).then(res =>
                 {
                     // Se um registro foi atualizado:
                     if(res)
+                    {
                         // Atualiza ítem alterado na lista de folhas
                         setSheets(sheets.map(sheet =>
                         {
                             if(sheet.id === renamedSheet.id)
-                                return { ...sheet, title: newSheetTitle };
+                                return { ...sheet, title };
 
                             return sheet;
                         }));
+
+                        if(currentSheet)
+                            setCurrentSheet({ ...currentSheet, title });
+                    }
                     else
                         alert('ERRO\nNão foi possível atualizar o título da página');
                 })
@@ -203,6 +210,113 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
     {
         setEditable(v);
         SecureStore.setItemAsync('editable', v ? 'true' : 'false');
+    }
+
+    /**
+     * Clona a página atual, alterando ou adicionando um índex
+     * ao final do nome desta nova página a ser adicionada
+     * 
+     * Ex.:
+     * - Página original: "Letra"
+     * - Nova página: "Letra (1)"
+     */
+    function handleCloneSheet(): void
+    {
+        saveSheetContent();
+
+        if(!currentSheet)
+            return;
+
+        /**
+         * Verifica se vTitle possui indexação
+         * Ex.:
+         * - "Letra (1)" = true
+         * - "Letra (a)" = false
+         * - "Letra"     = false
+         */
+        function haveIndex(title: string): { title: string, number: number } | null
+        {
+            // Se possuir parêntesis fechado:
+            if(title.length >= 3
+            && title.charAt(title.length - 1) === ')')
+            {
+                const openParenthesis = title.indexOf('(');
+    
+                // Se possuir parêntesis aberto:
+                if(openParenthesis !== undefined)
+                {
+                    const number = parseInt(title.substring(
+                        openParenthesis + 1,
+                        title.length - 1
+                    ));
+    
+                    // Se entre os parêntesis existir um número:
+                    return number !== NaN
+                        ? {
+                            title: title.substring(0, openParenthesis).trim(),
+                            number
+                        }
+                        : null;
+                }
+            }
+
+            return null;
+        }
+
+        // Trata título
+        let title = currentSheet.title.trim();
+
+        // Pega título raiz (sem o index, caso exista)
+        const originHaveIndex = haveIndex(title);
+        let rootTitle: string = originHaveIndex !== null
+            ? originHaveIndex.title
+            : title;
+
+        // Busca o maior índex entre as páginas com mesmo título raiz
+        let majorIndex: number = -1;
+        sheets.forEach(sheet =>
+        {
+            const sheetHaveIndex = haveIndex(sheet.title.trim());
+
+            if(sheetHaveIndex !== null
+            && sheetHaveIndex.title === rootTitle
+            && sheetHaveIndex.number > majorIndex)
+            {
+                majorIndex = sheetHaveIndex.number;
+            }
+            else if(sheet.title.trim() === rootTitle)
+            {
+                majorIndex = 0;
+            }
+        });
+
+        // Adiciona índex ao título
+        title = `${rootTitle} (${majorIndex + 1})`;
+
+        const newSheet: Sheet = {
+            songId: id,
+            title,
+            content: currentSheet.content,
+        };
+
+        SheetService.create(newSheet).then((res: any) =>
+        {
+            newSheet.id = res;
+
+            // Adicionar nova página à direita da orígem do clone
+            const updSheets: Sheet[] = [];
+            sheets.forEach(sheet =>
+            {
+                updSheets.push(sheet);
+
+                if(sheet.id === currentSheet.id)
+                    updSheets.push(newSheet);
+            });
+            setSheets(updSheets);
+
+            setCurrentSheet(newSheet);
+        })
+        .catch(err => alert(err));
     }
 
 
@@ -283,14 +397,14 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                     text: 'Alterar nome',
                     onClick: () => setIsRenameSheetVisible(true)
                 },
-                /*{
+                {
                     icon: {
                         component: FeatherIcon,
                         name: 'copy'
                     },
                     text: 'Clonar',
-                    onClick: () => {}
-                },*/
+                    onClick: handleCloneSheet
+                },
                 {
                     icon: {
                         component: FeatherIcon,
