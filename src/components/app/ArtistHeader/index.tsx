@@ -14,10 +14,15 @@ import styles from './styles';
 // Components
 import GenericAppHeader from '../GenericAppHeader';
 import Modal from '../../Modal';
-import ArtistService from '../../../services/ArtistService';
+import InputModal from '../../InputModal';
 
 // Contexts
 import { useUpdated } from '../../../contexts/Updated';
+
+// Services
+import ArtistService from '../../../services/ArtistService';
+
+
 
 interface ArtistHeaderProps {
     route: RouteProp<RootStackParamList, "Artist">;
@@ -30,7 +35,7 @@ const ArtistHeader: React.FC<ArtistHeaderProps> = ({ route, navigation }) =>
 
     const { setUpdated } = useUpdated();
 
-    const [isEditModalVisible, setIsEditModalVisible] = useState<boolean>(false);
+    const [isRenameModalVisible, setIsRenameModalVisible] = useState<boolean>(false);
     const [name, setName] = useState(artist.name);
 
     function handleRenameArtist()
@@ -44,7 +49,7 @@ const ArtistHeader: React.FC<ArtistHeaderProps> = ({ route, navigation }) =>
                     navigation.navigate('Artist', { artist });
                 })
                 .catch(err => alert(err))
-                .finally(() => setIsEditModalVisible(false))
+                .finally(() => setIsRenameModalVisible(false))
     }
 
     return (
@@ -57,41 +62,18 @@ const ArtistHeader: React.FC<ArtistHeaderProps> = ({ route, navigation }) =>
                         name: 'edit-2',
                     },
                     text: 'Editar',
-                    onClick: () => setIsEditModalVisible(true),
+                    onClick: () => setIsRenameModalVisible(true),
                 }]}
             />
 
-            {/* Editar (mudar nome) */}
-            <Modal
-                visible={isEditModalVisible}
-                setVisible={setIsEditModalVisible}
-                style={styles.editModal}
-            >
-                <Text style={styles.editModalLabel}>Nome</Text>
-                <TextInput
-                    style={styles.editModalInput}
-                    value={name}
-                    placeholder="Nome do artista"
-                    onChangeText={text => setName(text)}
-                    selectTextOnFocus
-                />
-
-                <View style={styles.editModalBtns}>
-                    <Pressable
-                        style={styles.editModalBtn}
-                        onPress={handleRenameArtist}
-                    >
-                        <Text style={styles.editModalBtnContent}>Salvar</Text>
-                    </Pressable>
-
-                    <Pressable
-                        style={styles.editModalBtn}
-                        onPress={() => setIsEditModalVisible(false)}
-                    >
-                        <Text>Cancelar</Text>
-                    </Pressable>
-                </View>
-            </Modal>
+            {/* Renomear artista */}
+            <InputModal
+                visible={isRenameModalVisible}
+                setVisible={setIsRenameModalVisible}
+                value={name}
+                setValue={setName}
+                onSubmit={handleRenameArtist}
+            />
         </>
     );
 }

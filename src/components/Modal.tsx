@@ -7,7 +7,10 @@ import FeatherIcon from 'react-native-vector-icons/Feather';
 // Utils
 import { colors } from '../utils/consts';
 
-interface ModalProps {
+
+
+export interface ModalProps
+{
     visible: boolean;
     setVisible: Dispatch<SetStateAction<boolean>>;
     style?: StyleProp<ViewStyle>;

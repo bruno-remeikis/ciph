@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, createElement } from 'react';
+import React, { createElement } from 'react';
 import { StyleSheet, Text, Pressable } from 'react-native';
 
 // Icons
@@ -6,7 +6,9 @@ import { Icon } from 'react-native-vector-icons/Icon';
 import { colors } from '../utils/consts';
 
 // Components
-import Modal from './Modal';
+import Modal, { ModalProps } from './Modal';
+
+
 
 export type MenuItem = {
     icon? : {
@@ -19,19 +21,17 @@ export type MenuItem = {
     division?: boolean;
 };
 
-interface MenuModalProps {
-    visible: boolean;
-    setVisible: Dispatch<SetStateAction<boolean>>;
+interface MenuModalProps extends ModalProps
+{
     items: MenuItem[];
 }
 
-const MenuModal: React.FC<MenuModalProps> = ({ visible, setVisible, items }) =>
+const MenuModal: React.FC<MenuModalProps> = ({ items, ...props }) =>
 {
     return (
         <Modal
-            style={styles.menuContainer}
-            visible={visible}
-            setVisible={setVisible}
+            {...props}
+            style={[ props.style, styles.menuContainer ]}
         >
             {items.map((item, i) =>
                 <Pressable
@@ -44,7 +44,7 @@ const MenuModal: React.FC<MenuModalProps> = ({ visible, setVisible, items }) =>
                     ]}
                     onPress={() =>
                     {
-                        setVisible(false);
+                        props.setVisible(false);
                         item.onClick();
                     }}
                 >

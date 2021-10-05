@@ -19,14 +19,12 @@ import SheetService from '../services/SheetService';
 import { colors, opacities, sizes } from '../utils/consts';
 
 // Components
-import Modal from '../components/Modal';
 import DialogModal from '../components/DialogModal';
-import Button from '../components/Button';
-
+import MenuModal from '../components/MenuModal';
+import InputModal from '../components/InputModal';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
-import MenuModal from '../components/MenuModal';
 
 
 
@@ -306,33 +304,13 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
             />
 
             {/* RENAME SHEET */}
-            <Modal
-                style={{ padding: 10 }}
+            <InputModal
                 visible={isRenameSheetVisible}
                 setVisible={setIsRenameSheetVisible}
-            >
-                <TextInput
-                    style={styles.modalInput}
-                    value={newSheetTitle}
-                    placeholder="Nome da página"
-                    onChangeText={text => setNewSheetTitle(text)}
-                    //autoFocus
-                    selectTextOnFocus
-                />
-
-                <View style={styles.modalBtns}>
-                    <Button
-                        style={{ marginLeft: 6 }}
-                        text='Salvar'
-                        backgroundColor={colors.primary}
-                        onClick={saveRenamedSheet}
-                    />
-                    <Button
-                        text='Cancelar'
-                        onClick={() => setIsRenameSheetVisible(false)}
-                    />
-                </View>
-            </Modal>
+                value={newSheetTitle}
+                setValue={setNewSheetTitle}
+                onSubmit={saveRenamedSheet}
+            />
 
             {/* DELETE SHEET DIALOG */}
 			<DialogModal
@@ -340,14 +318,15 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 				setVisible={setIsDeleteSheetVisible}
 				title='Tem certeza?'
 				text='Esta página será deletada permanentemente'
-				buttons={[
-                    {
-                        text: 'Sim, deletar!',
-                        color: colors.red,
-                        onClick: handleDeleteSheet
-                    },
-                    { text: 'Cancelar' }
-                ]}
+				buttons={
+                [{
+                    text: 'Sim, deletar!',
+                    color: colors.red,
+                    onClick: handleDeleteSheet
+                },
+                {
+                    text: 'Cancelar',
+                }]}
 			/>
 
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
@@ -511,22 +490,6 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 export default SongScreen;
 
 const styles = StyleSheet.create({
-    modalInput: {
-        width: 260,
-        marginBottom: 2,
-        paddingHorizontal: 14,
-        paddingVertical: 6,
-        borderWidth: 1,
-        borderColor: colors.inputBorder,
-        borderRadius: 4,
-    },
-    modalBtns: {
-        flexDirection: 'row-reverse',
-        alignItems: 'center',
-        //justifyContent: 'center',
-        marginTop: 6,
-    },
-
     // CONTAINER
     container: {
         flex: 1,

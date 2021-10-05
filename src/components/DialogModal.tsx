@@ -1,30 +1,28 @@
-import React, { Dispatch, SetStateAction } from 'react';
-import { StyleSheet, View, Text, Pressable } from 'react-native';
+import React from 'react';
+import { StyleSheet, View, Text } from 'react-native';
 
 // Icons
 import FeatherIcon from 'react-native-vector-icons/Feather';
 
 // Components
-import Modal from './Modal';
+import Modal, { ModalProps } from './Modal';
 import Button, { ButtonProps } from './Button';
 
 
 
-interface DialogModalProps {
-    visible: boolean;
-    setVisible: Dispatch<SetStateAction<boolean>>;
+interface DialogModalProps extends ModalProps
+{
     //iconType: 'warning',
     title: string;
     text: string;
     buttons: ButtonProps[];
 }
 
-const DialogModal: React.FC<DialogModalProps> = ({ visible, setVisible, /*iconType, */title, text, buttons }) =>
+const DialogModal: React.FC<DialogModalProps> = ({ /*iconType,*/ title, text, buttons, ...props }) =>
 {
     return (
         <Modal
-            visible={visible}
-            setVisible={setVisible}
+            {...props}
             style={styles.container}
         >
             <FeatherIcon name='alert-triangle' size={50} color='rgb(237, 192, 69)' />
@@ -44,7 +42,7 @@ const DialogModal: React.FC<DialogModalProps> = ({ visible, setVisible, /*iconTy
                             if(btn.onClick)
                                 btn.onClick();
                             else
-                                setVisible(false);
+                                props.setVisible(false);
                         }}
                     />
                 )}
