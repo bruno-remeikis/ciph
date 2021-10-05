@@ -61,7 +61,7 @@ const ArtistHeader: React.FC<ArtistHeaderProps> = ({ route, navigation }) =>
                         component: FeatherIcon,
                         name: 'edit-2',
                     },
-                    text: 'Editar',
+                    text: 'Renomear',
                     onClick: () => setIsRenameModalVisible(true),
                 }]}
             />

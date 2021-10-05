@@ -394,7 +394,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                         component: FeatherIcon,
                         name: 'edit-2'
                     },
-                    text: 'Alterar nome',
+                    text: 'Renomear',
                     onClick: () => setIsRenameSheetVisible(true)
                 },
                 {
