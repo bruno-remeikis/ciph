@@ -80,6 +80,7 @@ const styles = StyleSheet.create({
 
     closeBtn: {
         position: 'absolute',
+        zIndex: 1,
         top: - closeBtnSize / 2.5,
         right: - closeBtnSize / 2.5,
 
