@@ -25,6 +25,7 @@ import InputModal from '../components/InputModal';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
+import { useMessage } from '../contexts/Message';
 
 
 
@@ -41,6 +42,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
     // ---------- CONTEXTS ----------
 
     const { updated, setUpdated } = useUpdated();
+    const { pushMsg } = useMessage();
 
     // ---------- CONSTS ----------
 
@@ -530,6 +532,8 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                                 setNewSheetTitle(sheet.title);
                                                 setIsSheetMenuVisible(true);
                                             }
+                                            else
+                                                pushMsg('Edição desabilitada');
                                         }}
                                     >
                                         <Text style={styles.tabContent}>{sheet.title}</Text>
@@ -550,6 +554,8 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                     {
                                         if(editable)
                                             createSheet();
+                                        else
+                                            pushMsg('Edição desabilitada');
                                     }}
                                 >
                                     <FeatherIcon
@@ -567,20 +573,26 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                     <View style={styles.sheets}>
                         {sheets.length > 0
                             // Pagina com conteúdo atual:
-                            ? <TextInput
-                                style={styles.sheet}
-                                multiline={true}
-                                value={currentSheet?.content}
-                                onChangeText={content =>
-                                {
-                                    if(currentSheet)
+                            ?<TextInput
+                                    style={styles.sheet}
+                                    pointerEvents='none'
+                                    multiline={true}
+                                    value={currentSheet?.content}
+                                    onChangeText={content =>
                                     {
-                                        setCurrentSheet({ ...currentSheet, content });
-                                        setChanged(true);
-                                    }
-                                }}
-                                editable={editable}
-                            />
+                                        if(currentSheet)
+                                        {
+                                            setCurrentSheet({ ...currentSheet, content });
+                                            setChanged(true);
+                                        }
+                                    }}
+                                    editable={editable}
+                                    onTouchStart={() =>
+                                    {
+                                        if(!editable)
+                                            pushMsg('Edição desabilitada');
+                                    }}
+                                />
                             // Caso não hajam paginas ainda:
                             : <View style={[styles.sheet, styles.emptySheet]}>
                                 <View style={{ alignItems: 'center' }}>

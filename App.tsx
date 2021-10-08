@@ -11,13 +11,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // Contexts
 import { UpdatedProvider } from './src/contexts/Updated';
+import { MessageProvider } from './src/contexts/Message';
 
 // Database
 import Database from './src/database/Database';
-
-// Models
-import { Song } from './src/models/entities/Song';
-import { Artist } from './src/models/entities/Artist';
 
 // Utils
 import { colors } from './src/utils/consts';
@@ -28,10 +25,13 @@ import NewSongScreen from './src/screens/NewSongScreen';
 import SongScreen from './src/screens/SongScreen';
 import ArtistScreen from './src/screens/ArtistScreen';
 
-// Headers
+// Components: Headers
 import HomeHeader from './src/components/app/HomeHeader';
 import SongHeader from './src/components/app/SongHeader';
 import ArtistHeader from './src/components/app/ArtistHeader';
+
+// Components: Others
+import Message from './src/components/app/Message';
 
 
 
@@ -39,18 +39,14 @@ import ArtistHeader from './src/components/app/ArtistHeader';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-const AppContent: React.FC = () =>
+const AppNavigator: React.FC = () =>
 {
 	// Impedir que tela descanse
 	useKeepAwake();
 	
-
-
 	// ---------- EFFECTS ----------
 
 	useEffect(() => { Database.init() }, []);
-
-
 
 	// ---------- RETURN ----------
 
@@ -123,7 +119,10 @@ const AppContent: React.FC = () =>
 
 const App: React.FC = () =>
 	<UpdatedProvider>
-		<AppContent />
+		<MessageProvider>
+			<AppNavigator />
+			<Message />
+		</MessageProvider>
 	</UpdatedProvider>
 
 export default App;

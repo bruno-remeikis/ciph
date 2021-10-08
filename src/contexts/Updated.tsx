@@ -39,9 +39,7 @@ export function useUpdated()
     const context = useContext(UpdatedContext);
 
     if(!context)
-        throw new Error('useUpdated must be used within an UsedProvider')
+        throw new Error('useUpdated must be used within an UpdatedProvider');
 
-    const { updated, setUpdated } = context;
-
-    return { updated, setUpdated };
+    return context;
 }
