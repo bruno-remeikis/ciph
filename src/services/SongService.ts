@@ -57,6 +57,28 @@ export default class SongService
         () => resolve(id)));
     }
 
+    static findAll(): Promise<SQLResultSetRowList>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            const sql =
+                `select
+                    ${song.id} as id,
+                    ${song.name} as name,
+                    ${song.insertDate} as insertDate,
+                    ${song.updateDate} as updateDate
+                from
+                    ${song.table}`;
+
+            tx.executeSql(sql, [], (_, { rows }) => resolve(rows));
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        }));
+    }
+
     /**
      * Busca músicas pelo nome e pelo(s) artista(s).
      * Quebra o texto do parâmetro 'search' por palavras,
@@ -65,7 +87,7 @@ export default class SongService
      * @param search Texto de busca
      * @returns Lista de músicas
      */
-    static find(search: string): Promise<SQLResultSetRowList>
+    /*static find(search: string): Promise<SQLResultSetRowList>
     {
         let where = '';
         if(search.trim().length > 0)
@@ -130,7 +152,7 @@ export default class SongService
             console.error(err);
             reject(err);
         }));
-    }
+    }*/
 
     static findById(id: number): Promise<SQLResultSetRowList>
     {

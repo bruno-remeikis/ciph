@@ -3,6 +3,7 @@ import { Table, cols } from '../../database/types';
 
 // Models
 import { Artist } from './Artist';
+import { Sheet } from './Sheet';
 
 // ---------- BEAN ----------
 
@@ -10,13 +11,13 @@ export type Song =
 {
     id?: number;
     name: string;
+    
     artists?: Artist[] | string;
+    sheets?: Sheet[];
 
     insertDate?: string;
     updateDate?: string | null;
 }
-
-
 
 // ---------- DAO ----------
 

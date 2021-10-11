@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-//import fs from 'react-native-fs';
+
+// File management
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 // Database
 import Database from '../../../database/Database';
@@ -19,6 +22,9 @@ import { useUpdated } from '../../../contexts/Updated';
 import { colors } from '../../../utils/consts';
 import { Text } from 'react-native';
 
+// Services
+import ExportService from '../../../services/ExportService';
+
 
 
 const HomeHeader: React.FC = () =>
@@ -30,14 +36,28 @@ const HomeHeader: React.FC = () =>
 	
 	const [verificationCode, setVerificationCode] = useState<string | null>(null);
 
-	function handleExport()
+	async function handleExport()
 	{
-		/*const path = fs.DocumentDirectoryPath + '/ciph-data.txt';
-		fs.writeFile(path, '').then(res => // 'utf8'
+		try
 		{
+			// Criar JSON com todos os dados
+			const data = await ExportService.createDataJson();
 
-		})
-		.catch(err => alert(err));*/
+			// Criar arquivo em cache
+			const path = FileSystem.cacheDirectory + 'ciph-data.json';
+			await FileSystem.writeAsStringAsync(path, JSON.stringify(data), { encoding: 'utf8' });
+			
+			// Verificar se é possível compartilhar arquivo
+			const avaliable = await Sharing.isAvailableAsync();
+			if(avaliable)
+				// Abrir menú de compartilhamento
+				await Sharing.shareAsync(path);
+		}
+		catch(err)
+		{
+			console.error(err);
+			alert(err);
+		}
 	}
 
 	function showVerifyReset()

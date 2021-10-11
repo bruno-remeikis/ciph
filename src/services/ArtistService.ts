@@ -68,6 +68,28 @@ export default class ArtistService
         });
     }
 
+    static findAll(): Promise<SQLResultSetRowList>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            const sql =
+                `select
+                    ${artist.id} as id,
+                    ${artist.name} as name,
+                    ${artist.insertDate} as insertDate,
+                    ${artist.updateDate} as updateDate
+                from
+                    ${artist.table}`;
+
+            tx.executeSql(sql, [], (_, { rows }) => resolve(rows));
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        }));
+    }
+
     /**
      * Busca artistas pelo ID de sua música
      * 

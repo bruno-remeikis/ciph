@@ -1,4 +1,4 @@
-import { SQLTransaction } from 'expo-sqlite';
+import { SQLResultSetRowList, SQLTransaction } from 'expo-sqlite';
 
 // Database
 import { db } from '../database/connection';
@@ -46,6 +46,29 @@ export default class SongArtistService
 
         artistIds.forEach(id =>
             tx.executeSql(sql, [songId, id]));
+    }
+
+    static findAll(): Promise<SQLResultSetRowList>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            const sql =
+                `select
+                    ${song_artist.id} as id,
+                    ${song_artist.songId} as songId,
+                    ${song_artist.artistId} as artistId,
+                    ${song_artist.insertDate} as insertDate,
+                    ${song_artist.updateDate} as updateDate
+                from
+                    ${song_artist.table}`;
+
+            tx.executeSql(sql, [], (_, { rows }) => resolve(rows));
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        }));
     }
 
     /**

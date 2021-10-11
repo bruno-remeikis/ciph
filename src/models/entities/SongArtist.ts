@@ -5,6 +5,18 @@ import { Table, cols } from '../../database/types';
 import { alias as songAlias, song } from './Song';
 import { alias as artistAlias, artist } from './Artist';
 
+// ---------- BEAN ----------
+
+export type SongArtist =
+{
+    id?: number;
+    songId: number;
+    artistId: number;
+
+    insertDate?: string;
+    updateDate?: string | null;
+}
+
 // ---------- DAO ----------
 
 export const alias = songAlias + artistAlias;
