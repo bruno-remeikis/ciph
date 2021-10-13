@@ -40,8 +40,6 @@ export default class ExportService
                     return { sheets, ...song };
                 });
 
-                console.log(songs);
-
                 // Artist
                 let artists: any = await ArtistService.findAll();
                 artists = artists._array;

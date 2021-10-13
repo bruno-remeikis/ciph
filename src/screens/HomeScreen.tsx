@@ -36,8 +36,6 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 
 	const { updated, setUpdated } = useUpdated();
 
-	
-
 	// ---------- STATES ----------
 
 	const [headerHeight, setHeaderHeight] = useState(0);
@@ -55,6 +53,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 
 	// ---------- REFS ----------
 
+	const searchRef = useRef<TextInput>(null);
 	const resultsRef = useRef<FlatList | null>(null);
 
 	const loadingRef = useRef(loading);
@@ -132,7 +131,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 				{!loading && results.length === 0 ?
 					<Text>{
 						search.trim().length === 0
-							? 'Você ainda possui músicas'
+							? `Você ainda não possui ${filter === 'artists' ? 'artistas' : 'músicas'}`
 							: 'Nenhum resultado'
 					}</Text>
 				: null}
@@ -150,6 +149,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 			>
 				<View style={styles.search}>
 					<TextInput
+						ref={searchRef}
 						style={styles.searchInput}
 						placeholder="Pesquisar"
 						value={search}
@@ -161,6 +161,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 						{
 							setSearch('');
 							handleSearch('', filter);
+							searchRef.current?.focus();
 						}}
 					>
 						<FeatherIcon name='x' size={16} color='#000000' />

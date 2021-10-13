@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 // File management
 import * as FileSystem from 'expo-file-system';
@@ -20,21 +21,75 @@ import { useUpdated } from '../../../contexts/Updated';
 
 // Utils
 import { colors } from '../../../utils/consts';
-import { Text } from 'react-native';
 
 // Services
 import ExportService from '../../../services/ExportService';
+import Button from '../../Button';
 
+const Pointer: React.FC = () =>
+{
+	const opacity = useRef(new Animated.Value(1)).current;
 
+	useEffect(() =>
+		Animated.loop
+		(
+			Animated.sequence
+			([
+				Animated.delay(300),
+				Animated.timing(opacity,
+				{
+					toValue: 0,
+					duration: 300,
+					useNativeDriver: false,
+				}),
+				Animated.timing(opacity,
+				{
+					toValue: 1,
+					duration: 300,
+					useNativeDriver: false,
+				})
+			])
+		).start()
+	, []);
+
+	return (
+		<Animated.View style={{
+			position: 'absolute',
+			width: 2,
+			height: 20,
+			backgroundColor: colors.primary,
+			opacity
+		}} />
+	);
+}
 
 const HomeHeader: React.FC = () =>
 {
+	// ---------- CONSTS ----------
+
+	const verifCodeLength = 4;
+
+	// ---------- CONTEXTS ----------
+
 	const { setUpdated } = useUpdated();
 
+	// ---------- STATES ----------
+
 	const [isConfirmResetVisible, setIsConfirmResetVisible] = useState<boolean>(false);
-	const [isVerifyResetVisible, setIsVerifymResetVisible] = useState<boolean>(false);
+	const [isVerifyResetVisible, setIsVerifyResetVisible] = useState<boolean>(false);
 	
-	const [verificationCode, setVerificationCode] = useState<string | null>(null);
+	const [verifCode, setVerifCode] = useState<string | null>(null);
+	const [verifCodeValue, setVerifCodeValue] = useState<string>('');
+
+	// ---------- REFS ----------
+
+	const verifCodeRef = useRef<TextInput>(null);
+
+	// ---------- EVENTS ----------
+
+	Keyboard.addListener('keyboardDidHide', () => verifCodeRef.current?.blur());
+
+	// ---------- FUNCTIONS ----------
 
 	async function handleExport()
 	{
@@ -60,12 +115,17 @@ const HomeHeader: React.FC = () =>
 		}
 	}
 
+	function handleImport()
+	{
+		
+	}
+
 	function showVerifyReset()
 	{
 		setIsConfirmResetVisible(false);
 
 		let newVerificationCode: string = "";
-		for(let i = 0; i < 4; i++)
+		for(let i = 0; i < verifCodeLength; i++)
 		{
 			// 36 = (0...9) + (A...Z)
 			// (DEC) 48 = (ASCII) "0"
@@ -78,17 +138,33 @@ const HomeHeader: React.FC = () =>
 			newVerificationCode += String.fromCharCode(intChar);
 		}
 
-		setVerificationCode(newVerificationCode);
-		setIsVerifymResetVisible(true);
+		setVerifCode(newVerificationCode);
+		setIsVerifyResetVisible(true);
 	}
 
 	function handleResetData()
 	{
-		Database.recreate()
-			.then(() => setUpdated(true)) // <- Atualiza HomeScreen
-			.catch(err => alert(err))
-			.finally(() => setIsConfirmResetVisible(false));
+		if(verifCodeValue === verifCode)
+			Database.recreate()
+				.then(() => setUpdated(true)) // <- Atualiza HomeScreen
+				.catch(err => alert(err));
+		else
+			alert('Código inválido');
+
+		setIsVerifyResetVisible(false);
 	}
+
+	// ---------- EFFECTS ----------
+
+	useEffect(() =>
+	{
+		if(isVerifyResetVisible)
+		{
+			setVerifCodeValue('');
+			setTimeout(() => verifCodeRef.current?.focus(), 2000);
+		}
+	},
+	[isVerifyResetVisible]);
 
 	return (
 		<>
@@ -108,7 +184,7 @@ const HomeHeader: React.FC = () =>
 						name: 'upload',
 					},
 					text: 'Importar dados',
-					onClick: ()=> {},
+					onClick: handleImport  ,
 				},
 				{
 					icon: {
@@ -132,7 +208,7 @@ const HomeHeader: React.FC = () =>
                     {
                         text: 'Sim, resetar!',
                         color: colors.red,
-                        onClick: showVerifyReset //handleResetData
+                        onClick: showVerifyReset
                     },
                     { text: 'Cancelar' }
                 ]}
@@ -141,15 +217,122 @@ const HomeHeader: React.FC = () =>
 			{/* Confirmar reset novamente */}
 			<Modal
 				visible={isVerifyResetVisible}
-				setVisible={setIsVerifymResetVisible}
+				setVisible={setIsVerifyResetVisible}
+				style={styles.verifyModal}
+				//onTouchStart={() => verifCodeRef.current?.focus()}
 			>
-				<Text style={{ letterSpacing: 20, fontSize: 26 }}>
-					{verificationCode}
+				<Text style={{ fontSize: 16, textAlign: 'center' }}>
+					Para prosseguir, digite o código
 				</Text>
 
+				{/* Código aleatório */}
+				<Text style={styles.verifCode}>
+					{verifCode}
+				</Text>
+
+				{/*<Text style={{ fontSize: 16, textAlign: 'center' }}>
+					para continuar
+				</Text>*/}
+
+				{/* Input invisível */}
+				<TextInput
+					ref={verifCodeRef}
+					style={styles.verifCodeInput}
+					maxLength={verifCodeLength}
+					value={verifCodeValue}
+					onChangeText={text => setVerifCodeValue(text.toUpperCase())}
+					autoCapitalize='characters'
+					returnKeyType='next'
+					onSubmitEditing={() => handleResetData()}
+				/>
+
+				{/* Caracteres digitados pelo usuário */}
+				<View style={styles.verifCodeChars}>
+					{Array.from(Array(verifCodeLength).keys()).map(i =>
+						<Pressable
+							key={i}
+							style={{ alignItems: 'center', justifyContent: 'center' }}
+							onPress={() => verifCodeRef.current?.focus()}
+						>
+							<Text
+								//key={i}
+								style={[
+									styles.verifCodeChar,
+									/*verifCodeValue.length === i ? {
+										borderColor: `rgba(${colors.primaryRGB}, 1)`,
+									} : null*/
+								]}
+							>
+								{verifCodeValue.charAt(i)}
+							</Text>
+
+							{verifCodeValue.length === i
+							? /*<View style={{
+								position: 'absolute',
+								width: 2,
+								height: 20,
+								backgroundColor: colors.primary,
+							}} />*/ <Pointer /> : null}
+						</Pressable>
+					)}
+				</View>
+
+				<View style={styles.buttons}>
+					<Button
+						text='Cancelar'
+						onClick={() => setIsVerifyResetVisible(false)}
+					/>
+					<Button
+						style={{ marginLeft: 6 }}
+						text='Resetar'
+						backgroundColor={colors.red}
+						onClick={handleResetData}
+					/>
+				</View>
 			</Modal>
 		</>
 	);
 }
 
 export default HomeHeader;
+
+
+
+const styles = StyleSheet.create({
+	// VERIFY MODAL
+	verifyModal: {
+		padding: 18,
+	},
+	verifCode: {
+		letterSpacing: 6,
+		fontSize: 22,
+		textAlign: 'center',
+	},
+	verifCodeInput: {
+		position: 'absolute',
+		width: 0,
+		height: 0,
+	},
+	verifCodeChars: {
+		flexDirection: 'row',
+		justifyContent: 'space-around',
+		marginTop: 12,
+	},
+	verifCodeChar: {
+		//width: 32,
+		width: 42,
+		height: 42,
+		borderWidth: 1,
+		borderColor: 'rgba(0, 0, 0, 0.14)',
+		borderRadius: 6,
+		textAlign: 'center',
+		textAlignVertical: 'center',
+		fontSize: 20,
+	},
+	buttons: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'center',
+		marginTop: 18,
+	},
+});

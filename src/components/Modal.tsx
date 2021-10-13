@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction, useState } from 'react';
-import { StyleSheet, View, Modal, StyleProp, ViewStyle, Pressable } from 'react-native';
+import { StyleSheet, View, Modal, StyleProp, ViewStyle, Pressable, ViewProps } from 'react-native';
 
 // Icons
 import FeatherIcon from 'react-native-vector-icons/Feather';
@@ -9,42 +9,57 @@ import { colors } from '../utils/consts';
 
 
 
-export interface ModalProps
+export interface ModalProps extends ViewProps
 {
     visible: boolean;
     setVisible: Dispatch<SetStateAction<boolean>>;
-    style?: StyleProp<ViewStyle>;
+    onHide?: Function;
 }
 
-const ModalComponent: React.FC<ModalProps> = ({ children, visible, setVisible, style }) =>
+const ModalComponent: React.FC<ModalProps> = ({ children, visible, setVisible, onHide, ...props }) =>
 {
     // Guarda se a View interna (conteúdo) do Modal foi tocada
     const [touchIn, setTouchIn] = useState<boolean>(false);
+
+    function close()
+    {
+        setVisible(false);
+
+        if(onHide)
+            onHide();
+    }
 
     return (
         <Modal
             animationType='fade'
             transparent={true}
             visible={visible}
-            onRequestClose={() => setVisible(false)}
+            onRequestClose={close}
         >
             <View
                 style={styles.modalBackground}
                 onTouchEnd={() =>
                 {
                     if(!touchIn)
-                        setVisible(false);
+                        close();
                     else
                         setTouchIn(false);
                 }}
             >
                 <View
-                    style={[ styles.modalBox, style ]}
-                    onTouchStart={() => setTouchIn(true)}
+                    {...props}
+                    style={[ styles.modalBox, props.style ]}
+                    onTouchStart={event =>
+                    {
+                        setTouchIn(true);
+                        
+                        if(props.onTouchStart)
+                            props.onTouchStart(event);
+                    }}
                 >
                     <Pressable
                         style={styles.closeBtn}
-                        onPress={() => setVisible(false)}
+                        onPress={close}
                     >
                         <FeatherIcon name='x' size={16} color={colors.text} />
                     </Pressable>
