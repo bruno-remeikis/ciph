@@ -4,6 +4,7 @@ import { Animated, Keyboard, Pressable, StyleSheet, Text, TextInput, View } from
 // File management
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import * as DocumentPicker from 'expo-document-picker';
 
 // Database
 import Database from '../../../database/Database';
@@ -15,6 +16,7 @@ import FeatherIcon from 'react-native-vector-icons/Feather';
 import GenericAppHeader from '../GenericAppHeader';
 import Modal from '../../Modal';
 import DialogModal from '../../DialogModal';
+import Button from '../../Button';
 
 // Contexts
 import { useUpdated } from '../../../contexts/Updated';
@@ -23,14 +25,15 @@ import { useUpdated } from '../../../contexts/Updated';
 import { colors } from '../../../utils/consts';
 
 // Services
-import ExportService from '../../../services/ExportService';
-import Button from '../../Button';
+import ExportService, { DataJson } from '../../../services/ExportService';
+import ImportService from '../../../services/ImportService';
 
 const Pointer: React.FC = () =>
 {
 	const opacity = useRef(new Animated.Value(1)).current;
 
 	useEffect(() =>
+	{
 		Animated.loop
 		(
 			Animated.sequence
@@ -49,8 +52,8 @@ const Pointer: React.FC = () =>
 					useNativeDriver: false,
 				})
 			])
-		).start()
-	, []);
+		).start();
+	}, []);
 
 	return (
 		<Animated.View style={{
@@ -115,9 +118,29 @@ const HomeHeader: React.FC = () =>
 		}
 	}
 
-	function handleImport()
+	async function handleImport()
 	{
-		
+		try
+		{
+			const file = await DocumentPicker.getDocumentAsync({
+				copyToCacheDirectory: false,
+				//type: 'application/json'
+			});
+
+			if(file.type === 'success')
+			{
+				const content = await FileSystem.readAsStringAsync(file.uri, { encoding: 'utf8' });
+				const json: DataJson & any = JSON.parse(content);
+
+				ImportService.consumeDataJson(json);
+				setUpdated(true);
+			}
+		}
+		catch(err)
+		{
+			console.log(err);
+			alert(err);
+		}
 	}
 
 	function showVerifyReset()

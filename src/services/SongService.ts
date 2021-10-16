@@ -13,17 +13,74 @@ import SongArtistService from './SongArtistService';
 import { Song, song } from '../models/entities/Song';
 import { Artist, artist } from '../models/entities/Artist';
 import { song_artist } from '../models/entities/SongArtist';
+
+// Utils
 import { dbDatetimeFormat } from '../utils/functions';
 
 export default class SongService
 {
     /**
-     * Insere uma nova entidade no banco
+     * Insere as músicas contidas no JSON principal
+     * (parâmetro: 'songs').
+     * 
+     * Atualiza o JSON, adicionando um 'newId' a
+     * cada objeto inserido.
+     * 
+     * @param json Objeto JSON contendo dados de importação
+     */
+    static import(json: any): Promise<void>
+    {  
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            // Validar JSON principal
+            if(!json.songs || !Array.isArray(json.songs))
+                reject();
+
+            const sql =
+                `insert into ${song.table} (
+                    ${song.name},
+                    ${song.unaccentedName},
+                    ${song.insertDate},
+                    ${song.updateDate}
+                ) values (?, ?, ?, ?)`;
+
+            for(let i = 0; i < json.songs.length; i++)
+            {
+                const obj = json.songs[i];
+
+                // Validar propriedades do objeto
+                if(!obj.name)
+                    continue;
+
+                const args = [
+                    obj.name.trim(),
+                    remove(obj.name.trim()),
+                    obj.insertDate ? obj.insertDate : 'current_timestamp',
+                    obj.updateDate ? obj.insertDate : null,
+                ];
+
+                tx.executeSql(sql, args, (_, { insertId }) =>
+                {
+                    json.songs[i].newId = insertId;
+
+                    if(obj.sheets)
+                        json.songs[i].sheets = SheetService.importTx(
+                            tx, insertId, obj.sheets
+                        );
+                });
+            }
+        },
+        err => reject(err),
+        () => resolve()));
+    }
+    
+    /**
+     * Insere uma música e artistas no banco
      * 
      * @param obj Entidade a ser inserida
      * @returns ID da entidade recém incerido
      */
-    static create(obj: Song, artists: Artist[]): Promise<number>
+    static createWithArtists(obj: Song, artists: Artist[]): Promise<number>
     {
         let id: number;
 
@@ -57,7 +114,7 @@ export default class SongService
         () => resolve(id)));
     }
 
-    static findAll(): Promise<SQLResultSetRowList>
+    static export(): Promise<SQLResultSetRowList>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {

@@ -9,7 +9,7 @@ import SheetService from "./SheetService";
 import ArtistService from "./ArtistService";
 import SongArtistService from "./SongArtistService";
 
-type DataJson = {
+export type DataJson = {
     songs: Song[];
     artists: Artist[];
     songsArtists: SongArtist[];
@@ -23,29 +23,24 @@ export default class ExportService
         {
             try
             {
-                // Song
-                let songs: any = await SongService.findAll();
+                // Songs
+                let songs: any = await SongService.export();
+                songs = songs._array;
 
-                // Sheet
-                songs = songs._array.map((song: Song) =>
-                {
-                    let sheets: any = [];
+                // Sheets
+                for(let i = 0; i < songs.length; i++)
+                    if(songs[i].id)
+                    {
+                        const sheets: any = await SheetService.export(songs[i].id);
+                        songs[i].sheets = sheets._array;
+                    }
 
-                    if(song.id)
-                        SheetService.findBySongId(song.id).then((res: any) =>
-                        {
-                            sheets = res._array;
-                        });
-
-                    return { sheets, ...song };
-                });
-
-                // Artist
-                let artists: any = await ArtistService.findAll();
+                // Artists
+                let artists: any = await ArtistService.export();
                 artists = artists._array;
 
-                // SongArtist
-                let songsArtists: any = await SongArtistService.findAll();
+                // Songs _ Artists
+                let songsArtists: any = await SongArtistService.export();
                 songsArtists = songsArtists._array;
 
                 resolve({

@@ -159,7 +159,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
         // NEW
         else
         {
-            SongService.create({ name }, validArtists.map(({ obj }) => obj))
+            SongService.createWithArtists({ name }, validArtists.map(({ obj }) => obj))
             .then(insertId =>
             {
                 SongService.findById(insertId)

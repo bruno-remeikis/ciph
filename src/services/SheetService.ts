@@ -9,33 +9,105 @@ import { Sheet, sheet } from '../models/entities/Sheet';
 export default class SheetService
 {
     /**
+     * Insere as páginas passadas.
+     * 
+     * Adiciona um 'newId' a cada objeto inserido.
+     * 
+     * @returns Lista de páginas atualizadas
+     */
+    static importTx(tx: SQLTransaction, songId: number, sheets: any[]): any[]
+    {
+        if(sheets.length === 0)
+            return [];
+
+        const sql =
+            `insert into ${sheet.table} (
+                ${sheet.songId},
+                ${sheet.title},
+                ${sheet.content},
+                ${sheet.insertDate},
+                ${sheet.updateDate}
+            ) values (?, ?, ?, ?, ?)`;
+
+        for(let i = 0; i < sheets.length; i++)
+        {
+            const obj = sheets[i];
+
+            // Verificar existência de propriedades no JSON
+            if(!obj.title
+            || !obj.content)
+                continue;
+
+            const args = [
+                songId,
+                obj.title.trim(),
+                obj.content,
+                obj.insertDate ? obj.insertDate : 'current_timestamp',
+                obj.updateDate ? obj.updateDate : null,
+            ];
+
+            tx.executeSql(sql, args, (_, { insertId }) =>
+            {
+                sheets[i].newId = insertId;
+            });
+        }
+
+        return sheets;
+    }
+
+    /**
      * Insere uma nova entidade no banco
      * 
      * @param obj Entidade a ser inserida
      * @returns ID da entidade recém incerida
      */
-    static create(obj: Sheet): Promise<number>
+    static create(obj: Sheet): Promise<boolean>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            const sql = `insert into ${sheet.table} (
-                ${sheet.songId},
-                ${sheet.title},
-                ${sheet.content}
-            ) values (?, ?, ?)`;
+            const sql =
+                `insert into ${sheet.table} (
+                    ${sheet.songId},
+                    ${sheet.title},
+                    ${sheet.content}
+                ) values (?, ?, ?)`;
 
             const args = [
                 obj.songId,
-                obj.title.trim(),
-                obj.content
+                sheet.title.trim(),
+                sheet.content,
             ];
 
-            tx.executeSql(sql, args, (_, { rowsAffected, insertId }) =>
+            tx.executeSql(sql, args);
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        },
+        () => resolve(true)));
+    }
+
+    static export(songId: number): Promise<SQLResultSetRowList>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            const sql =
+                `select
+                    ${sheet.id} as id,
+                    ${sheet.songId} as songId,
+                    ${sheet.title} as title,
+                    ${sheet.content} as content,
+                    ${sheet.insertDate} as insertDate,
+                    ${sheet.updateDate} as updateDate
+                from
+                    ${sheet.table}
+                where
+                    ${sheet.songId} = ?`;
+
+            tx.executeSql(sql, [songId], (_, { rows }) =>
             {
-                if(rowsAffected > 0)
-                    resolve(insertId);
-                else
-                    reject("Error inserting obj: " + JSON.stringify(obj));
+                resolve(rows);
             });
         },
         err =>

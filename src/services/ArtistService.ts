@@ -14,6 +14,56 @@ import { song_artist } from '../models/entities/SongArtist';
 export default class ArtistService
 {
     /**
+     * Insere os artistas contidos no JSON principal
+     * (parâmetro: 'artists').
+     * 
+     * Atualiza o JSON, adicionando um 'newId' a
+     * cada objeto inserido.
+     * 
+     * @param json Objeto JSON contendo dados de importação
+     */
+    static import(json: any): Promise<void>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            // Validar JSON principal
+            if(!json.artists || !Array.isArray(json.artists))
+                reject();
+
+            const sql =
+                `insert into ${artist.table} (
+                    ${artist.name},
+                    ${artist.unaccentedName},
+                    ${artist.insertDate},
+                    ${artist.updateDate}
+                ) values (?, ?, ?, ?)`;
+
+            for(let i = 0; i < json.artists.length; i++)
+            {
+                const obj = json.artists[i];
+
+                // Validar propriedades do objeto
+                if(!obj.name)
+                    continue;
+
+                const args = [
+                    obj.name.trim(),
+                    remove(obj.name.trim()),
+                    obj.insertDate ? obj.insertDate : 'current_timestamp',
+                    obj.updateDate ? obj.insertDate : null,
+                ];
+
+                tx.executeSql(sql, args, (_, { insertId }) =>
+                {
+                    json.artists[i].newId = insertId;
+                });
+            }
+        },
+        err => reject(err),
+        () => resolve()));
+    }
+
+    /**
      * Insere uma nova entidade no banco
      * 
      * @param songId ID da música
@@ -68,7 +118,7 @@ export default class ArtistService
         });
     }
 
-    static findAll(): Promise<SQLResultSetRowList>
+    static export(): Promise<SQLResultSetRowList>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {

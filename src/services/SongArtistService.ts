@@ -4,10 +4,79 @@ import { SQLResultSetRowList, SQLTransaction } from 'expo-sqlite';
 import { db } from '../database/connection';
 
 // Models
-import { song_artist } from '../models/entities/SongArtist';
+import {  song_artist } from '../models/entities/SongArtist';
 
 export default class SongArtistService
 {
+    /**
+     * Insere as entidades assosiativas song_artist contidos
+     * no JSON principal (parâmetro: 'songsArtists').
+     * 
+     * Por se tratar de uma tabela associativa, busca os novos
+     * IDs ('newId') nos ítens das listas 'songs' e 'artists'.
+     * 
+     * Atualiza o JSON, adicionando um 'newId' a
+     * cada objeto inserido.
+     * 
+     * @param json Objeto JSON contendo dados de importação
+     */
+    static import(json: any): Promise<void>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            // Validar JSON principal
+            if(!json.songs || !Array.isArray(json.songs)
+            || !json.artists || !Array.isArray(json.artists))
+                reject();
+
+            const sql =
+                `insert into ${song_artist.table} (
+                    ${song_artist.songId},
+                    ${song_artist.artistId},
+                    ${song_artist.insertDate},
+                    ${song_artist.updateDate}
+                ) values (?, ?, ?, ?)`;
+
+            for(let i = 0; i < json.songsArtists.length; i++)
+            {
+                const obj = json.songsArtists[i];
+
+                // Validar propriedades do objeto
+                if(Number.isNaN(obj.songId) || obj.songId <= 0
+                || Number.isNaN(obj.artistId) || obj.artistId <= 0)
+                    continue;
+
+                // Busca objetos do relacionamento.
+                // Procura os com mesmo 'id' e pega o 'newId'
+                const songId = json.songs
+                    .find((song: any) => song.id === obj.songId)
+                    ?.newId;
+                
+                const artistId = json.artists
+                    .find((artist: any) => artist.id === obj.artistId)
+                    ?.newId;
+
+                // Valida IDs encontrados
+                if(!songId || !artistId)
+                    continue;
+
+                const args = [
+                    songId,
+                    artistId,
+                    obj.insertDate ? obj.insertDate : 'current_timestamp',
+                    obj.updateDate ? obj.insertDate : null,
+                ];
+
+                tx.executeSql(sql, args, (_, { insertId }) =>
+                {
+                    json.songsArtists[i].newId = insertId;
+                });
+            }
+        },
+        err => reject(err),
+        () => resolve()));
+    }
+
     /**
      * Insere uma nova entidade no banco
      * 
@@ -48,7 +117,7 @@ export default class SongArtistService
             tx.executeSql(sql, [songId, id]));
     }
 
-    static findAll(): Promise<SQLResultSetRowList>
+    static export(): Promise<SQLResultSetRowList>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
