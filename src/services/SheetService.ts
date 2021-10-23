@@ -61,7 +61,7 @@ export default class SheetService
      * @param obj Entidade a ser inserida
      * @returns ID da entidade recém incerida
      */
-    static create(obj: Sheet): Promise<boolean>
+    static create(obj: Sheet): Promise<number>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
@@ -74,18 +74,23 @@ export default class SheetService
 
             const args = [
                 obj.songId,
-                sheet.title.trim(),
-                sheet.content,
+                obj.title.trim(),
+                obj.content,
             ];
 
-            tx.executeSql(sql, args);
+            tx.executeSql(sql, args, (_, { rowsAffected, insertId }) =>
+            {
+                if(rowsAffected > 0)
+                    resolve(insertId);
+                else
+                    reject("Error inserting obj: " + JSON.stringify(obj));
+            });
         },
         err =>
         {
             console.error(err);
             reject(err);
-        },
-        () => resolve(true)));
+        }));
     }
 
     static export(songId: number): Promise<SQLResultSetRowList>

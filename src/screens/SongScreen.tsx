@@ -127,16 +127,14 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                 SheetService.updateTitle(renamedSheet?.id, title).then(res =>
                 {
                     // Se um registro foi atualizado:
-                    if(res)
+                    if(res > 0)
                     {
                         // Atualiza ítem alterado na lista de folhas
                         setSheets(sheets.map(sheet =>
-                        {
-                            if(sheet.id === renamedSheet.id)
-                                return { ...sheet, title };
-
-                            return sheet;
-                        }));
+                            sheet.id === renamedSheet.id
+                                ? { ...sheet, title }
+                                : sheet
+                        ));
 
                         if(currentSheet)
                             setCurrentSheet({ ...currentSheet, title });
@@ -162,7 +160,17 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
         const { id, content } = currentSheetRef.current;
 
         if(id)
-            SheetService.updateContent(id, content)
+            SheetService.updateContent(id, content).then(() =>
+            {
+                // Atualiza conteúdo (necessário caso o usuário
+                // tenha clicado em outra aba. Sem isso, o conteúdo
+                // da aba atualizada se mantia ao voltar nela)
+                setSheets(sheets.map(s =>
+                    s.id === id
+                        ? { ...s, content }
+                        : s
+                ));
+            })
             .catch(err => alert(err));
     }
 
@@ -443,7 +451,10 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                 }]}
 			/>
 
-            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+            <ScrollView
+                contentContainerStyle={{ flexGrow: 1 }}
+                keyboardShouldPersistTaps='handled'
+            >
                 <View style={styles.container}>
                     <View style={styles.header}>
                         <View style={styles.headerContent}>
@@ -502,6 +513,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                         <ScrollView
                             style={styles.tabs}
                             horizontal
+                            keyboardShouldPersistTaps='handled'
                         >
                             {sheets.map(sheet =>
                                 <View
@@ -548,6 +560,8 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                     ]}
                                     onPress={() =>
                                     {
+                                        saveSheetContent();
+
                                         if(editable)
                                             createSheet();
                                     }}

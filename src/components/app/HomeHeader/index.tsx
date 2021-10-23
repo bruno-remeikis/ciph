@@ -253,10 +253,6 @@ const HomeHeader: React.FC = () =>
 					{verifCode}
 				</Text>
 
-				{/*<Text style={{ fontSize: 16, textAlign: 'center' }}>
-					para continuar
-				</Text>*/}
-
 				{/* Input invisível */}
 				<TextInput
 					ref={verifCodeRef}
@@ -277,25 +273,12 @@ const HomeHeader: React.FC = () =>
 							style={{ alignItems: 'center', justifyContent: 'center' }}
 							onPress={() => verifCodeRef.current?.focus()}
 						>
-							<Text
-								//key={i}
-								style={[
-									styles.verifCodeChar,
-									/*verifCodeValue.length === i ? {
-										borderColor: `rgba(${colors.primaryRGB}, 1)`,
-									} : null*/
-								]}
-							>
+							<Text style={styles.verifCodeChar}>
 								{verifCodeValue.charAt(i)}
 							</Text>
 
 							{verifCodeValue.length === i
-							? /*<View style={{
-								position: 'absolute',
-								width: 2,
-								height: 20,
-								backgroundColor: colors.primary,
-							}} />*/ <Pointer /> : null}
+							? <Pointer /> : null}
 						</Pressable>
 					)}
 				</View>
@@ -342,7 +325,6 @@ const styles = StyleSheet.create({
 		marginTop: 12,
 	},
 	verifCodeChar: {
-		//width: 32,
 		width: 42,
 		height: 42,
 		borderWidth: 1,
