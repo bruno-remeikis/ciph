@@ -57,12 +57,10 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
     const [isRenameSheetVisible, setIsRenameSheetVisible] = useState<boolean>(false);
     const [isDeleteSheetVisible, setIsDeleteSheetVisible] = useState<boolean>(false);
 
-    // ID da folha (sheet) a ser renomeada
-    const [renamedSheet, setRenamedSheet] = useState<Sheet | null>(null);
     // Valor do novo título da folha (sheet) a ser renomeada
     const [newSheetTitle, setNewSheetTitle] = useState('');
 
-    const [sheets, setSheets] = useState<Sheet[]>([]);
+    const [sheets, _setSheets] = useState<Sheet[]>([]);
     // Folha (sheet) aberta no momento
     const [currentSheet, _setCurrentSheet] = useState<Sheet | null>();
     const [editable, setEditable] = useState(false);
@@ -71,6 +69,13 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
 
     // ---------- REFS ----------
+
+    const sheetsRef = useRef(sheets);
+    const setSheets = (newValue: Sheet[]) =>
+    {
+        sheetsRef.current = newValue;
+        _setSheets(newValue);
+    }
 
     const currentSheetRef = useRef(currentSheet);
     const setCurrentSheet = (newValue: Sheet | null) =>
@@ -106,10 +111,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
             setSheets([...sheets, newSheet]);
             setCurrentSheet(newSheet);
 
-            // Atualizar nome da folha:
-            setRenamedSheet(newSheet);
-            setNewSheetTitle(newSheet.title);
-            setIsRenameSheetVisible(true);
+            showIsRenameSheetVisible(newSheet.title);
         })
         .catch(err => alert(err));
     }
@@ -120,18 +122,18 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
         const title = newSheetTitle.trim();
 
-        if(renamedSheet && renamedSheet.id)
+        if(currentSheet && currentSheet.id)
         {
             if(title.length > 0)
             {
-                SheetService.updateTitle(renamedSheet?.id, title).then(res =>
+                SheetService.updateTitle(currentSheet.id, title).then(res =>
                 {
                     // Se um registro foi atualizado:
                     if(res > 0)
                     {
                         // Atualiza ítem alterado na lista de folhas
                         setSheets(sheets.map(sheet =>
-                            sheet.id === renamedSheet.id
+                            sheet.id === currentSheet.id
                                 ? { ...sheet, title }
                                 : sheet
                         ));
@@ -165,7 +167,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                 // Atualiza conteúdo (necessário caso o usuário
                 // tenha clicado em outra aba. Sem isso, o conteúdo
                 // da aba atualizada se mantia ao voltar nela)
-                setSheets(sheets.map(s =>
+                setSheets(sheetsRef.current.map(s =>
                     s.id === id
                         ? { ...s, content }
                         : s
@@ -191,10 +193,12 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                     if(sheets[i].id === currentSheet.id)
                     {
                         updSheets.splice(i, 1);
+
+                        if(sheets.length > 0)
+                            newCurrentSheet = sheets[i > 0 ? i - 1 : i];
+
                         break;
                     }
-
-                    newCurrentSheet = sheets[i];
                 };
 
                 setSheets(updSheets);
@@ -327,6 +331,15 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
         .catch(err => alert(err));
     }
 
+    function showIsRenameSheetVisible(title?: string)
+    {
+        if(title)
+            setNewSheetTitle(title);
+        else if(currentSheet)
+            setNewSheetTitle(currentSheet.title);
+
+        setIsRenameSheetVisible(true);
+    }
 
 
     // ---------- EFFECTS ----------
@@ -360,14 +373,15 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
     },
     []);
 
+    // Resolvido com onBlur do TextInput:
     /**
      * Salva pagina atual ao clicar em voltar
      */
-    useEffect(() =>
+    /*useEffect(() =>
     {
-        navigation.addListener('beforeRemove', saveSheetContent);
+        //navigation.addListener('beforeRemove', saveSheetContent);
     },
-    [navigation]);
+    [navigation]);*/
 
     /**
      * Atualiza dados da música
@@ -403,7 +417,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                         name: 'edit-2'
                     },
                     text: 'Renomear',
-                    onClick: () => setIsRenameSheetVisible(true)
+                    onClick: showIsRenameSheetVisible
                 },
                 {
                     icon: {
@@ -531,15 +545,14 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                         ]}
                                         onPress={() =>
                                         {
+                                            saveSheetContent();
+
                                             if(currentSheet?.id !== sheet.id)
-                                            {
-                                                saveSheetContent();
                                                 setCurrentSheet(sheet);
-                                            }
                                             else if(editable)
                                             {
-                                                setRenamedSheet(sheet);
-                                                setNewSheetTitle(sheet.title);
+                                                //setRenamedSheet(sheet);
+                                                //setNewSheetTitle(sheet.title);
                                                 setIsSheetMenuVisible(true);
                                             }
                                         }}
@@ -560,8 +573,6 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                     ]}
                                     onPress={() =>
                                     {
-                                        saveSheetContent();
-
                                         if(editable)
                                             createSheet();
                                     }}
@@ -593,6 +604,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                         setChanged(true);
                                     }
                                 }}
+                                onBlur={() => saveSheetContent()}
                                 editable={editable}
                             />
                             // Caso não hajam paginas ainda:
