@@ -3,7 +3,7 @@ import { StyleSheet, Text, View, ScrollView, Pressable, FlatList } from 'react-n
 
 // Icons
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import SearchItem from '../components/SearchItem';
+import FeatherIcon from 'react-native-vector-icons/Feather';
 
 // Models
 import { Song } from '../models/entities/Song';
@@ -19,6 +19,7 @@ import { useUpdated } from '../contexts/Updated';
 
 // Components
 import Fade from '../components/animations/Fade';
+import SearchItem from '../components/SearchItem';
 
 const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 {
@@ -125,6 +126,15 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 				// mesmo que o teclado esteja aberto:
 				keyboardShouldPersistTaps='handled'
             />
+
+            <View style={styles.btns}>
+                <Pressable
+					style={styles.newBtn}
+					onPress={() => navigation.navigate('NewSong', { artist: { id, name: nameInfo } })}
+				>
+					<FeatherIcon name='plus' size={30} color='#ffff' />
+				</Pressable>
+            </View>
         </View>
     );
 }
@@ -157,4 +167,22 @@ const styles = StyleSheet.create({
         paddingHorizontal: sizes.screenPadding,
         paddingBottom: sizes.screenPadding - 8,
     },
+
+    // BUTTONS
+	btns: {
+		position: 'absolute',
+		bottom: 18,
+		right: 18,
+		alignItems: 'center',
+	},
+	newBtn: {
+		justifyContent: 'space-around',
+		alignItems: 'center',
+
+		backgroundColor: colors.primary,
+
+		width: 60,
+		height: 60,
+		borderRadius: 999,
+	},
 });
