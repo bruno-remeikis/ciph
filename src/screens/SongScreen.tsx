@@ -486,7 +486,10 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                     {artists.map((artist, i) =>
                                         <Pressable
                                             key={artist.id}
-                                            onPress={() => navigation.navigate('Artist', { artist })}
+                                            onPress={() => {
+                                                navigation.popToTop(); // Previne que estado desta tela seja resgatado ao tentar acessar outra música
+                                                navigation.navigate('Artist', { artist });
+                                            }}
                                         >
                                             <Text style={{ fontSize: 16 }}>
                                                 {`${artist.name}${i !== artists.length - 1 ? ', ' : ''}`}

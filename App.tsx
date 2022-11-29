@@ -99,7 +99,7 @@ const AppContent: React.FC = () =>
 					})}
 				/>
 
-				{/* SONG */}
+				{/* ARTIST */}
 				<Stack.Screen
 					name="Artist"
 					component={ArtistScreen}

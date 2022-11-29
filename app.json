@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "ciph",
+    "name": "Ciph",
     "slug": "ciph",
-    "version": "1.0.0",
+    "version": "1.4.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
