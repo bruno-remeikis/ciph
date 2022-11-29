@@ -28,6 +28,8 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
     // ---------- CONSTS ----------
 
+    // From: Song screen > edit song
+
     const id: number | null = route.params?.song?.id
         ? route.params.song.id
         : null;
@@ -38,13 +40,19 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
         ? route.params.song.name
         : null;
 
+    // From: Artist screen > plus button
+
+    const artist: Artist | null = route.params?.artist
+        ? route.params.artist
+        : null;
+
 
 
     // ---------- TYPES ----------
 
     type ArtistProps = {
         obj: Artist;
-        initial?: boolean; // <- Foi carregado inicialmente? (apenas para updateScreen)
+        initial?: boolean; // <- Foi carregado inicialmente? (apenas para updateScreen e botão '+' da ArtistScreen)
         existing?: boolean; // <- Exite outro com mesmo nome no banco?
         equals?: string; // <- Existe outro com mesmo nome na lista? Se sim, qual?
     }
@@ -327,6 +335,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 
     /**
      * Carrega os artistas caso uma música tenha sido passada para a rota
+     * (Vindo de: SongScreen > Editar (música))
      */
     useEffect(() =>
     {
@@ -344,6 +353,20 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
             .catch(err => alert(err));
     },
     [id]);
+
+    /**
+     * Adiciona artista à lista de artistas caso o mesmo tenha sido passado para a rota
+     * (Vindo de: ArtistScreen > botão '+')
+     */
+    useEffect(() =>
+    {
+        if(artist)
+            setArtists([{
+                obj: artist,
+                initial: true,
+            }]);
+    },
+    [artist]);
 
 
 
