@@ -6,7 +6,7 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 
 // Models
-import { Song } from '../models/entities/Song';
+import { song, Song } from '../models/entities/Song';
 
 // Services
 import SongService from '../services/SongService';
@@ -46,9 +46,9 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 
 
 
-    // ---------- EFFECTS ----------
+    // ---------- FUNCTIONS ----------
 
-    useEffect(() =>
+    function loadSongs()
     {
         SongService.findByArtistId(id, true)
             .then((res: any) => setSongs(
@@ -60,8 +60,13 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
                 }))
             ))
             .catch(err => alert(err));
-    },
-    []);
+    }
+
+
+
+    // ---------- EFFECTS ----------
+
+    useEffect(() => loadSongs(), []);
 
     /**
      * Atualiza dados do artista
@@ -76,6 +81,8 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
             if(!updated.song)
                 setUpdated(false);
         }
+        else
+            loadSongs();
     },
     [updated]);
 
