@@ -168,30 +168,39 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 					</Pressable>
 				</View>
 
-				<View style={styles.filter}>
-					{filters.map((item, i) =>
-						<Pressable
-							key={i}
-							style={[
-								styles.filterItem,
-								filter === item.value
-									? styles.selectedFilterItem
-									: null
-							]}
-							onPress={() =>
-							{
-								handleSearch(search, item.value);
-								setFilter(item.value);
-							}}
-						>
-							<Text
-								style={filter === item.value
-									? styles.selectedFilterItemText
-									: styles.filterItemText
-								}
-							>{ item.label }</Text>
-						</Pressable>
-					)}
+				<View style={styles.filterBar}>
+					<View style={styles.filter}>
+						{filters.map((item, i) =>
+							<Pressable
+								key={i}
+								style={[
+									styles.filterItem,
+									filter === item.value
+										? styles.selectedFilterItem
+										: null
+								]}
+								onPress={() =>
+								{
+									handleSearch(search, item.value);
+									setFilter(item.value);
+								}}
+							>
+								<Text
+									style={filter === item.value
+										? styles.selectedFilterItemText
+										: styles.filterItemText
+									}
+								>{ item.label }</Text>
+							</Pressable>
+						)}
+					</View>
+
+					{/* NUMBER OF RESULTS */}
+					{results.length > 0 ?
+						<View style={styles.found}>
+							<Text>{results.length}</Text>
+						</View>
+					: null}
 				</View>
 			</Fade>
 
@@ -315,10 +324,16 @@ const styles = StyleSheet.create({
 	},
 
 	// FILTER
+	filterBar: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		marginTop: 8,
+	},
 	filter: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		marginTop: 8,
+		//marginTop: 8,
 	},
 	filterItem: {
 		paddingHorizontal: 8,
@@ -337,6 +352,9 @@ const styles = StyleSheet.create({
 	},
 	selectedFilterItemText: {
 		color: 'white',
+	},
+	found: {
+		marginRight: 10,
 	},
 
 	// RESULTS
