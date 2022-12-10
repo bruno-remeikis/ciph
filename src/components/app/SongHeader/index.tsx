@@ -17,15 +17,16 @@ import styles from './styles';
 import { useUpdated } from '../../../contexts/Updated';
 
 // Components
-import Modal from '../../../components/Modal';
+import GenericAppHeader from '../GenericAppHeader';
+import Modal from '../../modals/Modal';
+import DialogModal from '../../modals/DialogModal';
 
 // Services
 import SongService from '../../../services/SongService';
 
 // Utils
 import { colors, dateFormat } from '../../../utils/consts';
-import GenericAppHeader from '../GenericAppHeader';
-import DialogModal from '../../DialogModal';
+
 
 interface SongHeaderProps {
 	route: RouteProp<RootStackParamList, "Song">;

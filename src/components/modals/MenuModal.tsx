@@ -3,7 +3,7 @@ import { StyleSheet, Text, Pressable } from 'react-native';
 
 // Icons
 import { Icon } from 'react-native-vector-icons/Icon';
-import { colors } from '../utils/consts';
+import { colors } from '../../utils/consts';
 
 // Components
 import Modal, { ModalProps } from './Modal';

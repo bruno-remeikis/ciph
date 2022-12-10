@@ -3,10 +3,10 @@ import { StyleSheet, TextInput, View } from 'react-native';
 
 // Components
 import Modal, { ModalProps } from './Modal';
-import Button from './Button';
+import Button from '../Button';
 
 // Utils
-import { colors } from '../utils/consts';
+import { colors } from '../../utils/consts';
 
 
 

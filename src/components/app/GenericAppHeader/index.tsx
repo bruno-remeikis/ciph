@@ -5,7 +5,7 @@ import { Pressable, StyleSheet } from 'react-native';
 import EntypoIcon from 'react-native-vector-icons/Entypo';
 
 // Components
-import MenuModal, { MenuItem } from '../../MenuModal';
+import MenuModal, { MenuItem } from '../../modals/MenuModal';
 
 interface GenericAppHeaderProps {
     menuItems: MenuItem[];

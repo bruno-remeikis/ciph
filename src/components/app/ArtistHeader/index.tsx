@@ -13,8 +13,8 @@ import styles from './styles';
 
 // Components
 import GenericAppHeader from '../GenericAppHeader';
-import Modal from '../../Modal';
-import InputModal from '../../InputModal';
+import Modal from '../../modals/Modal';
+import InputModal from '../../modals/InputModal';
 
 // Contexts
 import { useUpdated } from '../../../contexts/Updated';

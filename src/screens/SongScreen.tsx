@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View, Pressable, TextInput, ScrollView, Switch, AppState } from 'react-native';
+import { StyleSheet, Text, View, Pressable, TextInput, ScrollView, Switch, AppState, Vibration } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 
 // Icons
@@ -10,21 +10,25 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 // Models
 import { Artist } from '../models/entities/Artist';
 import { Sheet } from '../models/entities/Sheet';
+import { Tag } from '../models/entities/Tag';
 
 // Services
 import ArtistService from '../services/ArtistService';
 import SheetService from '../services/SheetService';
+import TagService from '../services/TagService';
 
 // Utils
 import { colors, opacities, sizes } from '../utils/consts';
 
 // Components
-import DialogModal from '../components/DialogModal';
-import MenuModal from '../components/MenuModal';
-import InputModal from '../components/InputModal';
+import DialogModal from '../components/modals/DialogModal';
+import MenuModal from '../components/modals/MenuModal';
+import InputModal from '../components/modals/InputModal';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
+import TagSongModal from '../components/modals/TagSongModal';
+import SongTagService from '../services/SongTagService';
 
 
 
@@ -52,10 +56,17 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
     const [nameInfo, setNameInfo] = useState(name);
     const [artists, setArtists] = useState<Artist[]>([]);
+    const [tags, setTags] = useState<Tag[]>([]);
 
+    const [isTagSongModalVisible, setTagSongModalVisible] = useState<boolean>(false);
+    const [isTagMenuModalVisible, setTagMenuModalVisible] = useState<boolean>(false);
     const [isSheetMenuVisible, setIsSheetMenuVisible] = useState<boolean>(false);
     const [isRenameSheetVisible, setIsRenameSheetVisible] = useState<boolean>(false);
     const [isDeleteSheetVisible, setIsDeleteSheetVisible] = useState<boolean>(false);
+
+    // Tag
+    const [returnedTags, setReturnedTags] = useState<Tag[]>([]);
+    const [currentTag, setCurrentTag] = useState<Tag | null>(null);
 
     // Valor do novo título da folha (sheet) a ser renomeada
     const [newSheetTitle, setNewSheetTitle] = useState('');
@@ -94,6 +105,23 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
 
     // ---------- FUNCTIONS ----------
+
+    function handleRemoveTag()
+    {
+        if(!currentTag || !currentTag.id)
+            return;
+
+        SongTagService.delete(id, currentTag.id)
+            .then((res: any) =>
+            {
+                if(res > 0)
+                {
+                    setTags(tags.filter(tag => tag.id !== currentTag.id));
+                    setUpdated(true);
+                }
+            })
+            .catch(err => alert(err));
+    }
 
     function createSheet()
     {
@@ -211,11 +239,17 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 
     function loadArtists()
     {
-        ArtistService.findBySongId(id).then((res: any) =>
-        {
-            setArtists(res._array);
-        })
-        .catch(err => alert(err));
+        ArtistService.findBySongId(id)
+            .then((res: any) => setArtists(res._array))
+            .catch(err => alert(err));
+    }
+
+    function loadTags()
+    {
+        TagService.findBySongId(id)
+            .then((res: any) => setTags(res._array))
+            .catch(err => alert(err))
+            //.finally(() => { console.log('\n\n\nCURRENT TAGS'); console.log(tags) });
     }
 
     function switchEditable(v: boolean)
@@ -263,7 +297,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                     ));
     
                     // Se entre os parêntesis existir um número:
-                    return number !== NaN
+                    return !Number.isNaN(number)
                         ? {
                             title: title.substring(0, openParenthesis).trim(),
                             number
@@ -349,6 +383,9 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
         // Busca artistas
         loadArtists();
 
+        // Busca tags (repertórios)
+        loadTags();
+
         // Busca páginas ao carregar tela
         SheetService.findBySongId(id).then((res: any) =>
         {
@@ -400,12 +437,49 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
     },
     [updated]);
 
+    // Adiciona tag recém inserida à lista
+    useEffect(() =>
+    {
+        if(!isTagSongModalVisible && returnedTags.length > 0)
+        {
+            setTags([...tags, ...returnedTags ]);
+            setReturnedTags([]);
+        }
+    },
+    [isTagSongModalVisible]);
+
 
 
     // ---------- RETURN ----------
 
     return (
         <>
+            {/* ADD TAG TO CURRENT SONG */}
+            <TagSongModal
+                visible={isTagSongModalVisible}
+                setVisible={setTagSongModalVisible}
+                songId={route.params.song.id}
+                //hiddenTags={tags}
+                setReturnObject={setReturnedTags}
+            />
+
+            {/* TAG MENÚ */}
+            <MenuModal
+                visible={isTagMenuModalVisible}
+                setVisible={setTagMenuModalVisible}
+                items={
+                [{
+                    icon: {
+                        component: FeatherIcon,
+                        name: 'x'
+                    },
+                    text: 'Remover repertório',
+                    color: colors.red,
+                    onClick: handleRemoveTag
+                }]}
+                onHide={() => setCurrentTag(null)}
+            />
+
             {/* SHEET MENÚ */}
             <MenuModal
                 visible={isSheetMenuVisible}
@@ -470,6 +544,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                 keyboardShouldPersistTaps='handled'
             >
                 <View style={styles.container}>
+                    {/* HEADER */}
                     <View style={styles.header}>
                         <View style={styles.headerContent}>
                             <IonIcon
@@ -523,6 +598,41 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                 />
                             </Pressable>
                         </View>
+                    </View>
+
+                    {/* TAGS */}
+                    <View>
+                        <ScrollView
+                            style={styles.tags}
+                            horizontal
+                            keyboardShouldPersistTaps='handled'
+                        >
+                            {tags.map(tag => (
+                                <Pressable
+                                    key={tag.id}
+                                    style={[styles.tag, { backgroundColor: /*'red'*/ colors.primary }]}
+                                    onPress={() => navigation.navigate('Tag', { tag })}
+                                    onLongPress={() =>
+                                    {
+                                        Vibration.vibrate(100);
+                                        setCurrentTag(tag);
+                                        setTagMenuModalVisible(true);
+                                    }}
+                                >
+                                    <Text style={{ color: /*'rgba(255, 255, 255, 0.9)'*/ 'white' }}>{tag.name}</Text>
+                                </Pressable>
+                            ))}
+
+                            <Pressable
+                                style={styles.addTag}
+                                onPress={() => setTagSongModalVisible(true)}
+                            >
+                                <FeatherIcon name='plus' size={20} color='#555555' />
+                                {tags.length === 0
+                                    ? <Text style={styles.addTagText}>Adicionar a repertórios</Text>
+                                    : null}
+                            </Pressable>
+                        </ScrollView>
                     </View>
 
                     {/* Abas */}
@@ -660,6 +770,28 @@ const styles = StyleSheet.create({
         paddingHorizontal: 4,
         paddingVertical: 6,
         borderRadius: 8,
+    },
+
+    // TAGS
+    tags: {
+        /*flexDirection: 'row',
+        alignItems: 'center',*/
+        marginTop: 6,
+    },
+    tag: {
+        paddingHorizontal: 6,
+        paddingVertical: 4,
+        marginRight: 4,
+        borderRadius: 6,
+    },
+    addTag: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        //alignSelf: 'center',
+        padding: 2,
+    },
+    addTagText: {
+        marginLeft: 4,
     },
 
     // SHEET

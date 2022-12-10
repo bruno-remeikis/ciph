@@ -30,6 +30,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 		{ label: 'Tudo',    value: 'all' },
 		{ label: 'Músicas',  value: 'songs' },
 		{ label: 'Artistas', value: 'artists' },
+		{ label: 'Repertórios', value: 'tags' },
 	];
 
 	// ---------- CONTEXTS ----------
@@ -130,9 +131,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 
 				{!loading && results.length === 0 ?
 					<Text>{
-						search.trim().length === 0
-							? `Você ainda não possui ${filter === 'artists' ? 'artistas' : 'músicas'}`
-							: 'Nenhum resultado'
+						search.trim().length === 0 ? 'Nenhum resultado'	: `Você ainda não possui ${(filter === 'artists' ? 'artistas' : (filter === 'tags' ? 'repertórios' : 'músicas'))}`
 					}</Text>
 				: null}
 			</View>
@@ -276,8 +275,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: colors.background,
-		alignItems: 'center',
-		justifyContent: 'center',
 	},
 
 	// INFO
@@ -333,7 +330,6 @@ const styles = StyleSheet.create({
 	filter: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		//marginTop: 8,
 	},
 	filterItem: {
 		paddingHorizontal: 8,
@@ -360,7 +356,7 @@ const styles = StyleSheet.create({
 	// RESULTS
 	results: {
 		paddingHorizontal: sizes.screenPadding,
-		paddingBottom: sizes.screenPadding - 8,
+		paddingBottom: sizes.screenPadding,
 	},
 
 	// BUTTONS

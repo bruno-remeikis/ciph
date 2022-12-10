@@ -14,8 +14,8 @@ import FeatherIcon from 'react-native-vector-icons/Feather';
 
 // Components
 import GenericAppHeader from '../GenericAppHeader';
-import Modal from '../../Modal';
-import DialogModal from '../../DialogModal';
+import Modal from '../../modals/Modal';
+import DialogModal from '../../modals/DialogModal';
 import Button from '../../Button';
 
 // Contexts
@@ -138,7 +138,7 @@ const HomeHeader: React.FC = () =>
 		}
 		catch(err)
 		{
-			console.log(err);
+			console.error(err);
 			alert(err);
 		}
 	}

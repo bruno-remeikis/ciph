@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     // SONGS
     songs: {
         paddingHorizontal: sizes.screenPadding,
-        paddingBottom: sizes.screenPadding - 8,
+        paddingBottom: sizes.screenPadding,
     },
 
     // BUTTONS

@@ -1,11 +1,11 @@
 import React, { Dispatch, SetStateAction, useState } from 'react';
-import { StyleSheet, View, Modal, StyleProp, ViewStyle, Pressable, ViewProps } from 'react-native';
+import { StyleSheet, View, Modal, Pressable, ViewProps } from 'react-native';
 
 // Icons
 import FeatherIcon from 'react-native-vector-icons/Feather';
 
 // Utils
-import { colors } from '../utils/consts';
+import { colors } from '../../utils/consts';
 
 
 

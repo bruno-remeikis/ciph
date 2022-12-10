@@ -95,6 +95,7 @@ export default class Database
             `create table if not exists ${tag.table} (
                 ${tag.id} integer primary key autoincrement,
                 ${tag.name} text not null,
+                ${tag.unaccentedName} text not null,
                 ${tag.color} text,
                 ${tag.insertDate} datetime not null
                     default current_timestamp,
@@ -163,8 +164,10 @@ export default class Database
         const sqls = [
             `DROP TABLE IF EXISTS ${sheet.table};`,
             `DROP TABLE IF EXISTS ${song_artist.table};`,
+            `DROP TABLE IF EXISTS ${song_tag.table};`,
             `DROP TABLE IF EXISTS ${artist.table};`,
             `DROP TABLE IF EXISTS ${song.table};`,
+            `DROP TABLE IF EXISTS ${tag.table};`
         ];
 
         updTriggers.forEach(tg =>

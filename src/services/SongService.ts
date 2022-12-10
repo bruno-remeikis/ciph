@@ -16,6 +16,7 @@ import { song_artist } from '../models/entities/SongArtist';
 
 // Utils
 import { dbDatetimeFormat } from '../utils/functions';
+import { song_tag } from '../models/entities/SongTag';
 
 export default class SongService
 {
@@ -309,6 +310,58 @@ export default class SongService
                 )`;
 
             tx.executeSql(sql, [artistId], (_, { rows }) =>
+            {
+                resolve(rows);
+            });
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        }));
+    }
+
+    /**
+     * @param tagId ID do artista
+     */
+    static findByTagId(tagId: number): Promise<SQLResultSetRowList>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            const sql = 
+                `select
+                    id,
+                    name,
+                    insertDate,
+                    updateDate,
+                    (
+                        select
+                            group_concat(${artist.name}, ', ')
+                        from
+                            ${song_artist.table}
+                        left join
+                            ${artist.table} on
+                                ${song_artist.artistId} = ${artist.id}
+                        where
+                            ${song_artist.songId} = id and
+                            ${song_artist.songId} = ${song_artist.songId}
+                    ) as artists
+                from (
+                    select
+                        ${song.id} as id,
+                        ${song.name} as name,
+                        ${dbDatetimeFormat(song.insertDate)} as insertDate,
+                        ${dbDatetimeFormat(song.updateDate)} as updateDate
+                    from
+                        ${song.table}
+                    inner join
+                        ${song_tag.table} on
+                            ${song.id} = ${song_tag.songId}
+                    where
+                        ${song_tag.tagId} = ?
+                )`;
+
+            tx.executeSql(sql, [tagId], (_, { rows }) =>
             {
                 resolve(rows);
             });

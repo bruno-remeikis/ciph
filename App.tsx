@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { BackHandler } from 'react-native';
 
 import { useKeepAwake } from 'expo-keep-awake';
 
@@ -15,10 +16,6 @@ import { UpdatedProvider } from './src/contexts/Updated';
 // Database
 import Database from './src/database/Database';
 
-// Models
-import { Song } from './src/models/entities/Song';
-import { Artist } from './src/models/entities/Artist';
-
 // Utils
 import { colors } from './src/utils/consts';
 
@@ -27,11 +24,16 @@ import HomeScreen from './src/screens/HomeScreen';
 import NewSongScreen from './src/screens/NewSongScreen';
 import SongScreen from './src/screens/SongScreen';
 import ArtistScreen from './src/screens/ArtistScreen';
+import TagScreen from './src/screens/TagScreen';
 
 // Headers
 import HomeHeader from './src/components/app/HomeHeader';
 import SongHeader from './src/components/app/SongHeader';
 import ArtistHeader from './src/components/app/ArtistHeader';
+import { SelectionHeaderLeft, SelectionHeaderRight } from './src/components/app/SelectionHeader';
+
+// Contexts
+import { SelectedItemsProvider, useSelectedItems } from './src/contexts/SelectedItems';
 
 
 
@@ -43,12 +45,36 @@ const AppContent: React.FC = () =>
 {
 	// Impedir que tela descanse
 	useKeepAwake();
+
+
+
+	// ---------- CONTEXTS ----------
+
+	const { selectedItems, setSelectedItems } = useSelectedItems();
 	
 
 
 	// ---------- EFFECTS ----------
 
-	useEffect(() => { Database.init() }, []);
+	useEffect(() =>
+	{
+		Database.init();
+
+		// Sai do modo de seleção ao clicar em voltar (caso esteja no modo de seleção)
+		const onBackPress = () =>
+		{
+			if(selectedItems != null)
+			{
+				setSelectedItems(null);
+				return true;
+			}
+			
+			return false;
+		};
+		const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+		return () => subscription.remove();
+	},
+	[]);
 
 
 
@@ -71,10 +97,14 @@ const AppContent: React.FC = () =>
 				<Stack.Screen
 					name="Home"
 					component={HomeScreen}
-					options={() => ({
+					options={() => selectedItems == null ? {
 						title: 'Ciphersonal',
 						headerRight: () => <HomeHeader />
-					})}
+					} : {
+						title: '',
+						headerLeft: () => <SelectionHeaderLeft />,
+						headerRight: () => <SelectionHeaderRight />
+					}}
 					initialParams={{ update: true }}
 				/>
 
@@ -112,6 +142,20 @@ const AppContent: React.FC = () =>
 							/>
 					})}
 				/>
+
+				{/* TAG */}
+				<Stack.Screen
+					name="Tag"
+					component={TagScreen}
+					options={({ route, navigation }) => ({
+						title: route.params.tag.name,
+						/*headerRight: () =>
+							<TagHeader
+								route={route}
+								navigation={navigation}
+							/>*/
+					})}
+				/>
 			</Stack.Navigator>
 		</NavigationContainer>
   	);
@@ -123,7 +167,9 @@ const AppContent: React.FC = () =>
 
 const App: React.FC = () =>
 	<UpdatedProvider>
-		<AppContent />
+		<SelectedItemsProvider>
+			<AppContent />
+		</SelectedItemsProvider>
 	</UpdatedProvider>
 
 export default App;

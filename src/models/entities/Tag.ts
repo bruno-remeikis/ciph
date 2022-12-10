@@ -7,7 +7,9 @@ export type Tag =
 {
     id?: number;
     name: string;
-    color?: string; // hexadecimal
+    color?: string | null; // hexadecimal
+
+    amount?: number;
 
     insertDate?: string;
     updateDate?: string | null;
@@ -22,6 +24,7 @@ export const tag: Table =
     
     id:    `${alias}_id_pk`,
     name:  `${alias}_name`,
+    unaccentedName: `${alias}_unaccented_name`,
     color: `${alias}_color`,
 
     insertDate: alias + cols.insert,
