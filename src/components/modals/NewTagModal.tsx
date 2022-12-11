@@ -64,7 +64,7 @@ const NewTagModal: React.FC<NewTagModalProps> = ({ setReturnObject, ...props }) 
             <TextInput
                 style={styles.input}
                 value={tagName}
-                placeholder="Nome do repertório"
+                placeholder="Nome do Repertório"
                 onChangeText={text => setTagName(text)}
                 selectTextOnFocus
             />

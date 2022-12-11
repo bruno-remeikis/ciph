@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { BackHandler } from 'react-native';
 
 import { useKeepAwake } from 'expo-keep-awake';
@@ -30,10 +30,11 @@ import TagScreen from './src/screens/TagScreen';
 import HomeHeader from './src/components/app/HomeHeader';
 import SongHeader from './src/components/app/SongHeader';
 import ArtistHeader from './src/components/app/ArtistHeader';
+import TagHeader from './src/components/app/TagHeader';
 import { SelectionHeaderLeft, SelectionHeaderRight } from './src/components/app/SelectionHeader';
 
 // Contexts
-import { SelectedItemsProvider, useSelectedItems } from './src/contexts/SelectedItems';
+import { selectedItems, SelectedItemsProvider, useSelectedItems } from './src/contexts/SelectedItems';
 
 
 
@@ -51,6 +52,12 @@ const AppContent: React.FC = () =>
 	// ---------- CONTEXTS ----------
 
 	const { selectedItems, setSelectedItems } = useSelectedItems();
+
+
+
+	// ---------- REFS ----------
+
+	const selectedItemsRef = useRef(selectedItems);
 	
 
 
@@ -58,23 +65,31 @@ const AppContent: React.FC = () =>
 
 	useEffect(() =>
 	{
+		// Inicia banco de dados
 		Database.init();
 
-		// Sai do modo de seleção ao clicar em voltar (caso esteja no modo de seleção)
-		const onBackPress = () =>
+		// Caso existam itens selecionados:
+		// - Previne ação do botão 'voltar' do celular
+		// - Desseleciona os itens
+		const backHandler = BackHandler.addEventListener('hardwareBackPress', () =>
 		{
-			if(selectedItems != null)
+			if(selectedItemsRef.current != null)
 			{
 				setSelectedItems(null);
 				return true;
 			}
 			
 			return false;
-		};
-		const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-		return () => subscription.remove();
+		});
+     	return () => backHandler.remove();
 	},
 	[]);
+
+	useEffect(() =>
+	{
+		selectedItemsRef.current = selectedItems;
+	},
+	[selectedItems]);
 
 
 
@@ -149,11 +164,11 @@ const AppContent: React.FC = () =>
 					component={TagScreen}
 					options={({ route, navigation }) => ({
 						title: route.params.tag.name,
-						/*headerRight: () =>
+						headerRight: () =>
 							<TagHeader
 								route={route}
 								navigation={navigation}
-							/>*/
+							/>
 					})}
 				/>
 			</Stack.Navigator>

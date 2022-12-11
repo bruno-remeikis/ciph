@@ -9,7 +9,7 @@ import { Search } from '../models/bo/Search';
  * Caso lista vazia: está em modo de seleção, porém sem nenhum item selecionado;
  * caso lista com itens: está em modo de seleção e existem itens selecionados.
  */
-type selectedItems = Search[] | null;
+export type selectedItems = Search[] | null;
 
 interface SelectedItemsProps {
     selectedItems: selectedItems;

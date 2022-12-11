@@ -263,11 +263,18 @@ export default class ArtistService
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
             const sql =
-                `update ${artist.table}
-                set ${artist.name} = ?
+                `update ${artist.table} set
+                    ${artist.name} = ?,
+                    ${artist.unaccentedName} = ?
                 where ${artist.id} = ?`;
 
-            tx.executeSql(sql, [name, id], (_, { rowsAffected }) =>
+            const args = [
+                name.trim(),
+                remove(name.trim()),
+                id
+            ];
+
+            tx.executeSql(sql, args, (_, { rowsAffected }) =>
                 resolve(rowsAffected)
             );
         },

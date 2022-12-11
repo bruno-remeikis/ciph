@@ -76,4 +76,22 @@ export default class SongTagService
             reject(err);
         }));
     }
+
+    static deleteBySongIdTx(tx: SQLTransaction, songId: number)
+    {
+        const sql =
+            `delete from ${song_tag.table}
+            where ${song_tag.songId} = ?`;
+
+        tx.executeSql(sql, [songId]);
+    }
+
+    static deleteByTagIdTx(tx: SQLTransaction, tagId: number)
+    {
+        const sql =
+            `delete from ${song_tag.table}
+            where ${song_tag.tagId} = ?`;
+
+        tx.executeSql(sql, [tagId]);
+    }
 }

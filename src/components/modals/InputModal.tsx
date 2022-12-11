@@ -15,9 +15,10 @@ export interface InputModalProps extends ModalProps
     value: string;
     setValue: Dispatch<SetStateAction<string>>;
     onSubmit: Function;
+    placeholder?: string;
 };
 
-const InputModal: React.FC<InputModalProps> = ({ value, setValue, onSubmit, ...props }) =>
+const InputModal: React.FC<InputModalProps> = ({ value, setValue, onSubmit, placeholder, ...props }) =>
     <Modal
         {...props}
         style={[ props.style, { padding: 10 } ]}
@@ -25,7 +26,7 @@ const InputModal: React.FC<InputModalProps> = ({ value, setValue, onSubmit, ...p
         <TextInput
             style={styles.input}
             value={value}
-            placeholder="Nome da página"
+            placeholder={placeholder ? placeholder : ''}
             onChangeText={text => setValue(text)}
             selectTextOnFocus
         />

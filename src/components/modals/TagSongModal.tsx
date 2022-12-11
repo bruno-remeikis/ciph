@@ -75,10 +75,7 @@ const TagSongModal: React.FC<TagSongModalProps> = ({ setReturnObject, songId, ..
         SongTagService.create(songIds, tagIds).then(() =>
         {
             if(setReturnObject)
-            {
-                console.log('\n\n\nRETURN OBJECT');
                 setReturnObject(tags.filter(tag => tag.selected));
-            }
 
             setUpdated(true);
             setSelectedItems(null);
@@ -97,9 +94,6 @@ const TagSongModal: React.FC<TagSongModalProps> = ({ setReturnObject, songId, ..
     {
         if(props.visible)
         {
-            console.log('\n\n\nSONG ID');
-            console.log(songId);
-
             /*if(songId)
                 TagService.findNotAdded(songId)
                     .then((res: any) => setTags(res._array))

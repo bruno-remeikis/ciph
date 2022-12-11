@@ -6,6 +6,7 @@ import { SQLResultSetRowList } from 'expo-sqlite';
 // Models
 import { Tag, tag } from '../models/entities/Tag';
 import { song_tag } from '../models/entities/SongTag';
+import SongTagService from './SongTagService';
 
 export default class TagService
 {
@@ -136,6 +137,58 @@ export default class TagService
                 where ${song_tag.songId} = ?`;
 
             tx.executeSql(sql, [songId], (_, { rows }) => resolve(rows));
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        }));
+    }
+
+    static updateName(id: number, name: string)
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            const sql =
+                `update ${tag.table} set
+                    ${tag.name} = ?,
+                    ${tag.unaccentedName} = ?
+                where ${tag.id} = ?`;
+
+            const args = [
+                name.trim(),
+                remove(name.trim()),
+                id
+            ];
+
+            tx.executeSql(sql, args, (_, { rowsAffected }) =>
+                resolve(rowsAffected)
+            );
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        }));
+    }
+
+    /**
+     * Deleta tag (repertório) por ID
+     * 
+     * @param id ID da tag (repertório)
+     * @returns Número de linhas afetadas
+     */
+    static delete(id: number): Promise<number>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            // Deleta relacionamentos entre tag e música
+            SongTagService.deleteByTagIdTx(tx, id);
+
+            const sql =
+                `delete from ${tag.table} where ${tag.id} = ?`;
+
+            tx.executeSql(sql, [id], (_, { rowsAffected }) => resolve(rowsAffected));
         },
         err =>
         {

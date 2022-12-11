@@ -17,6 +17,7 @@ import { song_artist } from '../models/entities/SongArtist';
 // Utils
 import { dbDatetimeFormat } from '../utils/functions';
 import { song_tag } from '../models/entities/SongTag';
+import SongTagService from './SongTagService';
 
 export default class SongService
 {
@@ -373,19 +374,23 @@ export default class SongService
         }));
     }
 
-    static update(obj: Song)
+    static updateName(id: number, name: string)
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            if(!obj.id)
-                reject();
-
             const sql =
-                `update ${song.table}
-                set ${song.name} = ?
+                `update ${song.table} set
+                    ${song.name} = ?,
+                    ${song.unaccentedName} = ?
                 where ${song.id} = ?`;
 
-            tx.executeSql(sql, [obj.name, obj.id], (_, { rowsAffected }) =>
+            const args = [
+                name.trim(),
+                remove(name.trim()),
+                id
+            ];
+
+            tx.executeSql(sql, args, (_, { rowsAffected }) =>
                 resolve(rowsAffected));
         },
         err =>
@@ -408,16 +413,16 @@ export default class SongService
             // Deleta folhas da música
             SheetService.deleteBySongIdTx(tx, id);
 
-            // Deletar link com músicas
+            // Deletar relacionamentos entre músicas e artistas
             SongArtistService.deleteBySongIdTx(tx, id);
+
+            // Deletar relacionamentos entre músicas e repertórios
+            SongTagService.deleteBySongIdTx(tx, id);
 
             const sql =
                 `delete from ${song.table} where ${song.id} = ?`;
 
-            tx.executeSql(sql, [id], (_, { rowsAffected }) =>
-            {
-                resolve(rowsAffected);
-            });
+            tx.executeSql(sql, [id], (_, { rowsAffected }) => resolve(rowsAffected));
         },
         err =>
         {

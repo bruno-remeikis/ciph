@@ -1,6 +1,5 @@
 import { RouteProp } from '@react-navigation/core';
 import React, { useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
 
 // RootStackParamList
 import RootStackParamList from '../../../../AppRootStackParamList';
@@ -8,12 +7,8 @@ import RootStackParamList from '../../../../AppRootStackParamList';
 // Icons
 import FeatherIcon from 'react-native-vector-icons/Feather';
 
-// Styles
-import styles from './styles';
-
 // Components
 import GenericAppHeader from '../GenericAppHeader';
-import Modal from '../../modals/Modal';
 import InputModal from '../../modals/InputModal';
 
 // Contexts
@@ -73,6 +68,7 @@ const ArtistHeader: React.FC<ArtistHeaderProps> = ({ route, navigation }) =>
                 value={name}
                 setValue={setName}
                 onSubmit={handleRenameArtist}
+                placeholder='Nome do Artista'
             />
         </>
     );

@@ -248,8 +248,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
     {
         TagService.findBySongId(id)
             .then((res: any) => setTags(res._array))
-            .catch(err => alert(err))
-            //.finally(() => { console.log('\n\n\nCURRENT TAGS'); console.log(tags) });
+            .catch(err => alert(err));
     }
 
     function switchEditable(v: boolean)
@@ -520,6 +519,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                 value={newSheetTitle}
                 setValue={setNewSheetTitle}
                 onSubmit={saveRenamedSheet}
+                placeholder='Nome da Página'
             />
 
             {/* DELETE SHEET DIALOG */}
