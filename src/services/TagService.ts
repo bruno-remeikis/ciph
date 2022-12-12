@@ -6,10 +6,85 @@ import { SQLResultSetRowList } from 'expo-sqlite';
 // Models
 import { Tag, tag } from '../models/entities/Tag';
 import { song_tag } from '../models/entities/SongTag';
+
+// Services
 import SongTagService from './SongTagService';
 
 export default class TagService
 {
+    /**
+     * Insere os repertórios contidos no JSON principal
+     * (parâmetro: 'tags').
+     * 
+     * Atualiza o JSON, adicionando um 'newId' a
+     * cada objeto inserido.
+     * 
+     * @param json Objeto JSON contendo dados de importação
+     */
+    static import(json: any): Promise<void>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            // Validar JSON principal
+            if(!json.artists || !Array.isArray(json.artists))
+                reject();
+
+            const sql =
+                `insert into ${tag.table} (
+                    ${tag.name},
+                    ${tag.unaccentedName},
+                    ${tag.insertDate},
+                    ${tag.updateDate}
+                ) values (?, ?, ?, ?)`;
+
+            for(let i = 0; i < json.artists.length; i++)
+            {
+                const obj = json.artists[i];
+
+                // Validar propriedades do objeto
+                if(!obj.name)
+                    continue;
+
+                const args = [
+                    obj.name.trim(),
+                    remove(obj.name.trim()),
+                    obj.insertDate ? obj.insertDate : 'current_timestamp',
+                    obj.updateDate ? obj.insertDate : null,
+                ];
+
+                tx.executeSql(sql, args, (_, { insertId }) =>
+                {
+                    json.artists[i].newId = insertId;
+                });
+            }
+        },
+        err => reject(err),
+        () => resolve()));
+    }
+
+    static export(): Promise<SQLResultSetRowList>
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
+            const sql =
+                `select
+                    ${tag.id} as id,
+                    ${tag.name} as name,
+                    ${tag.color} as color,
+                    ${tag.insertDate} as insertDate,
+                    ${tag.updateDate} as updateDate
+                from
+                    ${tag.table}`;
+
+            tx.executeSql(sql, [], (_, { rows }) => resolve(rows));
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        }));
+    }
+
     /**
      * Insere uma nova entidade no banco
      * 

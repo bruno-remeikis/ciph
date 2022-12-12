@@ -2,6 +2,8 @@
 import ArtistService from "./ArtistService";
 import SongArtistService from "./SongArtistService";
 import SongService from "./SongService";
+import SongTagService from "./SongTagService";
+import TagService from "./TagService";
 
 export default class ImportService
 {
@@ -16,6 +18,8 @@ export default class ImportService
         [SongService,
          ArtistService,
          SongArtistService,
+         TagService,
+         SongTagService
         ].forEach(async (serviceClass) =>
             await serviceClass.import(json)
         );
