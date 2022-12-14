@@ -50,8 +50,6 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 
 	const [scrollOnTop, setScrollOnTop] = useState<boolean>(true);
 
-
-
 	// ---------- REFS ----------
 
 	const searchRef = useRef<TextInput>(null);
@@ -99,13 +97,12 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 	useEffect(() => handleSearch('', filter), []);
 
 	/**
-	 * Atualiza músicas
+	 * Atualiza itens da tela
 	 */
 	useEffect(() =>
 	{
 		if(updated)
 		{
-			//searchSongs(search);
 			handleSearch(search, filter);
 
 			// Se não for boolean, será setado como false em SongScreen
@@ -131,7 +128,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 
 				{!loading && results.length === 0 ?
 					<Text>{
-						search.trim().length === 0 ? 'Nenhum resultado'	: `Você ainda não possui ${(filter === 'artists' ? 'artistas' : (filter === 'tags' ? 'repertórios' : 'músicas'))}`
+						search.trim().length !== 0 ? 'Nenhum resultado'	: `Você ainda não possui ${(filter === 'artists' ? 'artistas' : (filter === 'tags' ? 'repertórios' : 'músicas'))}`
 					}</Text>
 				: null}
 			</View>
@@ -219,6 +216,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 						key={`${item.type}-${item.id}`}
 						navigation={navigation}
 						searchItem={item}
+						selectable
 					/>
 				)}
 				onScroll={event => setScrollOnTop(
@@ -275,6 +273,8 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: colors.background,
+		alignItems: 'center',
+		justifyContent: 'center',
 	},
 
 	// INFO

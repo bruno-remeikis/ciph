@@ -31,9 +31,10 @@ export default class SongTagService
                 `insert into ${song_tag.table} (
                     ${song_tag.songId},
                     ${song_tag.tagId},
+                    ${song_tag.songPosition},
                     ${song_tag.insertDate},
                     ${song_tag.updateDate}
-                ) values (?, ?, ?, ?)`;
+                ) values (?, ?, ?, ?, ?)`;
 
             for(let i = 0; i < json.songsTags.length; i++)
             {
@@ -58,9 +59,12 @@ export default class SongTagService
                 if(!songId || !tagId)
                     continue;
 
+                //const songPosition
+
                 const args = [
                     songId,
                     tagId,
+                    //songPosition,
                     obj.insertDate ? obj.insertDate : 'current_timestamp',
                     obj.updateDate ? obj.insertDate : null,
                 ];
@@ -94,8 +98,9 @@ export default class SongTagService
 
             const mainSql = `insert into ${song_tag.table} (
                 ${song_tag.songId},
-                ${song_tag.tagId}
-            ) values (?, ?)`;
+                ${song_tag.tagId},
+                ${song_tag.songPosition}
+            ) values (?, ?, ?)`;
 
             const countSql = 
                 `select count(*) as qtd
@@ -103,15 +108,32 @@ export default class SongTagService
                 where ${song_tag.songId} = ?
                     AND ${song_tag.tagId} = ?`;
 
-            songIds.forEach(songId =>
+            const lastSongPositionSql =
+                `select ${song_tag.songPosition} as position
+                from ${song_tag.table}
+                where ${song_tag.tagId} = ?
+                order by ${song_tag.songPosition} desc
+                limit 1`;
+            
+            tagIds.forEach(tagId =>
             {
-                if(Array.isArray(tagIds))
-                    tagIds.forEach(tagId =>
+                // Busca posição da última música do repertório
+                let nextSongPosition = 1;
+                tx.executeSql(lastSongPositionSql, [tagId], (_, { rows }) =>
+                {
+                    if(rows.length > 0)
+                        nextSongPosition = rows.item(0).position + 1;
+                });
+
+                if(Array.isArray(songIds))
+                    songIds.forEach(songId =>
                     {
+                        // Verifica se já não existe a música no repertório
                         tx.executeSql(countSql, [songId, tagId], (_, { rows }) =>
                         {
                             if(rows.item(0).qtd === 0)
-                                tx.executeSql(mainSql, [songId, tagId]);
+                                // Insere relacionamento
+                                tx.executeSql(mainSql, [songId, tagId, nextSongPosition++]);
                         }); 
                     });
             });
@@ -136,6 +158,7 @@ export default class SongTagService
                     ${song_tag.id} as id,
                     ${song_tag.songId} as songId,
                     ${song_tag.tagId} as tagId,
+                    ${song_tag.songPosition} as songPosition,
                     ${song_tag.insertDate} as insertDate,
                     ${song_tag.updateDate} as updateDate
                 from
@@ -150,6 +173,17 @@ export default class SongTagService
         }));
     }
 
+    /*static getLastSongPosition(tx: SQLTransaction): Promise<number>
+    {
+        const sql =
+            `select ${song_tag.songPosition}
+            from ${song_tag.table}
+            order by ${song_tag.songPosition} desc
+            limit 1`;
+
+        tx.executeSql(sql, [], (_, { rows }) => {});
+    }*/
+
     static delete(songId: number, tagId: number)
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
@@ -159,8 +193,24 @@ export default class SongTagService
                     ${song_tag.songId} = ? and
                     ${song_tag.tagId} = ?`;
 
+            const updatePositionsSql =
+                `update ${song_tag.table}
+                set ${song_tag.songPosition} = ${song_tag.songPosition} - 1
+                where ${song_tag.songPosition} > (
+                    select ${song_tag.songPosition}
+                    from ${song_tag.table}
+                    where ${song_tag.songId} = ?
+                )`;
+
             tx.executeSql(sql, [songId, tagId], (_, { rowsAffected }) =>
-                resolve(rowsAffected));
+            {
+                if(rowsAffected > 0)
+                {
+                    tx.executeSql(updatePositionsSql, [songId]);
+
+                    resolve(rowsAffected);
+                }
+            });
         },
         err =>
         {

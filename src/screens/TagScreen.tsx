@@ -7,13 +7,16 @@ import { Song } from '../models/entities/Song';
 // Components
 import SearchItem from '../components/SearchItem';
 import SongService from '../services/SongService';
+import Fade from '../components/animations/Fade';
 
 // Utils
 import { colors, sizes, shadow } from '../utils/consts';
-import Fade from '../components/animations/Fade';
 
 // Icons
 import AntDesignIcon from 'react-native-vector-icons/AntDesign';
+
+// Contexts
+import { useUpdated } from '../contexts/Updated';
 
 const TagScreen: React.FC<any> = ({ navigation, route }) =>
 {
@@ -21,7 +24,9 @@ const TagScreen: React.FC<any> = ({ navigation, route }) =>
 
     const { id, name } = route.params.tag;
 
+    // ---------- CONTEXTS ----------
 
+    const { updated, setUpdated } = useUpdated();
 
     // ---------- STATES ----------
 
@@ -45,6 +50,23 @@ const TagScreen: React.FC<any> = ({ navigation, route }) =>
     // ---------- EFFECTS ----------
 
     useEffect(() => loadSongs(), []);
+
+	useEffect(() =>
+	{
+		if(updated)
+		{
+            if(typeof updated === 'object' 
+            && ((
+                updated.songTag && updated.songTag.tagId === id
+            ) || (
+                updated.song
+            ))) {
+                loadSongs();
+                setUpdated(true);
+            }
+		}
+	},
+	[updated]);
 
 
 

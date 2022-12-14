@@ -18,8 +18,8 @@ export default class ImportService
         [SongService,
          ArtistService,
          SongArtistService,
-         TagService,
-         SongTagService
+         //TagService,
+         //SongTagService
         ].forEach(async (serviceClass) =>
             await serviceClass.import(json)
         );

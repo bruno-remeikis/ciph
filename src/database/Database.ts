@@ -106,6 +106,7 @@ export default class Database
                 ${song_tag.id} integer primary key autoincrement,
                 ${song_tag.songId} integer not null,
                 ${song_tag.tagId} integer not null,
+                ${song_tag.songPosition} integer not null,
                 ${song_tag.insertDate} datetime not null
                     default current_timestamp,
                 ${song_tag.updateDate} datetime,

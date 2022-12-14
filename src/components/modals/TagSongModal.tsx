@@ -136,6 +136,12 @@ const TagSongModal: React.FC<TagSongModalProps> = ({ setReturnObject, songId, ..
             >
                 <Text style={styles.title}>Adicionar a Repertórios</Text>
 
+                {tags.length === 0 ?
+                    <View style={styles.noTag}>
+                        <Text style={styles.noTagText}>Ainda não há repertórios</Text>
+                    </View>
+                    : null}
+
                 <FlatList
                     /*style={{
                         width: '100%',
@@ -220,6 +226,16 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         textAlign: 'center',
     },
+    noTag: {
+        alignItems: 'center',
+    },
+    noTagText: {
+        backgroundColor: '#dddddd',
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        marginVertical: 10,
+        borderRadius: 99,
+    },
     tag: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -250,6 +266,10 @@ const styles = StyleSheet.create({
         marginTop: 2,
         paddingVertical: 8,
     },
+    /*newTagFirst: {
+        flexDirection: 'column-reverse',
+        //backgroundColor: 'red',
+    },*/
     newTagText: {
         fontSize: 18,
         marginLeft: 4,

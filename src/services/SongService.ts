@@ -346,13 +346,15 @@ export default class SongService
                         where
                             ${song_artist.songId} = id and
                             ${song_artist.songId} = ${song_artist.songId}
-                    ) as artists
+                    ) as artists,
+                    position
                 from (
                     select
                         ${song.id} as id,
                         ${song.name} as name,
                         ${dbDatetimeFormat(song.insertDate)} as insertDate,
-                        ${dbDatetimeFormat(song.updateDate)} as updateDate
+                        ${dbDatetimeFormat(song.updateDate)} as updateDate,
+                        ${song_tag.songPosition} as position
                     from
                         ${song.table}
                     inner join
@@ -362,10 +364,7 @@ export default class SongService
                         ${song_tag.tagId} = ?
                 )`;
 
-            tx.executeSql(sql, [tagId], (_, { rows }) =>
-            {
-                resolve(rows);
-            });
+            tx.executeSql(sql, [tagId], (_, { rows }) => resolve(rows));
         },
         err =>
         {

@@ -23,9 +23,10 @@ import { useSelectedItems, addSelectedItem, removeSelectedItem } from '../contex
 interface SearchItemProps {
     navigation: any;
     searchItem: Search;
+    selectable?: boolean;
 };
 
-const SearchItem: React.FC<SearchItemProps> = ({ navigation, searchItem }) =>
+const SearchItem: React.FC<SearchItemProps> = ({ navigation, searchItem, selectable }) =>
 {
     var iconName = '';
     var mainColor = colors.primary;
@@ -91,96 +92,105 @@ const SearchItem: React.FC<SearchItemProps> = ({ navigation, searchItem }) =>
     // ---------- RETURN ----------
 
     return (
-        <Pressable
-            style={[
-                styles.container,
-                { borderLeftColor: mainColor },
-                isSelected ? { backgroundColor: 'white' } : null
-            ]}
-            onLongPress={() =>
-            {
-                select();
-            }}
-            onPress={() =>
-            {
-                if(selectedItems != null)
+        <View style={styles.main}>
+            <Pressable
+                style={[
+                    styles.container,
+                    { borderLeftColor: mainColor },
+                    //isSelected ? { backgroundColor: 'white' } : null
+                ]}
+                onLongPress={() =>
                 {
-                    select();
-                }
-                else
+                    if(selectable)
+                        select();
+                }}
+                onPress={() =>
                 {
-                    switch(searchItem.type)
+                    if(selectable && selectedItems != null)
                     {
-                        case 'song':
-                            const song: Song = {
-                                id: searchItem.id,
-                                name: searchItem.name,
-                                artists: searchItem.artists,
-                                insertDate: searchItem.insertDate,
-                                updateDate: searchItem.updateDate,
-                            };
-                            navigation.navigate('Song', { song });
-                            break;
-                        
-                        case 'artist':
-                            const artist: Artist ={
-                                id: searchItem.id,
-                                name: searchItem.name,
-                                insertDate: searchItem.insertDate,
-                                updateDate: searchItem.updateDate,
-                            };
-                            navigation.navigate('Artist', { artist });
-                            break;
-
-                        case 'tag':
-                            const tag: Tag ={
-                                id: searchItem.id,
-                                name: searchItem.name,
-                                color: searchItem.color,
-                                amount: searchItem.amount,
-                                insertDate: searchItem.insertDate,
-                                updateDate: searchItem.updateDate,
-                            };
-                            navigation.navigate('Tag', { tag });
-                            break;
+                        select();
                     }
-                }
-            }}
-        >
-            <View style={styles.content}>
-                <View style={styles.leftContent}>
-                    {searchItem.type === 'tag' ?
-                        <AntDesignIcon
-                            style={styles.icon}
-                            name={iconName}
-                            size={30}
-                            color={mainColor}
-                        /> :
-                        <IonIcon
-                            style={styles.icon}
-                            name={iconName}
-                            size={30}
-                            color={mainColor}
-                        />}
+                    else
+                    {
+                        switch(searchItem.type)
+                        {
+                            case 'song':
+                                const song: Song = {
+                                    id: searchItem.id,
+                                    name: searchItem.name,
+                                    artists: searchItem.artists,
+                                    insertDate: searchItem.insertDate,
+                                    updateDate: searchItem.updateDate,
+                                };
+                                navigation.navigate('Song', { song });
+                                break;
+                            
+                            case 'artist':
+                                const artist: Artist ={
+                                    id: searchItem.id,
+                                    name: searchItem.name,
+                                    insertDate: searchItem.insertDate,
+                                    updateDate: searchItem.updateDate,
+                                };
+                                navigation.navigate('Artist', { artist });
+                                break;
 
-                    <View style={styles.info}>
-                        <Text style={styles.name}>{searchItem.name}</Text>
+                            case 'tag':
+                                const tag: Tag ={
+                                    id: searchItem.id,
+                                    name: searchItem.name,
+                                    color: searchItem.color,
+                                    amount: searchItem.amount,
+                                    insertDate: searchItem.insertDate,
+                                    updateDate: searchItem.updateDate,
+                                };
+                                navigation.navigate('Tag', { tag });
+                                break;
+                        }
+                    }
+                }}
+            >
+                <View style={styles.content}>
+                    <View style={styles.leftContent}>
+                        {searchItem.type === 'tag' ?
+                            <AntDesignIcon
+                                style={styles.icon}
+                                name={iconName}
+                                size={30}
+                                color={mainColor}
+                            /> :
+                            <IonIcon
+                                style={styles.icon}
+                                name={iconName}
+                                size={30}
+                                color={mainColor}
+                            />}
 
-                        {searchItem.type === 'song' &&
-                        searchItem.artists &&
-                        typeof searchItem.artists === 'string'
-                        ? <Text style={styles.artists}>{searchItem.artists}</Text>
-                        : null}
+                        <View style={styles.info}>
+                            <Text style={styles.name}>{searchItem.name}</Text>
+
+                            {searchItem.type === 'song' &&
+                            searchItem.artists &&
+                            typeof searchItem.artists === 'string'
+                                ? <Text style={styles.artists}>{searchItem.artists}</Text>
+                                : null}
+                        </View>
+                    </View>
+
+                    <View style={styles.rightContent}>
+                        {searchItem.amount ?
+                            <Text>{searchItem.amount}</Text>
+                            : null}
+
+                        {searchItem.position ?
+                            <Text style={styles.position}>{searchItem.position}</Text>
+                            : null}
                     </View>
                 </View>
 
-                <View style={styles.amount}>
-                    <Text>{searchItem.amount}</Text>
-                </View>
-            </View>
-
-            { isSelected ? <View style={styles.selected} /> : null }
-        </Pressable>
+                { isSelected ? <View style={styles.selected} /> : null }
+            </Pressable>
+        </View>
     );
 }
 
@@ -189,13 +199,18 @@ export default SearchItem;
 
 
 const styles = StyleSheet.create({
+    main: {
+        flexDirection: 'row',
+		alignItems: 'center',
+    },
 	container: {
+        flex: 1,
 		flexDirection: 'row',
 		alignItems: 'center',
 
 		backgroundColor: colors.background2,
 
-		width: '100%',
+		//width: '100%',
 		minHeight: 46,
         paddingVertical: 3,
         paddingRight: 6,
@@ -230,8 +245,14 @@ const styles = StyleSheet.create({
 		color: 'rgba(0, 0, 0, 0.7)',
 	},
 
-    amount: {
+    rightContent: {
         marginRight: 6,
+    },
+    position: {
+        color: colors.primary,
+        marginRight: 6,
+        fontSize: 14,
+        fontWeight: 'bold',
     },
 
     selected: {
@@ -242,7 +263,7 @@ const styles = StyleSheet.create({
         bottom: -4,
         right: -100,
 
-        backgroundColor: 'blue',
-        opacity: 0.2,
+        backgroundColor: colors.primary,
+        opacity: 0.25,
     },
 });

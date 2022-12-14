@@ -11,6 +11,7 @@ export type Search =
     //Tag
     amount?: number; // Quantidade de músicas
     color?: string | null;
+    position?: number; // Posição da música no repertório
 
     insertDate?: string;
     updateDate?: string | null;

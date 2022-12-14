@@ -117,7 +117,11 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                 if(res > 0)
                 {
                     setTags(tags.filter(tag => tag.id !== currentTag.id));
-                    setUpdated(true);
+
+                    setUpdated({ songTag: {
+                        songId: id,
+                        tagId: currentTag.id ? currentTag.id : 0
+                    } });
                 }
             })
             .catch(err => alert(err));

@@ -15,6 +15,8 @@ export type Song =
     artists?: Artist[] | string;
     sheets?: Sheet[];
 
+    position?: number; // Posição no repertório
+
     insertDate?: string;
     updateDate?: string | null;
 }

@@ -3,12 +3,14 @@ import React, { createContext, useContext, useState } from 'react';
 // Models
 import { Artist } from '../models/entities/Artist';
 import { Song } from '../models/entities/Song';
+import { SongTag } from '../models/entities/SongTag';
 import { Tag } from '../models/entities/Tag';
 
 type updated = boolean | {
     song?: Song;
     artist?: Artist;
-    tag?: Tag
+    tag?: Tag;
+    songTag?: SongTag;
 };
 
 interface UpdateProps {

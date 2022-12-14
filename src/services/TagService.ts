@@ -26,7 +26,7 @@ export default class TagService
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
             // Validar JSON principal
-            if(!json.artists || !Array.isArray(json.artists))
+            if(!json.tags || !Array.isArray(json.tags))
                 reject();
 
             const sql =
@@ -37,9 +37,9 @@ export default class TagService
                     ${tag.updateDate}
                 ) values (?, ?, ?, ?)`;
 
-            for(let i = 0; i < json.artists.length; i++)
+            for(let i = 0; i < json.tags.length; i++)
             {
-                const obj = json.artists[i];
+                const obj = json.tags[i];
 
                 // Validar propriedades do objeto
                 if(!obj.name)
@@ -54,7 +54,7 @@ export default class TagService
 
                 tx.executeSql(sql, args, (_, { insertId }) =>
                 {
-                    json.artists[i].newId = insertId;
+                    json.tags[i].newId = insertId;
                 });
             }
         },
