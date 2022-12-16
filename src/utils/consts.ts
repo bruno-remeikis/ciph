@@ -8,6 +8,7 @@ export const colors = {
 
 	primary: 'rgb(217, 136, 89)',
     primaryRGB: '217, 136, 89',
+    primaryHex: '#d98859',
 
     text: '#0f0f0f',
 

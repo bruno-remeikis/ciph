@@ -28,10 +28,8 @@ interface NewTagModalProps extends ModalProps
 
 const NewTagModal: React.FC<NewTagModalProps> = ({ setReturnObject, ...props }) =>
 {
-    const primaryColorHex = '#d98859';
-
     const [tagName, setTagName] = useState('');
-    const [color, _setColor] = useState(primaryColorHex);
+    const [color, _setColor] = useState(colors.primaryHex);
 
     const colorRef = useRef(color);
     const setColor = (newValue: string) =>
@@ -104,7 +102,7 @@ const NewTagModal: React.FC<NewTagModalProps> = ({ setReturnObject, ...props }) 
                     </Pressable>
 
                     <Pressable
-                        onPress={() => setColor(primaryColorHex)}
+                        onPress={() => setColor(colors.primaryHex)}
                         style={styles.colorPickerUndo}
                     >
                         <FontAwesomeIcon name='undo' size={20} />

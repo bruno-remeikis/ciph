@@ -30,7 +30,7 @@ interface SearchItemProps {
 const SearchItem: React.FC<SearchItemProps> = ({ navigation, searchItem, selectable }) =>
 {
     var iconName = '';
-    var mainColor = colors.primary;
+    var mainColor = colors.primaryHex;
     switch(searchItem.type)
     {
         case 'song':
