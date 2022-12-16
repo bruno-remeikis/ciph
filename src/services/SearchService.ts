@@ -131,7 +131,7 @@ export default class SearchService
                         from ${song_tag.table}
                         where ${song_tag.tagId} = ${tag.id}
                     ) as amount,
-                    null as color
+                    ${tag.color} as color
                 from
                     ${tag.table}
                 ${tagWhere}

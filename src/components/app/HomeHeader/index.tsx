@@ -124,7 +124,7 @@ const HomeHeader: React.FC = () =>
 		{
 			const file = await DocumentPicker.getDocumentAsync({
 				copyToCacheDirectory: false,
-				//type: 'application/json'
+				type: 'application/json'
 			});
 
 			if(file.type === 'success')

@@ -17,16 +17,19 @@ import AntDesignIcon from 'react-native-vector-icons/AntDesign';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
+import { useCurrentTag } from '../contexts/CurrentTag';
 
 const TagScreen: React.FC<any> = ({ navigation, route }) =>
 {
     // ---------- CONSTS ----------
 
-    const { id, name } = route.params.tag;
+    const { id, name, color } = route.params.tag;
 
     // ---------- CONTEXTS ----------
 
     const { updated, setUpdated } = useUpdated();
+
+    const { setCurrentTag } = useCurrentTag();
 
     // ---------- STATES ----------
 
@@ -49,7 +52,16 @@ const TagScreen: React.FC<any> = ({ navigation, route }) =>
 
     // ---------- EFFECTS ----------
 
-    useEffect(() => loadSongs(), []);
+    useEffect(() =>
+    {
+        loadSongs();
+
+        setCurrentTag({
+            tag: route.params.tag,
+            songList: [],
+        })
+    },
+    []);
 
 	useEffect(() =>
 	{
@@ -74,6 +86,8 @@ const TagScreen: React.FC<any> = ({ navigation, route }) =>
 
     return (
         <View style={styles.container}>
+            {/*<StatusBar backgroundColor = 'rgb(255, 0, 0)' />*/}
+
             <Fade
                 style={styles.header}
                 visible={!scrollOnTop}
@@ -86,13 +100,23 @@ const TagScreen: React.FC<any> = ({ navigation, route }) =>
                         style={{ marginRight: 12 }}
                         name='folder1'
                         size={34}
-                        color={colors.primary}
+                        color={color ? color : colors.primary}
                     />
-                    <Text style={{ fontSize: 24 }}>{ name }</Text>
+                    <Text style={{
+                        color: color ? color : colors.text,
+                        fontSize: 24
+                    }}>
+                        { name }
+                    </Text>
                 </View>
 
                 <View>
-                    <Text style={{ fontSize: 16 }}>{ songs.length }</Text>
+                    <Text style={{
+                        color: color ? color : colors.text,
+                        fontSize: 16
+                    }}>
+                        { songs.length }
+                    </Text>
                 </View>
             </Fade>
 

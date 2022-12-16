@@ -17,6 +17,7 @@ import { colors } from '../utils/consts';
 
 //Contexts
 import { useSelectedItems, addSelectedItem, removeSelectedItem } from '../contexts/SelectedItems';
+import { hexToRGB } from '../utils/functions';
 
 
 
@@ -94,11 +95,10 @@ const SearchItem: React.FC<SearchItemProps> = ({ navigation, searchItem, selecta
     return (
         <View style={styles.main}>
             <Pressable
-                style={[
-                    styles.container,
-                    { borderLeftColor: mainColor },
-                    //isSelected ? { backgroundColor: 'white' } : null
-                ]}
+                style={[ styles.container, {
+                    borderLeftColor: mainColor,
+                    backgroundColor: String(hexToRGB(mainColor, 0.08))
+                }]}
                 onLongPress={() =>
                 {
                     if(selectable)
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 
-		backgroundColor: colors.background2,
+		//backgroundColor: colors.background2,
 
 		//width: '100%',
 		minHeight: 46,

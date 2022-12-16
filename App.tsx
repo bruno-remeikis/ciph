@@ -12,12 +12,15 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // Contexts
 import { UpdatedProvider } from './src/contexts/Updated';
+import { SelectedItemsProvider, useSelectedItems } from './src/contexts/SelectedItems';
+import { CurrentTagProvider, useCurrentTag } from './src/contexts/CurrentTag';
 
 // Database
 import Database from './src/database/Database';
 
 // Utils
 import { colors } from './src/utils/consts';
+import { getContrastColor } from './src/utils/functions';
 
 // Screens
 import HomeScreen from './src/screens/HomeScreen';
@@ -32,9 +35,6 @@ import SongHeader from './src/components/app/SongHeader';
 import ArtistHeader from './src/components/app/ArtistHeader';
 import TagHeader from './src/components/app/TagHeader';
 import { SelectionHeaderLeft, SelectionHeaderRight } from './src/components/app/SelectionHeader';
-
-// Contexts
-import { selectedItems, SelectedItemsProvider, useSelectedItems } from './src/contexts/SelectedItems';
 
 
 
@@ -52,6 +52,8 @@ const AppContent: React.FC = () =>
 	// ---------- CONTEXTS ----------
 
 	const { selectedItems, setSelectedItems } = useSelectedItems();
+
+	const { currentTag } = useCurrentTag();
 
 
 
@@ -100,9 +102,9 @@ const AppContent: React.FC = () =>
 			<Stack.Navigator
 				screenOptions={{
 					headerStyle: {
-						backgroundColor: colors.primary,
+						backgroundColor: currentTag && currentTag.tag.color ? currentTag.tag.color : colors.primary,
 					},
-					headerTintColor: '#fff',
+					headerTintColor: currentTag && currentTag.tag.color ? getContrastColor(currentTag.tag.color) : '#fff',
 					headerTitleStyle: {
 						fontWeight: 'bold',
 					},
@@ -183,7 +185,9 @@ const AppContent: React.FC = () =>
 const App: React.FC = () =>
 	<UpdatedProvider>
 		<SelectedItemsProvider>
-			<AppContent />
+			<CurrentTagProvider>
+				<AppContent />
+			</CurrentTagProvider>
 		</SelectedItemsProvider>
 	</UpdatedProvider>
 

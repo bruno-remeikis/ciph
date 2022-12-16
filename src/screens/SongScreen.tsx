@@ -19,6 +19,7 @@ import TagService from '../services/TagService';
 
 // Utils
 import { colors, opacities, sizes } from '../utils/consts';
+import { getContrastColor } from '../utils/functions';
 
 // Components
 import DialogModal from '../components/modals/DialogModal';
@@ -614,7 +615,9 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                             {tags.map(tag => (
                                 <Pressable
                                     key={tag.id}
-                                    style={[styles.tag, { backgroundColor: /*'red'*/ colors.primary }]}
+                                    style={[styles.tag, {
+                                        backgroundColor: tag.color ? tag.color : colors.primary
+                                    }]}
                                     onPress={() => navigation.navigate('Tag', { tag })}
                                     onLongPress={() =>
                                     {
@@ -623,7 +626,11 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                                         setTagMenuModalVisible(true);
                                     }}
                                 >
-                                    <Text style={{ color: /*'rgba(255, 255, 255, 0.9)'*/ 'white' }}>{tag.name}</Text>
+                                    <Text style={{
+                                        color: tag.color ? getContrastColor(tag.color) : '#fff'
+                                    }}>
+                                        {tag.name}
+                                    </Text>
                                 </Pressable>
                             ))}
 

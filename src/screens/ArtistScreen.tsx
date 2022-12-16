@@ -21,11 +21,20 @@ import { useUpdated } from '../contexts/Updated';
 import Fade from '../components/animations/Fade';
 import SearchItem from '../components/SearchItem';
 
+// Contexts
+import { useCurrentTag } from '../contexts/CurrentTag';
+
 const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 {
     // ---------- CONSTS ----------
 
     const { id, name } = route.params.artist;
+
+
+
+    // ---------- CONTEXTS ----------
+
+    const { setCurrentTag } = useCurrentTag();
 
 
 
@@ -67,6 +76,14 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
     // ---------- EFFECTS ----------
 
     useEffect(() => loadSongs(), []);
+
+    useEffect(() =>
+	{
+		const unsubscribe = navigation.addListener( 'focus', () => setCurrentTag(null));
+        
+		return unsubscribe;
+	},
+	[navigation]);
 
     /**
      * Atualiza dados do artista

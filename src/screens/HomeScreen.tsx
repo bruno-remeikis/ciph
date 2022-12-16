@@ -16,6 +16,7 @@ import { colors, shadow, sizes } from '../utils/consts';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
+import { useCurrentTag } from '../contexts/CurrentTag';
 
 // Components
 import Fade from '../components/animations/Fade';
@@ -36,6 +37,8 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 	// ---------- CONTEXTS ----------
 
 	const { updated, setUpdated } = useUpdated();
+
+	const { setCurrentTag } = useCurrentTag();
 
 	// ---------- STATES ----------
 
@@ -92,9 +95,17 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 	// ---------- EFFECTS ----------
 
 	/**
-	 * Carrega músicas ao abrir app
+	 * Carrega músicas, artistas e repertórios ao abrir app
 	 */
 	useEffect(() => handleSearch('', filter), []);
+
+	useEffect(() =>
+	{
+		const unsubscribe = navigation.addListener('focus', () => setCurrentTag(null));
+
+		return unsubscribe;
+	},
+	[navigation]);
 
 	/**
 	 * Atualiza itens da tela
