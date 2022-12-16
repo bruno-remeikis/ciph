@@ -7,6 +7,7 @@ export type Search =
     id: number;
     name: string;
     artists?: Artist[] | string;
+    tags?: string; // Json Array (Tag[]) no formato string
 
     //Tag
     amount?: number; // Quantidade de músicas

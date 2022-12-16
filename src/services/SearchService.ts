@@ -77,7 +77,21 @@ export default class SearchService
                             ${song_artist.songId} = ${song_artist.songId}
                     ) as artists,
                     null as amount,
-                    null as color
+                    null as color,
+                    (
+                        select
+                            ('[' || GROUP_CONCAT(
+                                ('{ \"name\": \"' || ${tag.name} || '\", \"color\": \"' || ${tag.color} || '\" }'),
+                                ', '
+                            ) || ']')
+                        from
+                            ${song_tag.table}
+                        inner join
+                            ${tag.table} on
+                                ${song_tag.tagId} = ${tag.id}
+                        where
+                            ${song_tag.songId} = id
+                    ) as tags
                 from (
                     select
                         ${song.id} as id,
@@ -111,7 +125,8 @@ export default class SearchService
                         ${artist.updateDate} as updateDate,
                         null as artists,
                         null as amount,
-                        null as color
+                        null as color,
+                        null as tags
                     from
                         ${artist.table}
                     ${artistWhere}
@@ -131,7 +146,8 @@ export default class SearchService
                         from ${song_tag.table}
                         where ${song_tag.tagId} = ${tag.id}
                     ) as amount,
-                    ${tag.color} as color
+                    ${tag.color} as color,
+                    null as tags
                 from
                     ${tag.table}
                 ${tagWhere}
@@ -146,7 +162,8 @@ export default class SearchService
                     ${dbDatetimeFormat('updateDate')} as updateDate,
                     artists,
                     amount,
-                    color
+                    color,
+                    tags
                 from
                 (
                     ${filter === 'all' || filter === 'artists' ? artistsSql : ''}

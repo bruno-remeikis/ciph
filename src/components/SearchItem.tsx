@@ -17,7 +17,7 @@ import { colors } from '../utils/consts';
 
 //Contexts
 import { useSelectedItems, addSelectedItem, removeSelectedItem } from '../contexts/SelectedItems';
-import { hexToRGB } from '../utils/functions';
+import { getContrastColor, hexToRGB } from '../utils/functions';
 
 
 
@@ -179,11 +179,29 @@ const SearchItem: React.FC<SearchItemProps> = ({ navigation, searchItem, selecta
 
                     <View style={styles.rightContent}>
                         {searchItem.amount ?
-                            <Text>{searchItem.amount}</Text>
+                            <Text style={styles.amount}>{searchItem.amount}</Text>
                             : null}
 
                         {searchItem.position ?
                             <Text style={styles.position}>{searchItem.position}</Text>
+                            : null}
+
+                        {searchItem.tags ?
+                            <View style={{ height: 46, flexWrap: 'wrap-reverse', /*justifyContent: 'space-between'*/ }}>
+                                {JSON.parse(searchItem.tags).map((tag: Tag, i: number) =>
+                                    <View style={[styles.tagInSong, {
+                                        backgroundColor: tag.color ? tag.color : colors.primaryHex,
+                                        marginBottom: (i + 1) % 3 !== 0 ? 2 : 0
+                                    }]}>
+                                        <Text style={{
+                                            color: tag.color ? getContrastColor(tag.color) : '#fff',
+                                            fontSize: 10
+                                        }}>
+                                            { tag.name.charAt(0) }
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
                             : null}
                     </View>
                 </View>
@@ -246,13 +264,24 @@ const styles = StyleSheet.create({
 	},
 
     rightContent: {
-        marginRight: 6,
+        //marginRight: 6,
+    },
+    amount: {
+        marginRight: 6
     },
     position: {
         color: colors.primary,
-        marginRight: 6,
+        marginRight: 12,
         fontSize: 14,
         fontWeight: 'bold',
+    },
+    tagInSong: {
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        width: 14,
+        height: 14,
+        marginRight: 2,
+        borderRadius: 99,
     },
 
     selected: {
