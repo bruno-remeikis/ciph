@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Dispatch, SetStateAction } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 // Icons
-import IonIcon from 'react-native-vector-icons/Ionicons';
+import IoniconsIcon from 'react-native-vector-icons/Ionicons';
 import AntDesignIcon from 'react-native-vector-icons/AntDesign';
 
 // Models
@@ -79,7 +79,7 @@ const SearchItem: React.FC<SearchItemProps> = ({ navigation, searchItem, selecta
 
 
 
-    //---------- EFFECTS ----------
+    // ---------- EFFECTS ----------
 
     useEffect(() =>
     {
@@ -94,6 +94,15 @@ const SearchItem: React.FC<SearchItemProps> = ({ navigation, searchItem, selecta
 
     return (
         <View style={styles.main}>
+            {/*searchItem.position ?
+                <Pressable
+                    style={{ marginLeft: -16, marginTop: 6 }}
+                    onPress={() => {}}
+                >
+                    <IoniconsIcon name='reorder-two-outline' size={14} />
+                </Pressable>
+                : null*/}
+
             <Pressable
                 style={[ styles.container, {
                     borderLeftColor: mainColor,
@@ -159,7 +168,7 @@ const SearchItem: React.FC<SearchItemProps> = ({ navigation, searchItem, selecta
                                 size={30}
                                 color={mainColor}
                             /> :
-                            <IonIcon
+                            <IoniconsIcon
                                 style={styles.icon}
                                 name={iconName}
                                 size={30}

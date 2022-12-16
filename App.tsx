@@ -165,7 +165,7 @@ const AppContent: React.FC = () =>
 					name="Tag"
 					component={TagScreen}
 					options={({ route, navigation }) => ({
-						title: route.params.tag.name,
+						title: currentTag?.tag.name, //route.params.tag.name,
 						headerRight: () =>
 							<TagHeader
 								route={route}

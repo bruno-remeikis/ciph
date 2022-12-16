@@ -2,7 +2,7 @@
   "expo": {
     "name": "Ciph",
     "slug": "ciph",
-    "version": "1.5.3",
+    "version": "1.5.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {

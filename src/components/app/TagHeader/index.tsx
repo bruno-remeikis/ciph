@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RouteProp } from "@react-navigation/native";
 
 // RootStackParamList
@@ -6,7 +6,8 @@ import RootStackParamList from "../../../../AppRootStackParamList";
 
 // Components
 import GenericAppHeader from "../GenericAppHeader";
-import InputModal from '../../modals/InputModal';
+import DialogModal from '../../modals/DialogModal';
+import NewTagModal from '../../modals/NewTagModal';
 
 // Icons
 import FeatherIcon from 'react-native-vector-icons/Feather';
@@ -17,7 +18,12 @@ import { useUpdated } from '../../../contexts/Updated';
 
 // Utils
 import { colors } from '../../../utils/consts';
-import DialogModal from '../../modals/DialogModal';
+
+// Models
+import { Tag } from '../../../models/entities/Tag';
+
+// Contexts
+import { useCurrentTag } from '../../../contexts/CurrentTag';
 
 
 
@@ -28,28 +34,29 @@ interface TagHeaderProps {
 
 const TagHeader: React.FC<TagHeaderProps> = ({ route, navigation }) =>
 {
+    // ---------- CONSTS ----------
+
     const tag = route.params.tag;
 
-    const { setUpdated } = useUpdated();
 
-    const [isRenameModalVisible, setRenameModalVisible] = useState<boolean>(false);
+
+    // ---------- CONTEXTS ----------
+
+    const { setUpdated } = useUpdated();
+    
+    const { currentTag, setCurrentTag } = useCurrentTag();
+
+
+
+    // ---------- STATES ----------
+
+    const [isEditModalVisible, setEditModalVisible] = useState<boolean>(false);
+    const [returnedTag, setReturnedTag] = useState<Tag | null>(null);
     const [isConfirmDeleteModalVisible, setConfirmDeleteModalVisible] = useState<boolean>(false);
 
-    const [name, setName] = useState<string>(tag.name);
 
-    function handleRenameTag()
-    {
-        if(tag.id)
-            TagService.updateName(tag.id, name)
-                .then(() =>
-                {
-                    tag.name = name;
-                    setUpdated({ tag });
-                    navigation.navigate('Tag', { tag });
-                })
-                .catch(err => alert(err))
-                .finally(() => setRenameModalVisible(false))
-    }
+
+    // ---------- FUNCTIONS ----------
 
     function handleDelete()
     {
@@ -64,6 +71,27 @@ const TagHeader: React.FC<TagHeaderProps> = ({ route, navigation }) =>
             .finally(() => setConfirmDeleteModalVisible(false));
     }
 
+
+
+    // ---------- EFFECTS ----------
+
+    /**
+     * Quando a tag for atualizada
+     */
+    useEffect(() =>
+    {
+        if(returnedTag !== null
+        && currentTag !== null)
+        {
+            setCurrentTag({ ...currentTag, tag: returnedTag });
+        }
+    },
+    [returnedTag]);
+
+    
+
+    // ---------- RETURN ----------
+
     return (
         <>
             <GenericAppHeader
@@ -73,8 +101,8 @@ const TagHeader: React.FC<TagHeaderProps> = ({ route, navigation }) =>
                         component: FeatherIcon,
                         name: 'edit-2',
                     },
-                    text: 'Renomear',
-                    onClick: () => setRenameModalVisible(true),
+                    text: 'Editar',
+                    onClick: () => setEditModalVisible(true),
                 },
                 {
 					icon: {
@@ -88,14 +116,13 @@ const TagHeader: React.FC<TagHeaderProps> = ({ route, navigation }) =>
 				}]}
             />
 
-            {/* Renomear repertório */}
-            <InputModal
-                visible={isRenameModalVisible}
-                setVisible={setRenameModalVisible}
-                value={name}
-                setValue={setName}
-                onSubmit={handleRenameTag}
-                placeholder='Nome do Repertório'
+            {/* Editar repertório */}
+            <NewTagModal
+                visible={isEditModalVisible}
+                setVisible={setEditModalVisible}
+                tag={tag}
+                setReturnObject={setReturnedTag}
+                navigation={navigation}
             />
 
             {/* Confirmar delete */}

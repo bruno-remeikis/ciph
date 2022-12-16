@@ -220,22 +220,41 @@ export default class TagService
         }));
     }
 
-    static updateName(id: number, name: string)
+    static update(obj: Tag)
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
+            // Verificações de segurança e tratativas
+
+            if(!obj.id)
+                reject();
+
+            obj.name = obj.name.trim();
+
+            if(typeof obj.color === 'string'
+            && obj.color.length === 0)
+                obj.color = null;
+
+            if(obj.name.length === 0)
+                reject();
+
+            // Query
             const sql =
                 `update ${tag.table} set
                     ${tag.name} = ?,
-                    ${tag.unaccentedName} = ?
+                    ${tag.unaccentedName} = ?,
+                    ${tag.color} = ?
                 where ${tag.id} = ?`;
 
+            // Argumentos
             const args = [
-                name.trim(),
-                remove(name.trim()),
-                id
+                obj.name,
+                remove(obj.name),
+                obj.color,
+                obj.id
             ];
 
+            // Execução
             tx.executeSql(sql, args, (_, { rowsAffected }) =>
                 resolve(rowsAffected)
             );

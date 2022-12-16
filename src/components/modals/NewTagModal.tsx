@@ -8,6 +8,7 @@ import Button from '../Button';
 
 // Utils
 import { colors } from '../../utils/consts';
+import { getContrastColor } from '../../utils/functions';
 
 // Entities
 import { Tag } from '../../models/entities/Tag';
@@ -17,19 +18,44 @@ import TagService from '../../services/TagService';
 
 // Icons
 import FontAwesomeIcon from 'react-native-vector-icons/FontAwesome';
-import { getContrastColor } from '../../utils/functions';
+
+// Contexts
+import { useUpdated } from '../../contexts/Updated';
+import { useCurrentTag } from '../../contexts/CurrentTag';
 
 
 
 interface NewTagModalProps extends ModalProps
 {
+    navigation: any;
+    tag?: Tag; // Caso modal seja usado para atualizar, e não para criar tag
     setReturnObject?: Dispatch<SetStateAction<Tag>>;
 }
 
-const NewTagModal: React.FC<NewTagModalProps> = ({ setReturnObject, ...props }) =>
+const NewTagModal: React.FC<NewTagModalProps> = ({ navigation, tag, setReturnObject, ...props }) =>
 {
-    const [tagName, setTagName] = useState('');
-    const [color, _setColor] = useState(colors.primaryHex);
+    // ---------- CONTEXTS ----------
+
+    const { setUpdated } = useUpdated();
+
+    const { currentTag, setCurrentTag } = useCurrentTag();
+
+
+
+    // ---------- STATES ----------
+
+    const [tagName, _setTagName] = useState<string>(() =>
+    {
+        console.log(currentTag);
+        return currentTag ? currentTag.tag.name : '';
+    });
+    const [color, _setColor] = useState(currentTag?.tag.color ? currentTag.tag.color : colors.primaryHex);
+
+    const [isColorPickerModalVisible, setColorPickerModalVisible] = useState<boolean>(false);
+
+
+
+    // ---------- REFS ----------
 
     const colorRef = useRef(color);
     const setColor = (newValue: string) =>
@@ -38,29 +64,71 @@ const NewTagModal: React.FC<NewTagModalProps> = ({ setReturnObject, ...props }) 
         _setColor(newValue);
     }
 
-    const [isColorPickerModalVisible, setColorPickerModalVisible] = useState<boolean>(false);
+    const tagNameRef = useRef(tagName);
+    const setTagName = (newValue: string) =>
+    {
+        tagNameRef.current = newValue;
+        _setTagName(newValue);
+    }
+
+
+
+    // ---------- FUNCTIONS ----------
 
     function handleSubmit()
     {
-        const newTag: Tag = {
-            name: tagName.trim(),
-            color: color,
-        };
-
-        TagService.create(newTag).then((res: any) =>
+        if(tag)
         {
-            if(setReturnObject)
-                setReturnObject({
-                    id: res,
-                    name: newTag.name,
-                    color: newTag.color,
-                    amount: 0
-                });
+            if(!tag.id)
+                return;
 
-            props.setVisible(false);
-        })
-        .catch(err => alert(err));
+            const obj: Tag = {
+                ...tag,
+                name: tagName,
+                color
+            }
+
+            TagService.update(obj).then((res: any) =>
+            {
+                if(setReturnObject)
+                    setReturnObject(obj);
+
+                setUpdated({ tag });
+                props.setVisible(false);
+
+                if(currentTag !== null)
+                    setCurrentTag({ ...currentTag, tag: obj });
+
+                navigation.navigate('Tag', { tag: obj });
+            })
+            .catch(err => alert(err));
+        }
+        else
+        {
+            const obj: Tag = {
+                name: tagName.trim(),
+                color: color,
+            };
+
+            TagService.create(obj).then((res: any) =>
+            {
+                if(setReturnObject)
+                    setReturnObject({
+                        id: res,
+                        name: obj.name,
+                        color: obj.color,
+                        amount: 0
+                    });
+
+                props.setVisible(false);
+            })
+            .catch(err => alert(err));
+        }
     }
+
+
+
+    // ---------- EFFECTS ----------
 
     useEffect(() =>
     {
@@ -68,6 +136,10 @@ const NewTagModal: React.FC<NewTagModalProps> = ({ setReturnObject, ...props }) 
             setTagName('');
     },
     [props.visible]);
+
+
+
+    // ---------- RETURN ----------
 
     return (
         <>
@@ -83,11 +155,13 @@ const NewTagModal: React.FC<NewTagModalProps> = ({ setReturnObject, ...props }) 
                 {...props}
                 style={styles.container}
             >
-                <Text style={styles.title}>Novo Repertório</Text>
+                <Text style={styles.title}>
+                    {tag ? 'Editar' : 'Novo'} Repertório
+                </Text>
 
                 <TextInput
                     style={styles.input}
-                    value={tagName}
+                    value={tagNameRef.current}
                     placeholder="Nome do Repertório"
                     onChangeText={text => setTagName(text)}
                     selectTextOnFocus
