@@ -104,9 +104,7 @@ export default class SongArtistService
     static createTx(tx: SQLTransaction, songId: number, artistIds: number | number[])
     {
         if(!Array.isArray(artistIds))
-        {
             artistIds = [artistIds];
-        }
 
         const sql = `insert into ${song_artist.table} (
             ${song_artist.songId},

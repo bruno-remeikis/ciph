@@ -4,18 +4,18 @@ import { remove } from 'remove-accents';
 // Database
 import { db } from '../database/connection';
 
-// Services
-import SheetService from './SheetService';
-import ArtistService from './ArtistService';
-import SongArtistService from './SongArtistService';
-
 // Models
-import { Song, song } from '../models/entities/Song';
-import { Artist, artist } from '../models/entities/Artist';
+import { song } from '../models/entities/Song';
+import { artist } from '../models/entities/Artist';
+import { tag } from '../models/entities/Tag';
 import { song_artist } from '../models/entities/SongArtist';
-import { dbDatetimeFormat } from '../utils/functions';
 
-export type filterValue = 'all' | 'songs' | 'artists';
+// Utils
+import { dbDatetimeFormat } from '../utils/functions';
+import { song_tag } from '../models/entities/SongTag';
+
+
+export type filterValue = 'all' | 'songs' | 'artists' | 'tags';
 
 export default class SearchService
 {
@@ -36,6 +36,7 @@ export default class SearchService
         
         let songWhere = '';
         let artistWhere = '';
+        let tagWhere = '';
 
         if(search.length > 0)
         {
@@ -47,9 +48,11 @@ export default class SearchService
                 word = remove(word); // < -Remover acentos
                 songWhere += `or ${song.unaccentedName} like '%${word}%' `;
                 artistWhere += `or ${artist.unaccentedName} like '%${word}%' `;
+                tagWhere += `or ${tag.unaccentedName} like '%${word}%'`;
             });
 
             artistWhere = artistWhere.replace('or', 'where');
+            tagWhere = tagWhere.replace('or', 'where');
         }
 
         return new Promise((resolve, reject) => db.transaction(tx =>
@@ -72,7 +75,23 @@ export default class SearchService
                         where
                             ${song_artist.songId} = id and
                             ${song_artist.songId} = ${song_artist.songId}
-                    ) as artists
+                    ) as artists,
+                    null as amount,
+                    null as color,
+                    (
+                        select
+                            ('[' || GROUP_CONCAT(
+                                ('{ \"name\": \"' || ${tag.name} || '\", \"color\": \"' || ${tag.color} || '\" }'),
+                                ', '
+                            ) || ']')
+                        from
+                            ${song_tag.table}
+                        inner join
+                            ${tag.table} on
+                                ${song_tag.tagId} = ${tag.id}
+                        where
+                            ${song_tag.songId} = id
+                    ) as tags
                 from (
                     select
                         ${song.id} as id,
@@ -104,12 +123,35 @@ export default class SearchService
                         ${artist.name} as name,
                         ${artist.insertDate} as insertDate,
                         ${artist.updateDate} as updateDate,
-                        null as artists
+                        null as artists,
+                        null as amount,
+                        null as color,
+                        null as tags
                     from
                         ${artist.table}
                     ${artistWhere}
                     ${words.length !== 0 ? `order by ${artist.insertDate} desc` : ''}
                 )`;
+
+            const tagsSql =
+                `select
+                    'tag' as type,
+                    ${tag.id} as id,
+                    ${tag.name} as name,
+                    ${tag.insertDate} as insertDate,
+                    ${tag.updateDate} as updateDate,
+                    null as artists,
+                    (
+                        select count(*)
+                        from ${song_tag.table}
+                        where ${song_tag.tagId} = ${tag.id}
+                    ) as amount,
+                    ${tag.color} as color,
+                    null as tags
+                from
+                    ${tag.table}
+                ${tagWhere}
+                ${words.length !== 0 ? `order by ${tag.insertDate} desc` : ''}`;
 
             const sql =
                 `select
@@ -118,12 +160,17 @@ export default class SearchService
                     name,
                     ${dbDatetimeFormat('insertDate')} as insertDate,
                     ${dbDatetimeFormat('updateDate')} as updateDate,
-                    artists
+                    artists,
+                    amount,
+                    color,
+                    tags
                 from
                 (
                     ${filter === 'all' || filter === 'artists' ? artistsSql : ''}
                     ${filter === 'all' ? 'union all' : ''}
                     ${filter === 'all' || filter === 'songs' ? songsSql : ''}
+                    ${filter === 'all' ? 'union all' : ''}
+                    ${filter === 'all' || filter === 'tags' ? tagsSql : ''}
                 )
                 ${words.length === 0 ? 'order by insertDate desc' : ''}`;
 

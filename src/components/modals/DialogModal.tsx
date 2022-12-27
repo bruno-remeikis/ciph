@@ -6,7 +6,7 @@ import FeatherIcon from 'react-native-vector-icons/Feather';
 
 // Components
 import Modal, { ModalProps } from './Modal';
-import Button, { ButtonProps } from './Button';
+import Button, { ButtonProps } from '../Button';
 
 
 

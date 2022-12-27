@@ -3,10 +3,12 @@ export const dateFormat = 'dd/MM/yyyy H:mm';
 export const colors = {
     //background: '#F3E0EC',
     background: '#FAFAFA',
-    background2: 'rgb(251, 243, 239)',
+    //background2: 'rgb(251, 243, 239)',
+    background2: 'rgba(217, 136, 89, 0.08)',
 
 	primary: 'rgb(217, 136, 89)',
     primaryRGB: '217, 136, 89',
+    primaryHex: '#d98859',
 
     text: '#0f0f0f',
 

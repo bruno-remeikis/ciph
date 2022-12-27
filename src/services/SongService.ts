@@ -16,6 +16,8 @@ import { song_artist } from '../models/entities/SongArtist';
 
 // Utils
 import { dbDatetimeFormat } from '../utils/functions';
+import { song_tag } from '../models/entities/SongTag';
+import SongTagService from './SongTagService';
 
 export default class SongService
 {
@@ -320,19 +322,74 @@ export default class SongService
         }));
     }
 
-    static update(obj: Song)
+    /**
+     * @param tagId ID do artista
+     */
+    static findByTagId(tagId: number): Promise<SQLResultSetRowList>
     {
         return new Promise((resolve, reject) => db.transaction(tx =>
         {
-            if(!obj.id)
-                reject();
+            const sql = 
+                `select
+                    id,
+                    name,
+                    insertDate,
+                    updateDate,
+                    (
+                        select
+                            group_concat(${artist.name}, ', ')
+                        from
+                            ${song_artist.table}
+                        left join
+                            ${artist.table} on
+                                ${song_artist.artistId} = ${artist.id}
+                        where
+                            ${song_artist.songId} = id and
+                            ${song_artist.songId} = ${song_artist.songId}
+                    ) as artists,
+                    position
+                from (
+                    select
+                        ${song.id} as id,
+                        ${song.name} as name,
+                        ${dbDatetimeFormat(song.insertDate)} as insertDate,
+                        ${dbDatetimeFormat(song.updateDate)} as updateDate,
+                        ${song_tag.songPosition} as position
+                    from
+                        ${song.table}
+                    inner join
+                        ${song_tag.table} on
+                            ${song.id} = ${song_tag.songId}
+                    where
+                        ${song_tag.tagId} = ?
+                )`;
 
+            tx.executeSql(sql, [tagId], (_, { rows }) => resolve(rows));
+        },
+        err =>
+        {
+            console.error(err);
+            reject(err);
+        }));
+    }
+
+    static updateName(id: number, name: string)
+    {
+        return new Promise((resolve, reject) => db.transaction(tx =>
+        {
             const sql =
-                `update ${song.table}
-                set ${song.name} = ?
+                `update ${song.table} set
+                    ${song.name} = ?,
+                    ${song.unaccentedName} = ?
                 where ${song.id} = ?`;
 
-            tx.executeSql(sql, [obj.name, obj.id], (_, { rowsAffected }) =>
+            const args = [
+                name.trim(),
+                remove(name.trim()),
+                id
+            ];
+
+            tx.executeSql(sql, args, (_, { rowsAffected }) =>
                 resolve(rowsAffected));
         },
         err =>
@@ -355,16 +412,16 @@ export default class SongService
             // Deleta folhas da música
             SheetService.deleteBySongIdTx(tx, id);
 
-            // Deletar link com músicas
+            // Deletar relacionamentos entre músicas e artistas
             SongArtistService.deleteBySongIdTx(tx, id);
+
+            // Deletar relacionamentos entre músicas e repertórios
+            SongTagService.deleteBySongIdTx(tx, id);
 
             const sql =
                 `delete from ${song.table} where ${song.id} = ?`;
 
-            tx.executeSql(sql, [id], (_, { rowsAffected }) =>
-            {
-                resolve(rowsAffected);
-            });
+            tx.executeSql(sql, [id], (_, { rowsAffected }) => resolve(rowsAffected));
         },
         err =>
         {

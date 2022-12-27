@@ -16,6 +16,7 @@ import { colors, shadow, sizes } from '../utils/consts';
 
 // Contexts
 import { useUpdated } from '../contexts/Updated';
+import { useCurrentTag } from '../contexts/CurrentTag';
 
 // Components
 import Fade from '../components/animations/Fade';
@@ -30,11 +31,14 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 		{ label: 'Tudo',    value: 'all' },
 		{ label: 'Músicas',  value: 'songs' },
 		{ label: 'Artistas', value: 'artists' },
+		{ label: 'Repertórios', value: 'tags' },
 	];
 
 	// ---------- CONTEXTS ----------
 
 	const { updated, setUpdated } = useUpdated();
+
+	const { setCurrentTag } = useCurrentTag();
 
 	// ---------- STATES ----------
 
@@ -48,8 +52,6 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 	const [filter, setFilter] = useState<filterValue>('all');
 
 	const [scrollOnTop, setScrollOnTop] = useState<boolean>(true);
-
-
 
 	// ---------- REFS ----------
 
@@ -93,18 +95,25 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 	// ---------- EFFECTS ----------
 
 	/**
-	 * Carrega músicas ao abrir app
+	 * Carrega músicas, artistas e repertórios ao abrir app
 	 */
 	useEffect(() => handleSearch('', filter), []);
 
+	useEffect(() =>
+	{
+		const unsubscribe = navigation.addListener('focus', () => setCurrentTag(null));
+
+		return unsubscribe;
+	},
+	[navigation]);
+
 	/**
-	 * Atualiza músicas
+	 * Atualiza itens da tela
 	 */
 	useEffect(() =>
 	{
 		if(updated)
 		{
-			//searchSongs(search);
 			handleSearch(search, filter);
 
 			// Se não for boolean, será setado como false em SongScreen
@@ -130,9 +139,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 
 				{!loading && results.length === 0 ?
 					<Text>{
-						search.trim().length === 0
-							? `Você ainda não possui ${filter === 'artists' ? 'artistas' : 'músicas'}`
-							: 'Nenhum resultado'
+						search.trim().length !== 0 ? 'Nenhum resultado'	: `Você ainda não possui ${(filter === 'artists' ? 'artistas' : (filter === 'tags' ? 'repertórios' : 'músicas'))}`
 					}</Text>
 				: null}
 			</View>
@@ -220,6 +227,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 						key={`${item.type}-${item.id}`}
 						navigation={navigation}
 						searchItem={item}
+						selectable
 					/>
 				)}
 				onScroll={event => setScrollOnTop(
@@ -333,7 +341,6 @@ const styles = StyleSheet.create({
 	filter: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		//marginTop: 8,
 	},
 	filterItem: {
 		paddingHorizontal: 8,
@@ -360,7 +367,7 @@ const styles = StyleSheet.create({
 	// RESULTS
 	results: {
 		paddingHorizontal: sizes.screenPadding,
-		paddingBottom: sizes.screenPadding - 8,
+		paddingBottom: sizes.screenPadding,
 	},
 
 	// BUTTONS

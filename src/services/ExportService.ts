@@ -2,17 +2,23 @@
 import { Artist } from "../models/entities/Artist";
 import { Song } from "../models/entities/Song";
 import { SongArtist } from "../models/entities/SongArtist";
+import { Tag } from "../models/entities/Tag";
+import { SongTag } from "../models/entities/SongTag";
 
 // Services
 import SongService from "./SongService";
 import SheetService from "./SheetService";
 import ArtistService from "./ArtistService";
 import SongArtistService from "./SongArtistService";
+import TagService from "./TagService";
+import SongTagService from "./SongTagService";
 
 export type DataJson = {
     songs: Song[];
     artists: Artist[];
     songsArtists: SongArtist[];
+    tags: Tag[];
+    songsTags: SongTag[];
 }
 
 export default class ExportService
@@ -43,10 +49,20 @@ export default class ExportService
                 let songsArtists: any = await SongArtistService.export();
                 songsArtists = songsArtists._array;
 
+                // Tags
+                let tags: any = await TagService.export();
+                tags = tags._array;
+
+                // Songs _ Tags
+                let songsTags: any = await SongTagService.export();
+                songsTags = songsTags._array;
+
                 resolve({
                     songs,
                     artists,
                     songsArtists,
+                    tags,
+                    songsTags,
                 });
             }
             catch(err)

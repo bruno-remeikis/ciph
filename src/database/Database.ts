@@ -6,6 +6,10 @@ import { song } from '../models/entities/Song';
 import { artist } from '../models/entities/Artist';
 import { song_artist } from '../models/entities/SongArtist';
 import { sheet } from '../models/entities/Sheet';
+import { tag } from '../models/entities/Tag';
+import { song_tag } from '../models/entities/SongTag';
+
+
 
 // ---------- TYPES ----------
 
@@ -21,6 +25,8 @@ const updTriggers: UpdTgType[] = [
     {name: 'artist',      tb: artist},
     {name: 'song_artist', tb: song_artist},
     {name: 'sheet',       tb: sheet},
+    {name: 'tag',         tb: tag},
+    {name: 'song_tag',    tb: song_tag},
 ];
 
 
@@ -39,6 +45,7 @@ export default class Database
         );
 
         var sqls = [
+            // SONG
             `create table if not exists ${song.table} (
                 ${song.id} integer primary key autoincrement,
                 ${song.name} text not null,
@@ -47,7 +54,7 @@ export default class Database
                     default current_timestamp,
                 ${song.updateDate} datetime
             );`,
-
+            // ARTIST
             `create table if not exists ${artist.table} (
                 ${artist.id} integer primary key autoincrement,
                 ${artist.name} text unique not null,
@@ -56,7 +63,7 @@ export default class Database
                     default current_timestamp,
                 ${artist.updateDate} datetime
             );`,
-
+            // SONG_ARTIST (N:N)
             `create table if not exists ${song_artist.table} (
                 ${song_artist.id} integer primary key autoincrement,
                 ${song_artist.songId} integer not null,
@@ -71,7 +78,7 @@ export default class Database
                 foreign key (${song_artist.artistId})
                     references ${artist.table} (${artist.id})
             );`,
-            
+            // SHEET
             `create table if not exists ${sheet.table} (
                 ${sheet.id} integer primary key autoincrement,
                 ${sheet.songId} integer not null,
@@ -83,6 +90,32 @@ export default class Database
 
                 foreign key (${sheet.songId})
                     references ${song.table} (${song.id})
+            );`,
+            // TAG
+            `create table if not exists ${tag.table} (
+                ${tag.id} integer primary key autoincrement,
+                ${tag.name} text not null,
+                ${tag.unaccentedName} text not null,
+                ${tag.color} text,
+                ${tag.insertDate} datetime not null
+                    default current_timestamp,
+                ${tag.updateDate} datetime
+            );`,
+            // SONG_TAG (N:N)
+            `create table if not exists ${song_tag.table} (
+                ${song_tag.id} integer primary key autoincrement,
+                ${song_tag.songId} integer not null,
+                ${song_tag.tagId} integer not null,
+                ${song_tag.songPosition} integer not null,
+                ${song_tag.insertDate} datetime not null
+                    default current_timestamp,
+                ${song_tag.updateDate} datetime,
+
+                foreign key (${song_tag.songId})
+                    references ${song.table} (${song.id}),
+
+                foreign key (${song_tag.tagId})
+                    references ${tag.table} (${tag.id})
             );`,
         ];
 
@@ -132,8 +165,10 @@ export default class Database
         const sqls = [
             `DROP TABLE IF EXISTS ${sheet.table};`,
             `DROP TABLE IF EXISTS ${song_artist.table};`,
+            `DROP TABLE IF EXISTS ${song_tag.table};`,
             `DROP TABLE IF EXISTS ${artist.table};`,
             `DROP TABLE IF EXISTS ${song.table};`,
+            `DROP TABLE IF EXISTS ${tag.table};`
         ];
 
         updTriggers.forEach(tg =>

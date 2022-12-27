@@ -109,12 +109,12 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
             // Atualizar nome da música
             if(name !== initialName)
             {
-                SongService.update({ id, name })
-                .catch(err =>
-                {
-                    back = false;
-                    alert(err);
-                });
+                SongService.updateName(id, name)
+                    .catch(err =>
+                    {
+                        back = false;
+                        alert(err);
+                    });
             }
 
             // Deletar link entre artistas já existentes e a música
