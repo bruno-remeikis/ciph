@@ -12,6 +12,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // Contexts
 import { UpdatedProvider } from './src/contexts/Updated';
+import { Updated2Provider } from './src/contexts/Updated2';
 import { SelectedItemsProvider, useSelectedItems } from './src/contexts/SelectedItems';
 import { CurrentTagProvider, useCurrentTag } from './src/contexts/CurrentTag';
 
@@ -184,11 +185,13 @@ const AppContent: React.FC = () =>
 
 const App: React.FC = () =>
 	<UpdatedProvider>
-		<SelectedItemsProvider>
-			<CurrentTagProvider>
-				<AppContent />
-			</CurrentTagProvider>
-		</SelectedItemsProvider>
+		<Updated2Provider>
+			<SelectedItemsProvider>
+				<CurrentTagProvider>
+					<AppContent />
+				</CurrentTagProvider>
+			</SelectedItemsProvider>
+		</Updated2Provider>
 	</UpdatedProvider>
 
 export default App;

@@ -15,7 +15,8 @@ import { Search } from '../models/bo/Search';
 import { colors, shadow, sizes } from '../utils/consts';
 
 // Contexts
-import { useUpdated } from '../contexts/Updated';
+//import { useUpdated } from '../contexts/Updated';
+import { useUpdated2 } from '../contexts/Updated2';
 import { useCurrentTag } from '../contexts/CurrentTag';
 
 // Components
@@ -36,7 +37,8 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 
 	// ---------- CONTEXTS ----------
 
-	const { updated, setUpdated } = useUpdated();
+	//const { updated, setUpdated } = useUpdated();
+	const { updated2, setUpdated2 } = useUpdated2();
 
 	const { setCurrentTag } = useCurrentTag();
 
@@ -110,7 +112,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 	/**
 	 * Atualiza itens da tela
 	 */
-	useEffect(() =>
+	/*useEffect(() =>
 	{
 		if(updated)
 		{
@@ -121,7 +123,17 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 				setUpdated(false);
 		}
 	},
-	[updated]);
+	[updated]);*/
+
+	useEffect(() =>
+	{
+		if(updated2.homeScreen)
+		{
+			handleSearch(search, filter);
+			setUpdated2({ ...updated2, homeScreen: false });
+		}
+	},
+	[updated2]);
 
 
 
