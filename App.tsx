@@ -11,7 +11,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // Contexts
-import { UpdatedProvider } from './src/contexts/Updated';
+// import { UpdatedProvider } from './src/contexts/Updated';
+import { SearchProvider } from './src/contexts/SearchContext';
 import { SelectedItemsProvider, useSelectedItems } from './src/contexts/SelectedItems';
 import { CurrentTagProvider, useCurrentTag } from './src/contexts/CurrentTag';
 
@@ -183,12 +184,12 @@ const AppContent: React.FC = () =>
 // ---------- APP ----------
 
 const App: React.FC = () =>
-	<UpdatedProvider>
+	<SearchProvider>
 		<SelectedItemsProvider>
 			<CurrentTagProvider>
 				<AppContent />
 			</CurrentTagProvider>
 		</SelectedItemsProvider>
-	</UpdatedProvider>
+	</SearchProvider>
 
 export default App;

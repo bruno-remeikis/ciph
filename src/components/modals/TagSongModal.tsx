@@ -13,7 +13,7 @@ import TagService from '../../services/TagService';
 import { Tag } from '../../models/entities/Tag';
 
 // Contexts
-import { useUpdated } from '../../contexts/Updated';
+// import { useUpdated } from '../../contexts/Updated';
 import { useSelectedItems } from '../../contexts/SelectedItems';
 import { colors } from '../../utils/consts';
 
@@ -38,7 +38,7 @@ const TagSongModal: React.FC<TagSongModalProps> = ({ setReturnObject, songId, ..
 {
     // ---------- CONTEXTS ----------
     
-    const { setUpdated } = useUpdated();
+    // const { setUpdated } = useUpdated();
     const { selectedItems, setSelectedItems } = useSelectedItems();
 
 
@@ -78,7 +78,7 @@ const TagSongModal: React.FC<TagSongModalProps> = ({ setReturnObject, songId, ..
             if(setReturnObject)
                 setReturnObject(tags.filter(tag => tag.selected));
 
-            setUpdated(true);
+            // setUpdated(true);
             setSelectedItems(null);
 
             props.setVisible(false);

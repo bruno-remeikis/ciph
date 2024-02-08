@@ -14,7 +14,7 @@ import FeatherIcon from 'react-native-vector-icons/Feather';
 import styles from './styles';
 
 // Contexts
-import { useUpdated } from '../../../contexts/Updated';
+// import { useUpdated } from '../../../contexts/Updated';
 
 // Components
 import GenericAppHeader from '../GenericAppHeader';
@@ -37,7 +37,7 @@ const SongHeader: React.FC<SongHeaderProps> = ({ route, navigation }) =>
 {
 	const song = route.params.song;
 
-	const { setUpdated } = useUpdated();
+	// const { setUpdated } = useUpdated();
 
 	const [isConfirmDeleteVisible, setIsConfirmDeleteVisible] = useState<boolean>(false);
 	const [isInfoVisible, setIsInfoVisible] = useState<boolean>(false);
@@ -50,7 +50,7 @@ const SongHeader: React.FC<SongHeaderProps> = ({ route, navigation }) =>
             SongService.delete(song.id)
             .then(() =>
             {
-                setUpdated(true);
+                // setUpdated(true);
                 navigation.pop(2); // <- Volta 2 telas
             })
             .catch(err => alert(err));

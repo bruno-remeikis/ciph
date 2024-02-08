@@ -14,17 +14,17 @@ import { Artist } from '../models/entities/Artist';
 
 // Utils
 import { colors, opacities, sizes } from '../utils/consts';
+import { useSearch } from '../contexts/SearchContext';
 
 // Contexts
-import { useUpdated } from '../contexts/Updated';
+// import { useUpdated } from '../contexts/Updated';
 
 const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
 {
     // ---------- CONTEXTS ----------
 
-    const { setUpdated } = useUpdated();
-
-
+    // const { setUpdated } = useUpdated();
+    const { addSong, addArtist } = useSearch();
 
     // ---------- CONSTS ----------
 
@@ -45,8 +45,6 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
     const artist: Artist | null = route.params?.artist
         ? route.params.artist
         : null;
-
-
 
     // ---------- TYPES ----------
 
@@ -158,7 +156,7 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                 SongService.findById(id)
                 .then((song: any) =>
                 {
-                    setUpdated({ song });
+                    // setUpdated({ song });
                     navigation.navigate('Song', { song });
                 })
                 .catch(err => alert(err));
@@ -174,7 +172,11 @@ const NewSongScreen: React.FC<any> = ({ navigation, route }) =>
                 .then((song: any) =>
                 {
                     // Diz à 'HomeScreen' que músicas devem ser atualizadas
-                    setUpdated({ song });
+                    //setUpdated({ song });
+                    for(let va of validArtists)
+                        if(!va.existing)
+                            addArtist(va.obj);
+                    addSong(song);
 
                     // Impede que, ao clicar em voltar, volte para 'NewSongScreen'
                     navigation.pop(1);

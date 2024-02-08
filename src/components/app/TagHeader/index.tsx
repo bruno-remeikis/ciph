@@ -13,7 +13,7 @@ import FeatherIcon from 'react-native-vector-icons/Feather';
 import TagService from '../../../services/TagService';
 
 // Contexts
-import { useUpdated } from '../../../contexts/Updated';
+// import { useUpdated } from '../../../contexts/Updated';
 
 // Utils
 import { colors } from '../../../utils/consts';
@@ -30,7 +30,7 @@ const TagHeader: React.FC<TagHeaderProps> = ({ route, navigation }) =>
 {
     const tag = route.params.tag;
 
-    const { setUpdated } = useUpdated();
+    // const { setUpdated } = useUpdated();
 
     const [isRenameModalVisible, setRenameModalVisible] = useState<boolean>(false);
     const [isConfirmDeleteModalVisible, setConfirmDeleteModalVisible] = useState<boolean>(false);
@@ -44,7 +44,7 @@ const TagHeader: React.FC<TagHeaderProps> = ({ route, navigation }) =>
                 .then(() =>
                 {
                     tag.name = name;
-                    setUpdated({ tag });
+                    // setUpdated({ tag });
                     navigation.navigate('Tag', { tag });
                 })
                 .catch(err => alert(err))
@@ -57,7 +57,7 @@ const TagHeader: React.FC<TagHeaderProps> = ({ route, navigation }) =>
             TagService.delete(tag.id)
             .then(() =>
             {
-                setUpdated(true);
+                // setUpdated(true);
                 navigation.pop(2); // <- Volta 2 telas
             })
             .catch(err => alert(err))

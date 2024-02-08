@@ -16,7 +16,7 @@ import { colors, sizes, shadow } from '../utils/consts';
 import AntDesignIcon from 'react-native-vector-icons/AntDesign';
 
 // Contexts
-import { useUpdated } from '../contexts/Updated';
+// import { useUpdated } from '../contexts/Updated';
 import { useCurrentTag } from '../contexts/CurrentTag';
 
 const TagScreen: React.FC<any> = ({ navigation, route }) =>
@@ -27,7 +27,7 @@ const TagScreen: React.FC<any> = ({ navigation, route }) =>
 
     // ---------- CONTEXTS ----------
 
-    const { updated, setUpdated } = useUpdated();
+    // const { updated, setUpdated } = useUpdated();
 
     const { setCurrentTag } = useCurrentTag();
 
@@ -63,7 +63,7 @@ const TagScreen: React.FC<any> = ({ navigation, route }) =>
     },
     []);
 
-	useEffect(() =>
+	/*useEffect(() =>
 	{
 		if(updated)
 		{
@@ -78,7 +78,7 @@ const TagScreen: React.FC<any> = ({ navigation, route }) =>
             }
 		}
 	},
-	[updated]);
+	[updated]);*/
 
 
 

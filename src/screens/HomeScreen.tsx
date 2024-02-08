@@ -15,7 +15,8 @@ import { Search } from '../models/bo/Search';
 import { colors, shadow, sizes } from '../utils/consts';
 
 // Contexts
-import { useUpdated } from '../contexts/Updated';
+import { useIsFocused } from '@react-navigation/native';
+import { useSearch } from '../contexts/SearchContext';
 import { useCurrentTag } from '../contexts/CurrentTag';
 
 // Components
@@ -24,6 +25,8 @@ import SearchItem from '../components/SearchItem';
 
 const HomeScreen: React.FC<any> = ({ navigation }) =>
 {
+	useIsFocused();
+
 	// ---------- CONSTS ----------
 
 	const filters: { label: string, value: filterValue }[] =
@@ -36,7 +39,8 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 
 	// ---------- CONTEXTS ----------
 
-	const { updated, setUpdated } = useUpdated();
+	// const { updated, setUpdated } = useUpdated();
+	const { results, setResults } = useSearch();
 
 	const { setCurrentTag } = useCurrentTag();
 
@@ -45,7 +49,7 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 	const [headerHeight, setHeaderHeight] = useState(0);
 
 	const [search, setSearch] = useState<string>('');
-	const [results, setResults] = useState<Search[]>([]);
+	//const [results, setResults] = useState<Search[]>([]);
 	const [loading, _setLoading] = useState<boolean>(false);
 	const [showLoading, setShowLoading] = useState<boolean>(false);
 
@@ -106,22 +110,6 @@ const HomeScreen: React.FC<any> = ({ navigation }) =>
 		return unsubscribe;
 	},
 	[navigation]);
-
-	/**
-	 * Atualiza itens da tela
-	 */
-	useEffect(() =>
-	{
-		if(updated)
-		{
-			handleSearch(search, filter);
-
-			// Se não for boolean, será setado como false em SongScreen
-			if(typeof updated === 'boolean')
-				setUpdated(false);
-		}
-	},
-	[updated]);
 
 
 

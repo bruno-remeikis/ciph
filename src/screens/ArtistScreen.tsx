@@ -15,7 +15,7 @@ import SongService from '../services/SongService';
 import { colors, shadow, sizes } from '../utils/consts';
 
 // Contexts
-import { useUpdated } from '../contexts/Updated';
+// import { useUpdated } from '../contexts/Updated';
 
 // Components
 import Fade from '../components/animations/Fade';
@@ -24,7 +24,7 @@ import SearchItem from '../components/SearchItem';
 // Contexts
 import { useCurrentTag } from '../contexts/CurrentTag';
 
-const HomeScreen: React.FC<any> = ({ navigation, route }) =>
+const ArtistScreen: React.FC<any> = ({ navigation, route }) =>
 {
     // ---------- CONSTS ----------
 
@@ -36,7 +36,7 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 
     const { setCurrentTag } = useCurrentTag();
 
-
+    
 
     // ---------- REFS ----------
 
@@ -45,8 +45,6 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 
 
     // ---------- STATES ----------
-
-    const { updated, setUpdated } = useUpdated();
 
     const [songs, setSongs] = useState<Song[]>([]);
     const [nameInfo, setNameInfo] = useState(name);
@@ -84,24 +82,6 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
 		return unsubscribe;
 	},
 	[navigation]);
-
-    /**
-     * Atualiza dados do artista
-     */
-    useEffect(() =>
-    {
-        if(typeof updated === 'object'
-        && updated.artist)
-        {
-            setNameInfo(updated.artist.name);
-
-            if(!updated.song)
-                setUpdated(false);
-        }
-        else
-            loadSongs();
-    },
-    [updated]);
 
 
 
@@ -163,7 +143,7 @@ const HomeScreen: React.FC<any> = ({ navigation, route }) =>
     );
 }
 
-export default HomeScreen;
+export default ArtistScreen;
 
 
 

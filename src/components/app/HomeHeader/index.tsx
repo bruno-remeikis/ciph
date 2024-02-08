@@ -19,7 +19,7 @@ import DialogModal from '../../modals/DialogModal';
 import Button from '../../Button';
 
 // Contexts
-import { useUpdated } from '../../../contexts/Updated';
+// import { useUpdated } from '../../../contexts/Updated';
 
 // Utils
 import { colors } from '../../../utils/consts';
@@ -74,7 +74,7 @@ const HomeHeader: React.FC = () =>
 
 	// ---------- CONTEXTS ----------
 
-	const { setUpdated } = useUpdated();
+	// const { setUpdated } = useUpdated();
 
 	// ---------- STATES ----------
 
@@ -133,7 +133,7 @@ const HomeHeader: React.FC = () =>
 				const json: DataJson & any = JSON.parse(content);
 
 				ImportService.consumeDataJson(json);
-				setUpdated(true);
+				//setUpdated(true);
 			}
 		}
 		catch(err)
@@ -169,7 +169,7 @@ const HomeHeader: React.FC = () =>
 	{
 		if(verifCodeValue === verifCode)
 			Database.recreate()
-				.then(() => setUpdated(true)) // <- Atualiza HomeScreen
+				.then(() => /*setUpdated(true)*/ {}) // <- Atualiza HomeScreen
 				.catch(err => alert(err));
 		else
 			alert('Código inválido');

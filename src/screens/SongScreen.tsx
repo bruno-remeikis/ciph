@@ -27,7 +27,7 @@ import MenuModal from '../components/modals/MenuModal';
 import InputModal from '../components/modals/InputModal';
 
 // Contexts
-import { useUpdated } from '../contexts/Updated';
+// import { useUpdated } from '../contexts/Updated';
 import TagSongModal from '../components/modals/TagSongModal';
 import SongTagService from '../services/SongTagService';
 
@@ -45,7 +45,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
 {
     // ---------- CONTEXTS ----------
 
-    const { updated, setUpdated } = useUpdated();
+    // const { updated, setUpdated } = useUpdated();
 
     // ---------- CONSTS ----------
 
@@ -119,10 +119,10 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                 {
                     setTags(tags.filter(tag => tag.id !== currentTag.id));
 
-                    setUpdated({ songTag: {
+                    /*setUpdated({ songTag: {
                         songId: id,
                         tagId: currentTag.id ? currentTag.id : 0
-                    } });
+                    } });*/
                 }
             })
             .catch(err => alert(err));
@@ -427,7 +427,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
     /**
      * Atualiza dados da música
      */
-    useEffect(() =>
+    /*useEffect(() =>
     {
         if(typeof updated === 'object'
         && updated.song)
@@ -439,7 +439,7 @@ const SongScreen: React.FC<any> = ({ navigation, route }) =>
                 setUpdated(false);
         }
     },
-    [updated]);
+    [updated]);*/
 
     // Adiciona tag recém inserida à lista
     useEffect(() =>

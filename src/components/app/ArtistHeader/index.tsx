@@ -1,5 +1,5 @@
 import { RouteProp } from '@react-navigation/core';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 // RootStackParamList
 import RootStackParamList from '../../../../AppRootStackParamList';
@@ -12,10 +12,12 @@ import GenericAppHeader from '../GenericAppHeader';
 import InputModal from '../../modals/InputModal';
 
 // Contexts
-import { useUpdated } from '../../../contexts/Updated';
+// import { useUpdated } from '../../../contexts/Updated';
 
 // Services
 import ArtistService from '../../../services/ArtistService';
+import { Artist } from '../../../models/entities/Artist';
+import { useSearch } from '../../../contexts/SearchContext';
 
 
 
@@ -28,7 +30,8 @@ const ArtistHeader: React.FC<ArtistHeaderProps> = ({ route, navigation }) =>
 {
     const artist = route.params.artist;
 
-    const { setUpdated } = useUpdated();
+    // const { setUpdated } = useUpdated();
+    const { updateArtist } = useSearch();
 
     const [isRenameModalVisible, setIsRenameModalVisible] = useState<boolean>(false);
     const [name, setName] = useState(artist.name);
@@ -40,8 +43,10 @@ const ArtistHeader: React.FC<ArtistHeaderProps> = ({ route, navigation }) =>
                 .then(() =>
                 {
                     artist.name = name;
-                    setUpdated({ artist });
-                    navigation.navigate('Artist', { artist });
+                    updateArtist(artist);
+                    //setUpdated({ artist });
+                    console.log('AAA');
+                    //navigation.navigate('Artist', { artist });
                 })
                 .catch(err => alert(err))
                 .finally(() => setIsRenameModalVisible(false))

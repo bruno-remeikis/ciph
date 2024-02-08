@@ -1,5 +1,6 @@
 // Database
 import { Table, cols } from '../../database/types';
+import { Search } from '../bo/Search';
 
 // Models
 import { Artist } from './Artist';
@@ -20,6 +21,15 @@ export type Song =
     insertDate?: string;
     updateDate?: string | null;
 }
+
+export const songToSearch = ({ id, name, artists, insertDate, updateDate }: Song): Search => ({
+    type: 'song',
+    id: id ? id : 0,
+    name,
+    artists,
+    insertDate,
+    updateDate
+});
 
 // ---------- DAO ----------
 
